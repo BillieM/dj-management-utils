@@ -1,8 +1,6 @@
 package ui
 
 import (
-	"fmt"
-
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
@@ -51,6 +49,9 @@ func (d *Data) settingsList(w fyne.Window) []fyne.CanvasObject {
 	objs = append(objs, d.openFileCanvas(
 		w, "Traktor Collection Path", &d.TmpConfig.TraktorCollectionPath, []string{".nml"},
 	))
+	objs = append(objs, d.openDirCanvas(
+		w, "Tmp directory", &d.TmpConfig.TmpDir,
+	))
 
 	objs = append(objs, d.saveButton(w))
 
@@ -71,10 +72,14 @@ func (d *Data) saveButton(w fyne.Window) *widget.Button {
 	return btn
 }
 
-func (d *Data) openFileCanvas(w fyne.Window, label string, configPath *string, fileFilter []string) fyne.CanvasObject {
+/*
+TODO:
+Make this more generic so it can be used to select dirs too & used outside of settings
+*/
+func (d *Data) openFileCanvas(w fyne.Window, label string, updateVal *string, fileFilter []string) fyne.CanvasObject {
 
 	infoLabel := widget.NewLabel(label)
-	pathLabel := widget.NewLabel(*configPath)
+	pathLabel := widget.NewLabel(*updateVal)
 
 	buttonWidget := widget.NewButton("Open", func() {
 		f := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
@@ -86,20 +91,18 @@ func (d *Data) openFileCanvas(w fyne.Window, label string, configPath *string, f
 				helpers.WriteToLog("no writer")
 				return
 			}
-			*configPath = reader.URI().Path()
-			pathLabel.SetText(*configPath)
+			*updateVal = reader.URI().Path()
+			pathLabel.SetText(*updateVal)
 		}, w)
 
-		fileURI := storage.NewFileURI(*configPath)
+		fileURI := storage.NewFileURI(*updateVal)
 		dirURI, err := storage.Parent(fileURI)
 		if err != nil {
-			fmt.Println(fileURI)
 			dialogErr(w, err)
 			return
 		}
 		dirListableURI, err := storage.ListerForURI(dirURI)
 		if err != nil {
-			fmt.Println(fileURI)
 			dialogErr(w, err)
 			return
 		}
@@ -111,7 +114,48 @@ func (d *Data) openFileCanvas(w fyne.Window, label string, configPath *string, f
 	// buttonWidget.SetIcon()
 	// or just call newButtonWithIcon
 
-	border := container.NewBorder(infoLabel, nil, nil, buttonWidget, pathLabel)
+	return formatOpenCanvas(infoLabel, pathLabel, buttonWidget)
+}
 
-	return border
+func (d *Data) openDirCanvas(w fyne.Window, label string, updateVal *string) fyne.CanvasObject {
+
+	infoLabel := widget.NewLabel(label)
+	pathLabel := widget.NewLabel(*updateVal)
+
+	buttonWidget := widget.NewButton("Open", func() {
+		f := dialog.NewFolderOpen(func(reader fyne.ListableURI, err error) {
+			if err != nil {
+				dialogErr(w, err)
+				return
+			}
+			if reader == nil {
+				helpers.WriteToLog("no writer")
+				return
+			}
+			*updateVal = reader.Path()
+			pathLabel.SetText(*updateVal)
+		}, w)
+
+		dirURI := storage.NewFileURI(*updateVal)
+		dirListableURI, err := storage.ListerForURI(dirURI)
+		if err != nil {
+			dialogErr(w, err)
+			return
+		}
+		f.SetLocation(dirListableURI)
+		f.Show()
+	})
+	// can use this to set a file open icon
+	// buttonWidget.SetIcon()
+	// or just call newButtonWithIcon
+	// need to get a button icon first though
+
+	return formatOpenCanvas(infoLabel, pathLabel, buttonWidget)
+}
+
+func formatOpenCanvas(infoLabel *widget.Label, pathLabel *widget.Label, buttonWidget *widget.Button) fyne.CanvasObject {
+
+	container := container.NewBorder(infoLabel, nil, nil, buttonWidget, pathLabel)
+
+	return container
 }
