@@ -6,7 +6,6 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
 
 	"github.com/billiem/seren-management/src/helpers"
 )
@@ -36,14 +35,13 @@ func Entry(c *helpers.Config) {
 
 	w.Resize(fyne.NewSize(960, 720))
 
-	hello := widget.NewLabel("Hello Fyne!")
-	w.SetContent(container.NewVBox(
-		hello,
-		widget.NewButton("Hi!", func() {
-			hello.SetText("Welcome :)")
-		}),
-	))
+	contentStack := container.NewStack()
+	setMainContent(w, contentStack, Operations["home"])
 
+	split := container.NewHSplit(d.makeNavMenu(w, contentStack), contentStack)
+	split.Offset = 0.25
+
+	w.SetContent(split)
 	w.ShowAndRun()
 }
 
