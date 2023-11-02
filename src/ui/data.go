@@ -29,7 +29,7 @@ var (
 			Name: "Separate Collection",
 			View: separateCollectionView,
 		},
-		"convertMp3s": {
+		"mp3s": {
 			Name: "Convert MP3s",
 			View: convertMp3sView,
 		},
@@ -45,19 +45,43 @@ var (
 			Name: "Convert Collection",
 			View: convertCollectionMp3View,
 		},
+		"tags": {
+			Name: "Process Tags",
+			View: tagsView,
+		},
+		"rereadTags": {
+			Name: "Reread Tags",
+			View: rereadTagsView,
+		},
+		"cleanTags": {
+			Name: "Clean Tags",
+			View: cleanTagsView,
+		},
+		"conversion": {
+			Name: "Conversion",
+			View: conversionView,
+		},
+		"playlistMatching": {
+			Name: "Playlist Matching",
+			View: playlistMatchingView,
+		},
 	}
 
 	OperationIndex = map[string][]string{
-		"": {"home", "stems", "convertMp3s"},
+		"": {"home", "stems", "mp3s", "tags", "conversion", "playlistMatching"},
 		"stems": {
 			"separateTrack",
 			"separateFolder",
 			"separateCollection",
 		},
-		"convertMp3s": {
+		"mp3s": {
 			"convertSingleMp3",
 			"convertFolderMp3",
 			"convertCollectionMp3",
+		},
+		"tags": {
+			"rereadTags",
+			"cleanTags",
 		},
 	}
 )

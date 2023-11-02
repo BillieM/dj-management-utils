@@ -51,3 +51,23 @@ func convertFolderMp3View(w fyne.Window) fyne.CanvasObject {
 func convertCollectionMp3View(w fyne.Window) fyne.CanvasObject {
 	return widget.NewLabel("convertCollectionMp3View")
 }
+
+func tagsView(w fyne.Window) fyne.CanvasObject {
+	return widget.NewLabel("tagsView")
+}
+
+func rereadTagsView(w fyne.Window) fyne.CanvasObject {
+	return widget.NewLabel("rereadTagsView")
+}
+
+func cleanTagsView(w fyne.Window) fyne.CanvasObject {
+	return widget.NewLabel("cleanTagsView")
+}
+
+func conversionView(w fyne.Window) fyne.CanvasObject {
+	return widget.NewLabel("conversionView")
+}
+
+func playlistMatchingView(w fyne.Window) fyne.CanvasObject {
+	return widget.NewLabel("playlistMatchingView")
+}
