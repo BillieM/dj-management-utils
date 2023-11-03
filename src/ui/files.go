@@ -19,7 +19,7 @@ import (
 TODO:
 Make this more generic so it can be used to select dirs too & used outside of settings
 */
-func (d *Data) openFileCanvas(w fyne.Window, title string, updateVal *string, fileFilter []string) fyne.CanvasObject {
+func (d *Data) openFileCanvas(w fyne.Window, title string, updateVal *string, fileFilter []string, callbackFn func()) fyne.CanvasObject {
 
 	pathCard := buildPathCard(*updateVal, "file")
 
@@ -35,6 +35,7 @@ func (d *Data) openFileCanvas(w fyne.Window, title string, updateVal *string, fi
 			}
 			*updateVal = reader.URI().Path()
 			pathCard.SetSubTitle(*updateVal)
+			callbackFn()
 		}, w)
 		f.SetLocation(d.getListableURI(*updateVal))
 		f.SetFilter(storage.NewExtensionFileFilter(fileFilter))
@@ -44,7 +45,7 @@ func (d *Data) openFileCanvas(w fyne.Window, title string, updateVal *string, fi
 	return formatOpenCanvas(title, pathCard, buttonWidget)
 }
 
-func (d *Data) openDirCanvas(w fyne.Window, title string, updateVal *string) fyne.CanvasObject {
+func (d *Data) openDirCanvas(w fyne.Window, title string, updateVal *string, callbackFn func()) fyne.CanvasObject {
 
 	pathCard := buildPathCard(*updateVal, "directory")
 
@@ -94,14 +95,8 @@ func (d *Data) getListableURI(path string) fyne.ListableURI {
 
 	var recursionCount int
 	dirPath := d.GetClosestDir(path, &recursionCount)
-	fmt.Println(dirPath)
 	dirURI := storage.NewFileURI(dirPath)
-	fmt.Println(dirURI)
 	dirListableURI, err := storage.ListerForURI(dirURI)
-	fmt.Println(dirListableURI)
-	fmt.Println("exists")
-	exists, err2 := storage.Exists(dirURI)
-	fmt.Println("exists", exists, err2)
 	if err != nil {
 		helpers.HandleFatalError(errors.New("Something went wrong getting the listable URI, err: " + err.Error()))
 	}

@@ -8,19 +8,6 @@ import (
 	"github.com/billiem/seren-management/src/helpers"
 )
 
-type Data struct {
-	*helpers.Config
-	*State
-	TmpConfig      *helpers.Config
-	Operations     map[string]Operation
-	OperationIndex map[string][]string
-}
-
-type State struct {
-	settingsAlreadyOpen bool
-	processing          bool
-}
-
 func Entry(c *helpers.Config) {
 
 	d := buildData(c)

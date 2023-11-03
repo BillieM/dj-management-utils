@@ -40,3 +40,32 @@ func (c *Config) SaveConfig() error {
 
 	return nil
 }
+
+func (c *Config) CheckTraktorCollectionPath() (bool, string) {
+	if _, err := os.Stat(c.TraktorCollectionPath); os.IsNotExist(err) {
+		return false, "Traktor collection path does not exist"
+	}
+	return true, ""
+}
+
+func (c *Config) CheckTmpDir() (bool, string) {
+	fi, err := os.Stat(c.TmpDir)
+	if err != nil {
+		return false, "Temporary directory does not exist"
+	}
+	if !fi.IsDir() {
+		return false, "Temporary directory is not a directory"
+	}
+	return true, ""
+}
+
+func (c *Config) CheckBaseDir() (bool, string) {
+	fi, err := os.Stat(c.BaseDir)
+	if err != nil {
+		return false, "Base directory does not exist"
+	}
+	if !fi.IsDir() {
+		return false, "Base directory is not a directory"
+	}
+	return true, ""
+}

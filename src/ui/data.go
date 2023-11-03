@@ -1,10 +1,26 @@
 package ui
 
-import "fyne.io/fyne/v2"
+import (
+	"fyne.io/fyne/v2"
+	"github.com/billiem/seren-management/src/helpers"
+)
 
 type Operation struct {
 	Name string
 	View func(w fyne.Window) fyne.CanvasObject
+}
+
+type Data struct {
+	*helpers.Config
+	*State
+	TmpConfig      *helpers.Config
+	Operations     map[string]Operation
+	OperationIndex map[string][]string
+}
+
+type State struct {
+	settingsAlreadyOpen bool
+	processing          bool
 }
 
 func (d *Data) getOperationsList() map[string]Operation {

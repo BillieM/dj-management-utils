@@ -26,11 +26,21 @@ func stemsView(w fyne.Window) fyne.CanvasObject {
 
 func (d *Data) separateTrackView(w fyne.Window) fyne.CanvasObject {
 
+	ok, canvas := d.checkConfig([]func() (bool, string){d.Config.CheckTmpDir})
+
+	if !ok {
+		return canvas
+	}
+
 	var trackPath string
+	processContainer := container.NewVBox()
+	processContainer.Hidden = true
 
-	trackPathCanvas := d.openFileCanvas(w, "Track Path", &trackPath, []string{".mp3"})
+	trackPathCanvas := d.openFileCanvas(w, "Track Path", &trackPath, []string{".mp3"}, func() { processContainer.Hidden = false })
 
-	return container.NewVBox(trackPathCanvas)
+	processContainer.Add(widget.NewLabel("Processing..."))
+
+	return container.NewVBox(trackPathCanvas, processContainer)
 }
 
 func separateFolderView(w fyne.Window) fyne.CanvasObject {
@@ -75,4 +85,30 @@ func conversionView(w fyne.Window) fyne.CanvasObject {
 
 func playlistMatchingView(w fyne.Window) fyne.CanvasObject {
 	return widget.NewLabel("playlistMatchingView")
+}
+
+/*
+ */
+func (d *Data) checkConfig(checks []func() (bool, string)) (bool, fyne.CanvasObject) {
+
+	configIssues := []string{}
+
+	for _, check := range checks {
+		pass, msg := check()
+		if !pass {
+			configIssues = append(configIssues, msg)
+		}
+	}
+
+	if len(configIssues) > 0 {
+		issuesContainer := container.NewVBox(
+			widget.NewLabel("Please fix the following issues with your config:"),
+		)
+		for _, issue := range configIssues {
+			issuesContainer.Add(widget.NewLabel(issue))
+		}
+		return false, issuesContainer
+	}
+
+	return true, nil
 }

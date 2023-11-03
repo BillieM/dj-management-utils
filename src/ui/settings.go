@@ -45,10 +45,10 @@ func (d *Data) settingsList(w fyne.Window) []fyne.CanvasObject {
 	objs := []fyne.CanvasObject{}
 
 	objs = append(objs, d.openFileCanvas(
-		w, "Traktor Collection Filepath", &d.TmpConfig.TraktorCollectionPath, []string{".nml"},
+		w, "Traktor Collection Filepath", &d.TmpConfig.TraktorCollectionPath, []string{".nml"}, func() {},
 	))
 	objs = append(objs, d.openDirCanvas(
-		w, "Temporary Content Directory", &d.TmpConfig.TmpDir,
+		w, "Temporary Content Directory", &d.TmpConfig.TmpDir, func() {},
 	))
 
 	objs = append(objs, d.saveButton(w))
