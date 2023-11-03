@@ -1,7 +1,6 @@
 package ui_test
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -10,7 +9,7 @@ import (
 	"github.com/billiem/seren-management/src/ui"
 )
 
-func TestGetListableURI(t *testing.T) {
+func TestGetClosestDir(t *testing.T) {
 
 	workingDir, err := os.Getwd()
 	if err != nil {
@@ -26,6 +25,7 @@ func TestGetListableURI(t *testing.T) {
 		name     string
 		path     string
 		expected string
+		baseDir  string
 	}{
 		{
 			name:     "existing dir",
@@ -39,13 +39,25 @@ func TestGetListableURI(t *testing.T) {
 		},
 		{
 			name:     "non-existing file, existing parent dir",
-			path:     filepath.Join(baseTestDataDir, "files_test_dir/files_test_file_non_existent.txt"),
+			path:     filepath.Join(baseTestDataDir, "files_test_dir/fake_file.txt"),
 			expected: filepath.Join(baseTestDataDir, "files_test_dir"),
 		},
 		{
 			name:     "non-existing file, non-existing parent dir",
-			path:     filepath.Join(baseTestDataDir, "files_test_dir_non_existent/files_test_file_non_existent.txt"),
+			path:     filepath.Join(baseTestDataDir, "fake_dir/fake_file.txt"),
 			expected: filepath.Join(baseTestDataDir),
+		},
+		{
+			name:     "Many levels deep, returns BaseDir",
+			path:     filepath.Join("/fake_dir_1/fake_dir2/fake_dir_3/fake_dir_4/file.txt"),
+			expected: filepath.Join(baseTestDataDir),
+			baseDir:  baseTestDataDir,
+		},
+		{
+			name:     "Many levels deep, fake BaseDir, returns default /",
+			path:     filepath.Join(baseTestDataDir, "fake_dir_1/fake_dir2/fake_dir_3/fake_dir_4/file.txt"),
+			expected: filepath.Join("/"),
+			baseDir:  filepath.Join("/fake_dir/weeoeoeoeo/"),
 		},
 	}
 
@@ -53,12 +65,14 @@ func TestGetListableURI(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			uri := d.GetListableURI(tt.path)
 
-			fmt.Println(uri)
-			// if uri.Path() != tt.expected {
-			// 	t.Errorf("getListableURI(%s) returned %v, expected %v", tt.path, uri, tt.expected)
-			// }
+			d.Config.BaseDir = tt.baseDir
+			var recursionCount int
+			path := d.GetClosestDir(tt.path, &recursionCount)
+
+			if path != tt.expected {
+				t.Errorf("getListableURI(%s) returned %v, expected %v", tt.path, path, tt.expected)
+			}
 		})
 	}
 }

@@ -36,7 +36,7 @@ func (d *Data) openFileCanvas(w fyne.Window, title string, updateVal *string, fi
 			*updateVal = reader.URI().Path()
 			pathCard.SetSubTitle(*updateVal)
 		}, w)
-		f.SetLocation(d.GetListableURI(*updateVal))
+		f.SetLocation(d.getListableURI(*updateVal))
 		f.SetFilter(storage.NewExtensionFileFilter(fileFilter))
 		f.Show()
 	})
@@ -61,7 +61,7 @@ func (d *Data) openDirCanvas(w fyne.Window, title string, updateVal *string) fyn
 			*updateVal = reader.Path()
 			pathCard.SetSubTitle(*updateVal)
 		}, w)
-		f.SetLocation(d.GetListableURI(*updateVal))
+		f.SetLocation(d.getListableURI(*updateVal))
 		f.Show()
 	})
 
@@ -90,11 +90,10 @@ If a file path is given, returns a fyne.ListableURI for the parent directory
 
 If the path does not exist, returns
 */
-func (d *Data) GetListableURI(path string) fyne.ListableURI {
+func (d *Data) getListableURI(path string) fyne.ListableURI {
 
 	var recursionCount int
-
-	dirPath := d.getClosestDir(path, &recursionCount)
+	dirPath := d.GetClosestDir(path, &recursionCount)
 	fmt.Println(dirPath)
 	dirURI := storage.NewFileURI(dirPath)
 	fmt.Println(dirURI)
@@ -109,16 +108,17 @@ func (d *Data) GetListableURI(path string) fyne.ListableURI {
 	return dirListableURI
 }
 
-func (d *Data) getClosestDir(path string, rCnt *int) string {
+func (d *Data) GetClosestDir(path string, rCnt *int) string {
 	*rCnt++
 	fi, err := os.Stat(path)
+	// fmt.Println(*rCnt, path)
 	if err != nil {
 		if *rCnt <= 4 {
-			return d.getClosestDir(filepath.Join(path, ".."), rCnt)
-		} else if *rCnt == 4 {
-			return d.getClosestDir(d.Config.BaseDir, rCnt)
+			return d.GetClosestDir(filepath.Join(path, ".."), rCnt)
 		} else if *rCnt == 5 {
-			return d.getClosestDir("/", rCnt)
+			return d.GetClosestDir(d.Config.BaseDir, rCnt)
+		} else if *rCnt == 6 {
+			return d.GetClosestDir(filepath.Join("/"), rCnt)
 		} else {
 			helpers.HandleFatalError(errors.New("Something went very wrong getting the cloest dir, err: " + err.Error()))
 		}
@@ -126,7 +126,7 @@ func (d *Data) getClosestDir(path string, rCnt *int) string {
 	if fi.IsDir() {
 		return path
 	} else {
-		return d.getClosestDir(filepath.Join(path, ".."), rCnt)
+		return d.GetClosestDir(filepath.Join(path, ".."), rCnt)
 	}
 }
 
