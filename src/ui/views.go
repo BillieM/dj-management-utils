@@ -6,7 +6,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-func setMainContent(w fyne.Window, contentStack *fyne.Container, operation Operation) {
+func (d *Data) setMainContent(w fyne.Window, contentStack *fyne.Container, operation Operation) {
 
 	contentContainer := container.NewVBox(widget.NewLabel(operation.Name), widget.NewSeparator(), operation.View(w))
 
@@ -24,8 +24,13 @@ func stemsView(w fyne.Window) fyne.CanvasObject {
 	return container.NewVBox(content)
 }
 
-func separateTrackView(w fyne.Window) fyne.CanvasObject {
-	return widget.NewLabel("separateTrackView")
+func (d *Data) separateTrackView(w fyne.Window) fyne.CanvasObject {
+
+	var trackPath string
+
+	trackPathCanvas := d.openFileCanvas(w, "Track Path", &trackPath, []string{".mp3"})
+
+	return container.NewVBox(trackPathCanvas)
 }
 
 func separateFolderView(w fyne.Window) fyne.CanvasObject {

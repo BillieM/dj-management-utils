@@ -1,6 +1,11 @@
 package ui
 
 import (
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
@@ -14,12 +19,11 @@ import (
 TODO:
 Make this more generic so it can be used to select dirs too & used outside of settings
 */
-func (d *Data) openFileCanvas(w fyne.Window, label string, updateVal *string, fileFilter []string) fyne.CanvasObject {
+func (d *Data) openFileCanvas(w fyne.Window, title string, updateVal *string, fileFilter []string) fyne.CanvasObject {
 
-	infoLabel := widget.NewLabel(label)
-	pathLabel := widget.NewLabel(*updateVal)
+	pathCard := buildPathCard(*updateVal, "file")
 
-	buttonWidget := widget.NewButton("Open", func() {
+	buttonWidget := widget.NewButtonWithIcon("Open", theme.FolderOpenIcon(), func() {
 		f := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err != nil {
 				dialogErr(w, err)
@@ -30,35 +34,19 @@ func (d *Data) openFileCanvas(w fyne.Window, label string, updateVal *string, fi
 				return
 			}
 			*updateVal = reader.URI().Path()
-			pathLabel.SetText(*updateVal)
+			pathCard.SetSubTitle(*updateVal)
 		}, w)
-
-		fileURI := storage.NewFileURI(*updateVal)
-		dirURI, err := storage.Parent(fileURI)
-		if err != nil {
-			dialogErr(w, err)
-			return
-		}
-		dirListableURI, err := storage.ListerForURI(dirURI)
-		if err != nil {
-			dialogErr(w, err)
-			return
-		}
-		f.SetLocation(dirListableURI)
+		f.SetLocation(d.GetListableURI(*updateVal))
 		f.SetFilter(storage.NewExtensionFileFilter(fileFilter))
 		f.Show()
 	})
-	// can use this to set a file open icon
-	// buttonWidget.SetIcon()
-	// or just call newButtonWithIcon
 
-	return formatOpenCanvas(infoLabel, pathLabel, buttonWidget)
+	return formatOpenCanvas(title, pathCard, buttonWidget)
 }
 
-func (d *Data) openDirCanvas(w fyne.Window, label string, updateVal *string) fyne.CanvasObject {
+func (d *Data) openDirCanvas(w fyne.Window, title string, updateVal *string) fyne.CanvasObject {
 
-	infoLabel := widget.NewLabel(label)
-	pathLabel := widget.NewLabel(*updateVal)
+	pathCard := buildPathCard(*updateVal, "directory")
 
 	buttonWidget := widget.NewButtonWithIcon("Open", theme.FolderOpenIcon(), func() {
 		f := dialog.NewFolderOpen(func(reader fyne.ListableURI, err error) {
@@ -71,29 +59,83 @@ func (d *Data) openDirCanvas(w fyne.Window, label string, updateVal *string) fyn
 				return
 			}
 			*updateVal = reader.Path()
-			pathLabel.SetText(*updateVal)
+			pathCard.SetSubTitle(*updateVal)
 		}, w)
-
-		dirURI := storage.NewFileURI(*updateVal)
-		dirListableURI, err := storage.ListerForURI(dirURI)
-		if err != nil {
-			dialogErr(w, err)
-			return
-		}
-		f.SetLocation(dirListableURI)
+		f.SetLocation(d.GetListableURI(*updateVal))
 		f.Show()
 	})
-	// can use this to set a file open icon
-	// buttonWidget.SetIcon()
-	// or just call newButtonWithIcon
-	// need to get a button icon first though
 
-	return formatOpenCanvas(infoLabel, pathLabel, buttonWidget)
+	return formatOpenCanvas(title, pathCard, buttonWidget)
 }
 
-func formatOpenCanvas(infoLabel *widget.Label, pathLabel *widget.Label, buttonWidget *widget.Button) fyne.CanvasObject {
+func buildPathCard(path string, pathType string) *widget.Card {
 
-	container := container.NewBorder(infoLabel, widget.NewSeparator(), nil, buttonWidget, pathLabel)
+	var cardText string
+
+	if path == "" {
+		cardText = fmt.Sprintf("Please select a valid %s", pathType)
+	} else {
+		cardText = path
+	}
+
+	pathCard := widget.NewCard("", cardText, nil)
+	return pathCard
+}
+
+/*
+Returns a fyne.ListableURI for a given path
+
+If a directory path is given, returns a fyne.ListableURI for that directory
+If a file path is given, returns a fyne.ListableURI for the parent directory
+
+If the path does not exist, returns
+*/
+func (d *Data) GetListableURI(path string) fyne.ListableURI {
+
+	var recursionCount int
+
+	dirPath := d.getClosestDir(path, &recursionCount)
+	fmt.Println(dirPath)
+	dirURI := storage.NewFileURI(dirPath)
+	fmt.Println(dirURI)
+	dirListableURI, err := storage.ListerForURI(dirURI)
+	fmt.Println(dirListableURI)
+	fmt.Println("exists")
+	exists, err2 := storage.Exists(dirURI)
+	fmt.Println("exists", exists, err2)
+	if err != nil {
+		helpers.HandleFatalError(errors.New("Something went wrong getting the listable URI, err: " + err.Error()))
+	}
+	return dirListableURI
+}
+
+func (d *Data) getClosestDir(path string, rCnt *int) string {
+	*rCnt++
+	fi, err := os.Stat(path)
+	if err != nil {
+		if *rCnt <= 4 {
+			return d.getClosestDir(filepath.Join(path, ".."), rCnt)
+		} else if *rCnt == 4 {
+			return d.getClosestDir(d.Config.BaseDir, rCnt)
+		} else if *rCnt == 5 {
+			return d.getClosestDir("/", rCnt)
+		} else {
+			helpers.HandleFatalError(errors.New("Something went very wrong getting the cloest dir, err: " + err.Error()))
+		}
+	}
+	if fi.IsDir() {
+		return path
+	} else {
+		return d.getClosestDir(filepath.Join(path, ".."), rCnt)
+	}
+}
+
+func formatOpenCanvas(title string, pathLabel fyne.CanvasObject, buttonWidget fyne.CanvasObject) fyne.CanvasObject {
+
+	titleCard := widget.NewCard(title, "", nil)
+	sep := widget.NewSeparator()
+
+	container := container.NewBorder(titleCard, sep, nil, buttonWidget, pathLabel)
 
 	return container
 }

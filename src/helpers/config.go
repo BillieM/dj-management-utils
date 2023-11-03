@@ -9,6 +9,7 @@ import (
 type Config struct {
 	TraktorCollectionPath string `json:"traktorCollectionPath"`
 	TmpDir                string `json:"tmpDir"`
+	BaseDir               string `json:"baseDir"`
 }
 
 func LoadConfig() (*Config, error) {

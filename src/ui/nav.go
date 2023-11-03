@@ -14,17 +14,17 @@ func (d *Data) makeNavMenu(w fyne.Window, contentStack *fyne.Container) fyne.Can
 
 	tree := &widget.Tree{
 		ChildUIDs: func(uid string) []string {
-			return OperationIndex[uid]
+			return d.OperationIndex[uid]
 		},
 		IsBranch: func(uid string) bool {
-			children, ok := OperationIndex[uid]
+			children, ok := d.OperationIndex[uid]
 			return ok && len(children) > 0
 		},
 		CreateNode: func(branch bool) fyne.CanvasObject {
 			return widget.NewLabel("Node")
 		},
 		UpdateNode: func(uid string, branch bool, node fyne.CanvasObject) {
-			op, ok := Operations[uid]
+			op, ok := d.Operations[uid]
 			if !ok {
 				fmt.Println("updatenode", uid)
 				helpers.HandleFatalError(errors.New("Operation not found"))
@@ -33,13 +33,13 @@ func (d *Data) makeNavMenu(w fyne.Window, contentStack *fyne.Container) fyne.Can
 			node.(*widget.Label).SetText(op.Name)
 		},
 		OnSelected: func(uid string) {
-			op, ok := Operations[uid]
+			op, ok := d.Operations[uid]
 			if !ok {
 				fmt.Println("onselected", uid)
 				helpers.HandleFatalError(errors.New("Operation not found"))
 				return
 			}
-			setMainContent(w, contentStack, op)
+			d.setMainContent(w, contentStack, op)
 		},
 	}
 

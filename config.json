@@ -1,4 +1,5 @@
 {
   "traktorCollectionPath": "H:/Native Instruments/Traktor Windows/collection_backup_outdated.nml",
-  "tmpDir": "H:/tmp"
+  "tmpDir": "H:/tmp",
+  "baseDir": "H:/"
 }

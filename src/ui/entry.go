@@ -1,8 +1,6 @@
 package ui
 
 import (
-	"fmt"
-
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -13,20 +11,19 @@ import (
 type Data struct {
 	*helpers.Config
 	*State
-	TmpConfig *helpers.Config
+	TmpConfig      *helpers.Config
+	Operations     map[string]Operation
+	OperationIndex map[string][]string
 }
 
 type State struct {
 	settingsAlreadyOpen bool
+	processing          bool
 }
 
 func Entry(c *helpers.Config) {
 
-	s := &State{}
-
-	d := &Data{c, s, nil}
-
-	fmt.Println("Hello, world!")
+	d := buildData(c)
 
 	a := app.New()
 	w := a.NewWindow("Seren Library Management")
@@ -36,13 +33,27 @@ func Entry(c *helpers.Config) {
 	w.Resize(fyne.NewSize(960, 720))
 
 	contentStack := container.NewStack()
-	setMainContent(w, contentStack, Operations["home"])
+	d.setMainContent(w, contentStack, d.getOperationsList()["home"])
 
 	split := container.NewHSplit(d.makeNavMenu(w, contentStack), contentStack)
 	split.Offset = 0.25
 
 	w.SetContent(split)
 	w.ShowAndRun()
+}
+
+func buildData(c *helpers.Config) *Data {
+	d := &Data{c, nil, nil, nil, nil}
+
+	s := &State{}
+	operations := d.getOperationsList()
+	operationIndex := d.getOperationIndex()
+
+	d.State = s
+	d.Operations = operations
+	d.OperationIndex = operationIndex
+
+	return d
 }
 
 /*

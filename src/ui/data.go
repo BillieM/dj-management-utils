@@ -7,8 +7,9 @@ type Operation struct {
 	View func(w fyne.Window) fyne.CanvasObject
 }
 
-var (
-	Operations = map[string]Operation{
+func (d *Data) getOperationsList() map[string]Operation {
+
+	return map[string]Operation{
 		"home": {
 			Name: "Home",
 			View: homeView,
@@ -19,7 +20,7 @@ var (
 		},
 		"separateTrack": {
 			Name: "Separate Track",
-			View: separateTrackView,
+			View: d.separateTrackView,
 		},
 		"separateFolder": {
 			Name: "Separate Folder",
@@ -66,8 +67,10 @@ var (
 			View: playlistMatchingView,
 		},
 	}
+}
 
-	OperationIndex = map[string][]string{
+func (d *Data) getOperationIndex() map[string][]string {
+	return map[string][]string{
 		"": {"home", "stems", "mp3s", "tags", "conversion", "playlistMatching"},
 		"stems": {
 			"separateTrack",
@@ -84,4 +87,4 @@ var (
 			"cleanTags",
 		},
 	}
-)
+}
