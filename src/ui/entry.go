@@ -29,6 +29,11 @@ func Entry(c *helpers.Config) {
 	w.ShowAndRun()
 }
 
+/*
+builds the main data object for the application
+
+TODO: this may want to be moved out of the ui package
+*/
 func buildData(c *helpers.Config) *Data {
 	d := &Data{c, nil, nil, nil, nil}
 
@@ -42,16 +47,3 @@ func buildData(c *helpers.Config) *Data {
 
 	return d
 }
-
-/*
-list
-	fyne has a list type, this could be useful for displaying a list of tracks ?
-
-tree
-	fyne has a tree type, assuming i can make selections here, this could be useful for selecting folders to convert to stems ?
-
-table
-	fyne has a table type, this could be useful for displaying a list of tracks, kinda worried about performance with a very large libary though
-	perhaps it'll be alright if we're just dealing with tracks within playlists ?
-
-*/

@@ -15,10 +15,6 @@ import (
 	"github.com/billiem/seren-management/src/helpers"
 )
 
-/*
-TODO:
-Make this more generic so it can be used to select dirs too & used outside of settings
-*/
 func (d *Data) openFileCanvas(w fyne.Window, title string, updateVal *string, fileFilter []string, callbackFn func()) fyne.CanvasObject {
 
 	pathCard := buildPathCard(*updateVal, "file")
@@ -33,10 +29,12 @@ func (d *Data) openFileCanvas(w fyne.Window, title string, updateVal *string, fi
 				helpers.WriteToLog("no writer")
 				return
 			}
+			// Below runs if file selection was valid
 			*updateVal = reader.URI().Path()
 			pathCard.SetSubTitle(*updateVal)
 			callbackFn()
 		}, w)
+		// Set properties of the file open dialog
 		f.SetLocation(d.getListableURI(*updateVal))
 		f.SetFilter(storage.NewExtensionFileFilter(fileFilter))
 		f.Show()
@@ -59,9 +57,12 @@ func (d *Data) openDirCanvas(w fyne.Window, title string, updateVal *string, cal
 				helpers.WriteToLog("no writer")
 				return
 			}
+			// Below runs if directory selection was valid
 			*updateVal = reader.Path()
 			pathCard.SetSubTitle(*updateVal)
+			callbackFn()
 		}, w)
+		// Set properties of the folder open dialog
 		f.SetLocation(d.getListableURI(*updateVal))
 		f.Show()
 	})
@@ -69,6 +70,13 @@ func (d *Data) openDirCanvas(w fyne.Window, title string, updateVal *string, cal
 	return formatOpenCanvas(title, pathCard, buttonWidget)
 }
 
+/*
+Builds a fyne card given a path and pathType
+
+pathType is used to determine the default card text if path is empty
+
+used as a way of displaying paths kinda nicely?
+*/
 func buildPathCard(path string, pathType string) *widget.Card {
 
 	var cardText string
@@ -84,12 +92,10 @@ func buildPathCard(path string, pathType string) *widget.Card {
 }
 
 /*
-Returns a fyne.ListableURI for a given path
+Accepts a path and returns a listable URI for the closest directory
 
-If a directory path is given, returns a fyne.ListableURI for that directory
-If a file path is given, returns a fyne.ListableURI for the parent directory
-
-If the path does not exist, returns
+If no 'close directory' is found, it will return the base directory
+If the base directory is not found, it will return the root directory (i.e. /)
 */
 func (d *Data) getListableURI(path string) fyne.ListableURI {
 
@@ -103,6 +109,11 @@ func (d *Data) getListableURI(path string) fyne.ListableURI {
 	return dirListableURI
 }
 
+/*
+Provides a recursive way of finding the closest directory to a given path,
+or the base directory if no 'close directory' is found within 4 recursive calls
+If no base directory is found, it will return the root directory (i.e. /)
+*/
 func (d *Data) GetClosestDir(path string, rCnt *int) string {
 	*rCnt++
 	fi, err := os.Stat(path)
@@ -125,6 +136,9 @@ func (d *Data) GetClosestDir(path string, rCnt *int) string {
 	}
 }
 
+/*
+Creates a fyne container to be used for opening files/directories
+*/
 func formatOpenCanvas(title string, pathLabel fyne.CanvasObject, buttonWidget fyne.CanvasObject) fyne.CanvasObject {
 
 	titleCard := widget.NewCard(title, "", nil)

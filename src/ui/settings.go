@@ -40,9 +40,14 @@ func (d *Data) openSettingsWindow(a fyne.App) bool {
 	return false
 }
 
+/*
+TODO: implement 'tabs' for settings, will likely require some refactoring
+*/
 func (d *Data) settingsList(w fyne.Window) []fyne.CanvasObject {
 
 	objs := []fyne.CanvasObject{}
+
+	// TODO: may want to add a settings wrapper around these canvas calls in order to add a label to each call?
 
 	objs = append(objs, d.openFileCanvas(
 		w, "Traktor Collection Filepath", &d.TmpConfig.TraktorCollectionPath, []string{".nml"}, func() {},

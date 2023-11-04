@@ -10,6 +10,7 @@ type Config struct {
 	TraktorCollectionPath string `json:"traktorCollectionPath"`
 	TmpDir                string `json:"tmpDir"`
 	BaseDir               string `json:"baseDir"`
+	BaseOutputDir         string `json:"baseOutputDir"`
 }
 
 func LoadConfig() (*Config, error) {
@@ -66,6 +67,17 @@ func (c *Config) CheckBaseDir() (bool, string) {
 	}
 	if !fi.IsDir() {
 		return false, "Base directory is not a directory"
+	}
+	return true, ""
+}
+
+func (c *Config) CheckBaseOutputDir() (bool, string) {
+	fi, err := os.Stat(c.BaseOutputDir)
+	if err != nil {
+		return false, "Base output directory does not exist"
+	}
+	if !fi.IsDir() {
+		return false, "Base output directory is not a directory"
 	}
 	return true, ""
 }

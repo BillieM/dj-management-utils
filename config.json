@@ -1,5 +1,6 @@
 {
   "traktorCollectionPath": "H:/Native Instruments/Traktor Windows/collection_backup_outdated.nml",
   "tmpDir": "H:/tmp",
-  "baseDir": "H:/"
+  "baseDir": "H:/",
+  "baseOutputDir": "H:/tmp/seren-output-dir"
 }

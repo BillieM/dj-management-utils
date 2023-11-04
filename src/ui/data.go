@@ -28,11 +28,11 @@ func (d *Data) getOperationsList() map[string]Operation {
 	return map[string]Operation{
 		"home": {
 			Name: "Home",
-			View: homeView,
+			View: d.homeView,
 		},
 		"stems": {
 			Name: "Stems",
-			View: stemsView,
+			View: d.stemsView,
 		},
 		"separateTrack": {
 			Name: "Separate Track",
@@ -40,47 +40,47 @@ func (d *Data) getOperationsList() map[string]Operation {
 		},
 		"separateFolder": {
 			Name: "Separate Folder",
-			View: separateFolderView,
+			View: d.separateFolderView,
 		},
 		"separateCollection": {
 			Name: "Separate Collection",
-			View: separateCollectionView,
+			View: d.separateCollectionView,
 		},
 		"mp3s": {
 			Name: "Convert MP3s",
-			View: convertMp3sView,
+			View: d.convertMp3sView,
 		},
 		"convertSingleMp3": {
 			Name: "Convert Single",
-			View: convertSingleMp3View,
+			View: d.convertSingleMp3View,
 		},
 		"convertFolderMp3": {
 			Name: "Convert Folder",
-			View: convertFolderMp3View,
+			View: d.convertFolderMp3View,
 		},
 		"convertCollectionMp3": {
 			Name: "Convert Collection",
-			View: convertCollectionMp3View,
+			View: d.convertCollectionMp3View,
 		},
 		"tags": {
 			Name: "Process Tags",
-			View: tagsView,
+			View: d.tagsView,
 		},
 		"rereadTags": {
 			Name: "Reread Tags",
-			View: rereadTagsView,
+			View: d.rereadTagsView,
 		},
 		"cleanTags": {
 			Name: "Clean Tags",
-			View: cleanTagsView,
+			View: d.cleanTagsView,
 		},
 		"conversion": {
 			Name: "Conversion",
-			View: conversionView,
+			View: d.conversionView,
 		},
 		"playlistMatching": {
 			Name: "Playlist Matching",
-			View: playlistMatchingView,
+			View: d.playlistMatchingView,
 		},
 	}
 }
