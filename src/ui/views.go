@@ -85,7 +85,24 @@ func (d *Data) convertFolderMp3View(w fyne.Window) fyne.CanvasObject {
 		d.State.processing = true
 		processContainer.Add(widget.NewLabel("Processing..."))
 		processContainer.Add(progressBar)
-		operations.ConvertFolderMp3(dirPath, progressBar.updateProgressBar)
+
+		stopChannel := make(chan bool)
+
+		stopButton := widget.NewButton("Stop", func() {
+			stopChannel <- true
+		})
+		processContainer.Add(stopButton)
+
+		operations.ConvertFolderMp3Params{
+			BaseOperationParams: operations.BaseOperationParams{
+				Config: d.Config,
+				StepCallback: func(value float64) {
+					progressBar.updateProgressBar(value)
+				},
+				StopChannel: stopChannel,
+			},
+			InDirPath: dirPath,
+		}.ExecuteOperation()
 	}))
 
 	return container.NewVBox(trackPathCanvas, processContainer)

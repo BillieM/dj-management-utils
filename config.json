@@ -2,5 +2,12 @@
   "traktorCollectionPath": "H:/Native Instruments/Traktor Windows/collection_backup_outdated.nml",
   "tmpDir": "H:/tmp",
   "baseDir": "H:/",
-  "baseOutputDir": "H:/tmp/seren-output-dir"
+  "baseOutputDir": "H:/tmp/seren-output-dir",
+  "extensionsToConvertToMp3": [
+    "flac",
+    "aiff",
+    "ogg",
+    "m4a",
+    "wav"
+  ]
 }

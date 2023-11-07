@@ -3,8 +3,6 @@ package ui
 import (
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -100,40 +98,16 @@ If the base directory is not found, it will return the root directory (i.e. /)
 func (d *Data) getListableURI(path string) fyne.ListableURI {
 
 	var recursionCount int
-	dirPath := d.GetClosestDir(path, &recursionCount)
+	dirPath, err := helpers.GetClosestDir(path, d.Config.BaseDir, &recursionCount)
+	if err != nil {
+		helpers.HandleFatalError(errors.New("Something went wrong getting the closest dir, err: " + err.Error()))
+	}
 	dirURI := storage.NewFileURI(dirPath)
 	dirListableURI, err := storage.ListerForURI(dirURI)
 	if err != nil {
 		helpers.HandleFatalError(errors.New("Something went wrong getting the listable URI, err: " + err.Error()))
 	}
 	return dirListableURI
-}
-
-/*
-Provides a recursive way of finding the closest directory to a given path,
-or the base directory if no 'close directory' is found within 4 recursive calls
-If no base directory is found, it will return the root directory (i.e. /)
-*/
-func (d *Data) GetClosestDir(path string, rCnt *int) string {
-	*rCnt++
-	fi, err := os.Stat(path)
-	// fmt.Println(*rCnt, path)
-	if err != nil {
-		if *rCnt <= 4 {
-			return d.GetClosestDir(filepath.Join(path, ".."), rCnt)
-		} else if *rCnt == 5 {
-			return d.GetClosestDir(d.Config.BaseDir, rCnt)
-		} else if *rCnt == 6 {
-			return d.GetClosestDir(filepath.Join("/"), rCnt)
-		} else {
-			helpers.HandleFatalError(errors.New("Something went very wrong getting the cloest dir, err: " + err.Error()))
-		}
-	}
-	if fi.IsDir() {
-		return path
-	} else {
-		return d.GetClosestDir(filepath.Join(path, ".."), rCnt)
-	}
 }
 
 /*

@@ -2,19 +2,19 @@ package helpers
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 )
 
 type Config struct {
-	TraktorCollectionPath string `json:"traktorCollectionPath"`
-	TmpDir                string `json:"tmpDir"`
-	BaseDir               string `json:"baseDir"`
-	BaseOutputDir         string `json:"baseOutputDir"`
+	TraktorCollectionPath    string   `json:"traktorCollectionPath"`
+	TmpDir                   string   `json:"tmpDir"`
+	BaseDir                  string   `json:"baseDir"`
+	BaseOutputDir            string   `json:"baseOutputDir"`
+	ExtensionsToConvertToMp3 []string `json:"extensionsToConvertToMp3"`
 }
 
 func LoadConfig() (*Config, error) {
-	data, err := ioutil.ReadFile("../config.json")
+	data, err := os.ReadFile("../config.json")
 	if err != nil {
 		return nil, err
 	}
