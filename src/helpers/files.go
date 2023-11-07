@@ -16,6 +16,10 @@ type FileInfo struct {
 	FileExtension string
 }
 
+func (f FileInfo) BuildFullPath() string {
+	return fmt.Sprintf("%s%s%s", f.DirPath, f.FileName, f.FileExtension)
+}
+
 func DoesFileExist(path string) bool {
 	if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
 		return true

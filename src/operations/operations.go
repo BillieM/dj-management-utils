@@ -1,6 +1,9 @@
 package operations
 
-import "github.com/billiem/seren-management/src/helpers"
+import (
+	"github.com/billiem/seren-management/src/helpers"
+	"github.com/k0kubun/pp"
+)
 
 /*
 This file serves as an entrypoint for all operations
@@ -63,6 +66,14 @@ func (o ConvertFolderMp3Params) ExecuteOperation() {
 	}
 
 	convertTrackArray, errors := buildConvertTrackArray(convertFilePaths, o.OutDirPath)
+
+	for _, track := range convertTrackArray {
+		pp.Println(track)
+	}
+
+	for _, err := range errors {
+		pp.Println(err)
+	}
 
 	_ = errors
 	_ = convertTrackArray

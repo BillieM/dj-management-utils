@@ -1,18 +1,18 @@
 package operations
 
 import (
+	"fmt"
+
 	"github.com/billiem/seren-management/src/helpers"
 )
 
 type Track struct {
-	name string
+	Name string
 }
 
 type AudioFile struct {
-	originalFileInfo helpers.FileInfo // File path before any operations are performed (if "", this is a new file)
-	newFileInfo      helpers.FileInfo // File path after all operations are performed (if "", this file should not be moved)
-	clearOnExit      bool             // If true, this file should be deleted after all operations are performed
-	extension        string           // File extension (e.g. ".mp3")
+	FileInfo       helpers.FileInfo
+	DeleteOnFinish bool // If true, this file should be deleted after all operations are performed
 }
 
 /*
@@ -21,8 +21,8 @@ ConvertTrack is used as part of the process for converting non-mp3 audio files t
 
 type ConvertTrack struct {
 	Track
-	originalFile AudioFile
-	newFile      AudioFile
+	OriginalFile AudioFile
+	NewFile      AudioFile
 }
 
 func buildConvertTrackArray(paths []string, outDirPath string) ([]ConvertTrack, []error) {
@@ -46,6 +46,8 @@ func buildConvertTrackArray(paths []string, outDirPath string) ([]ConvertTrack, 
 
 func buildConvertTrack(path string, outDirPath string) (ConvertTrack, error) {
 
+	fmt.Println()
+
 	origFileInfo, err := helpers.SplitFilePathRequired(path)
 
 	if err != nil {
@@ -53,19 +55,26 @@ func buildConvertTrack(path string, outDirPath string) (ConvertTrack, error) {
 	}
 
 	newFileInfo := origFileInfo
+
+	// Populate info for the new file
+	newFileInfo.FileExtension = ".mp3"
 	if outDirPath != "" {
+		// TODO: option to preserve folder structure if call was recursive
+		// currently, recursive calls will only preserve the folder structure
+		// if outDirPath is not provided
 		newFileInfo.DirPath = outDirPath
 	}
+	newFileInfo.FullPath = newFileInfo.BuildFullPath()
 
 	return ConvertTrack{
 		Track: Track{
-			name: origFileInfo.FileName,
+			Name: origFileInfo.FileName,
 		},
-		originalFile: AudioFile{
-			originalFileInfo: origFileInfo,
+		OriginalFile: AudioFile{
+			FileInfo: origFileInfo,
 		},
-		newFile: AudioFile{
-			newFileInfo: newFileInfo,
+		NewFile: AudioFile{
+			FileInfo: newFileInfo,
 		},
 	}, nil
 }

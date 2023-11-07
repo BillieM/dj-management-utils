@@ -17,6 +17,10 @@ func (o ConvertFolderMp3Params) getConvertPaths() ([]string, error) {
 	return validConvertPaths, nil
 }
 
+func parallelProcessConvertTrackArray(tracks []ConvertTrack) {
+
+}
+
 // func (d *Data) convertMp3(track Track) Track {
 
 // 	if track == (Track{}) {
