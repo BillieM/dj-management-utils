@@ -150,7 +150,16 @@ func (d *Data) playlistMatchingView(w fyne.Window) fyne.CanvasObject {
 }
 
 /*
- */
+Checks the config for any issues for a given set of checks
+
+# Returns true if there are no issues, false if there are issues
+
+If there are issues, it will return a fyne.CanvasObject containing the issues
+
+	TODO: abstract the checking into a seperate function
+		can then add unit tests surrounding it
+		and create a seperate function for the generation of the canvas object
+*/
 func (d *Data) checkConfig(checks []func() (bool, string)) (bool, fyne.CanvasObject) {
 
 	configIssues := []string{}
