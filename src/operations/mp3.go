@@ -1,6 +1,10 @@
 package operations
 
-import "github.com/billiem/seren-management/src/helpers"
+import (
+	"context"
+
+	"github.com/billiem/seren-management/src/helpers"
+)
 
 // Gets all of the files in the given dirpath
 func (o ConvertFolderMp3Params) getConvertPaths() ([]string, error) {
@@ -17,8 +21,13 @@ func (o ConvertFolderMp3Params) getConvertPaths() ([]string, error) {
 	return validConvertPaths, nil
 }
 
-func parallelProcessConvertTrackArray(tracks []ConvertTrack) {
+func parallelProcessConvertTrackArray(ctx context.Context, tracks []ConvertTrack) {
 
+	/*
+		2 parts:
+
+
+	*/
 }
 
 // func (d *Data) convertMp3(track Track) Track {

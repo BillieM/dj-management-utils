@@ -6,6 +6,10 @@ import (
 	"github.com/billiem/seren-management/src/helpers"
 )
 
+/*
+Shared between operation track types
+*/
+
 type Track struct {
 	Name string
 }
@@ -13,6 +17,9 @@ type Track struct {
 type AudioFile struct {
 	FileInfo       helpers.FileInfo
 	DeleteOnFinish bool // If true, this file should be deleted after all operations are performed
+}
+
+type ProcessTrack interface {
 }
 
 /*

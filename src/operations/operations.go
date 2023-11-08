@@ -1,6 +1,8 @@
 package operations
 
 import (
+	"context"
+
 	"github.com/billiem/seren-management/src/helpers"
 	"github.com/k0kubun/pp"
 )
@@ -9,16 +11,13 @@ import (
 This file serves as an entrypoint for all operations
 */
 
-type Operation interface {
-	ExecuteOperation()
-}
-
 type BaseOperationParams struct {
 	Config             *helpers.Config
 	OperationShortName string
+	Context            context.Context
 	StepCallback       func(float64)
-	StopChannel        chan bool
-	Steps              []func(Track) (Track, error)
+
+	Steps []func(Track) (Track, error)
 }
 
 /*

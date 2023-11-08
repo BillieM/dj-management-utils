@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"context"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
@@ -86,10 +88,25 @@ func (d *Data) convertFolderMp3View(w fyne.Window) fyne.CanvasObject {
 		processContainer.Add(widget.NewLabel("Processing..."))
 		processContainer.Add(progressBar)
 
-		stopChannel := make(chan bool)
+		// new context
+		ctx := context.Background()
+		// create cancelFunc from context
+		ctx, cancelFunc := context.WithCancel(ctx)
+
+		context.AfterFunc(ctx, func() {
+			/*
+				rather than pass a callback through, we should just be able to do post processing steps here i.e.:
+					restoring interface state
+					reporting any failures
+					reporting progress if early shutdown
+						possibly also for cleaning up any residue files on early shutdown ?
+			*/
+
+			d.State.processing = false
+		})
 
 		stopButton := widget.NewButton("Stop", func() {
-			stopChannel <- true
+			cancelFunc()
 		})
 		processContainer.Add(stopButton)
 
@@ -99,7 +116,7 @@ func (d *Data) convertFolderMp3View(w fyne.Window) fyne.CanvasObject {
 				StepCallback: func(value float64) {
 					progressBar.updateProgressBar(value)
 				},
-				StopChannel: stopChannel,
+				Context: ctx,
 			},
 			InDirPath: dirPath,
 		}.ExecuteOperation()
