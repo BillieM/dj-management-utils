@@ -14,5 +14,4 @@ func (d *Data) buildProgressBar() MyProgressBar {
 
 func (p MyProgressBar) updateProgressBar(value float64) {
 	p.SetValue(value)
-	// p.Refresh()
 }

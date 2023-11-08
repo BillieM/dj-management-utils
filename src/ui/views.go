@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"fmt"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -101,6 +102,7 @@ func (d *Data) convertFolderMp3View(w fyne.Window) fyne.CanvasObject {
 					reporting progress if early shutdown
 						possibly also for cleaning up any residue files on early shutdown ?
 			*/
+			fmt.Println("context closed because: ", context.Cause(ctx))
 
 			d.State.processing = false
 		})
@@ -110,16 +112,16 @@ func (d *Data) convertFolderMp3View(w fyne.Window) fyne.CanvasObject {
 		})
 		processContainer.Add(stopButton)
 
-		operations.ConvertFolderMp3Params{
-			BaseOperationParams: operations.BaseOperationParams{
-				Config: d.Config,
-				StepCallback: func(value float64) {
-					progressBar.updateProgressBar(value)
-				},
-				Context: ctx,
+		operations.ConvertFolderMp3(
+			ctx,
+			*d.Config,
+			OperationProcess{
+				progressBar: progressBar,
 			},
-			InDirPath: dirPath,
-		}.ExecuteOperation()
+			operations.ConvertFolderMp3Params{
+				InDirPath: dirPath,
+			},
+		)
 	}))
 
 	return container.NewVBox(trackPathCanvas, processContainer)

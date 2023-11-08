@@ -2,6 +2,7 @@ package operations
 
 import (
 	"context"
+	"errors"
 
 	"github.com/billiem/seren-management/src/helpers"
 	"github.com/k0kubun/pp"
@@ -11,13 +12,8 @@ import (
 This file serves as an entrypoint for all operations
 */
 
-type BaseOperationParams struct {
-	Config             *helpers.Config
-	OperationShortName string
-	Context            context.Context
-	StepCallback       func(float64)
-
-	Steps []func(Track) (Track, error)
+type OperationProcess interface {
+	StepCallback(float64)
 }
 
 /*
@@ -27,16 +23,27 @@ Files which can be converted are found in config.ExtensionsToConvertToMp3
 */
 
 type ConvertSingleMp3Params struct {
-	BaseOperationParams
-
 	InFilePath string // Mandatory
 	OutDirPath string // Optional - if not provided, will use the same dir as the input file
 }
 
-func (o ConvertSingleMp3Params) ExecuteOperation() {
-	o.OperationShortName = "convert-single-mp3"
+func (p ConvertSingleMp3Params) check() error {
+	if p.InFilePath == "" {
+		return errors.New("inFilePath is required")
+	}
 
-	convertTrackArray, errors := buildConvertTrackArray([]string{o.InFilePath}, o.OutDirPath)
+	return nil
+}
+
+func ConvertSingleMp3(ctx context.Context, cfg helpers.Config, o OperationProcess, params ConvertSingleMp3Params) {
+
+	err := params.check()
+
+	if err != nil {
+		panic(err)
+	}
+
+	convertTrackArray, errors := buildConvertTrackArray([]string{params.InFilePath}, params.OutDirPath)
 
 	_ = errors
 	_ = convertTrackArray
@@ -48,23 +55,37 @@ Converts a folder of (non-mp3) files to mp3
 Files which can be converted are found in config.ExtensionsToConvertToMp3
 */
 type ConvertFolderMp3Params struct {
-	BaseOperationParams
-
 	InDirPath  string // Mandatory
 	OutDirPath string // Optional - if not provided, will use the same dir as the input file
 	Recursion  bool   // Optional
 }
 
-func (o ConvertFolderMp3Params) ExecuteOperation() {
-	o.OperationShortName = "convert-folder-mp3"
-
-	convertFilePaths, err := o.getConvertPaths()
-
-	if err != nil {
-		panic(err)
+func (p ConvertFolderMp3Params) check() error {
+	if p.InDirPath == "" {
+		return errors.New("InDirPath is required")
 	}
 
-	convertTrackArray, errors := buildConvertTrackArray(convertFilePaths, o.OutDirPath)
+	return nil
+}
+
+func ConvertFolderMp3(ctx context.Context, cfg helpers.Config, o OperationProcess, params ConvertFolderMp3Params) {
+
+	ctx, cancelCauseFunc := context.WithCancelCause(ctx)
+
+	err := params.check()
+
+	if err != nil {
+		cancelCauseFunc(err)
+	}
+
+	convertFilePaths, err := getConvertPaths(cfg, params.InDirPath, params.Recursion)
+
+	if err != nil {
+		// TODO: unsure if this function is going to return errors we still want to process? look into further
+		cancelCauseFunc(err)
+	}
+
+	convertTrackArray, errors := buildConvertTrackArray(convertFilePaths, params.OutDirPath)
 
 	for _, track := range convertTrackArray {
 		pp.Println(track)
@@ -77,21 +98,3 @@ func (o ConvertFolderMp3Params) ExecuteOperation() {
 	_ = errors
 	_ = convertTrackArray
 }
-
-// func ConvertFolderMp3(o OperationParams) {
-
-// 	// pipeConfig := parapipe.Config{
-// 	// 	ProcessErrors: false,
-// 	// }
-// 	// pipe := parapipe.NewPipeline(pipeConfig).
-// 	// 	Pipe(1, func(v interface{}) interface{} {
-// 	// 		inputVal := v.(string)
-// 	// 	}).
-// 	// 	Pipe(1, func(v interface{}) interface{} {
-// 	// 		inputVal := v.(string)
-// 	// 	})
-
-// 	// for result := range pipe.Out() {
-// 	// 	fmt.Println(result)
-// 	// }
-// }

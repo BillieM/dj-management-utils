@@ -7,14 +7,14 @@ import (
 )
 
 // Gets all of the files in the given dirpath
-func (o ConvertFolderMp3Params) getConvertPaths() ([]string, error) {
-	convertPaths, err := helpers.GetFilesInDir(o.InDirPath, o.Recursion)
+func getConvertPaths(cfg helpers.Config, inDirPath string, recursion bool) ([]string, error) {
+	convertPaths, err := helpers.GetFilesInDir(inDirPath, recursion)
 	if err != nil {
 		return nil, err
 	}
 	var validConvertPaths []string
 	for _, path := range convertPaths {
-		if helpers.IsExtensionInArray(path, o.Config.ExtensionsToConvertToMp3) {
+		if helpers.IsExtensionInArray(path, cfg.ExtensionsToConvertToMp3) {
 			validConvertPaths = append(validConvertPaths, path)
 		}
 	}
