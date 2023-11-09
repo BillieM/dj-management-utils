@@ -14,6 +14,7 @@ This file serves as an entrypoint for all operations
 
 type OperationProcess interface {
 	StepCallback(float64)
+	ExitCallback()
 }
 
 /*
@@ -101,5 +102,5 @@ func ConvertFolderMp3(ctx context.Context, cfg helpers.Config, o OperationProces
 
 	parallelProcessConvertTrackArray(ctx, o, convertTrackArray)
 
-	cancelCauseFunc(errors.New("operation finished end of fn"))
+	o.ExitCallback()
 }

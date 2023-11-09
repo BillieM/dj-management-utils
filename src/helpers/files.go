@@ -27,6 +27,11 @@ func DoesFileExist(path string) bool {
 	return false
 }
 
+/*
+Uses regex to check if a string contains any of the given extensions
+
+TODO: May want to adjust this to use GetExtensionFromFilePath for maintainabilities sake
+*/
 func IsExtensionInArray(s string, a []string) bool {
 	for _, v := range a {
 		if regexContains(s, `(?i)\.`+v+`$`) {

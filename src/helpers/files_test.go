@@ -111,6 +111,12 @@ func TestGetFileExtensionFromFilePath(t *testing.T) {
 			want:     "",
 			err:      "no file extension found",
 		},
+		{
+			name:     "file name with dot",
+			filePath: "H:/tmp/testdir/01 - funky cool song (feat. coolman).m4a",
+			want:     ".m4a",
+			err:      "",
+		},
 	}
 
 	for _, tt := range tests {
@@ -159,6 +165,12 @@ func TestGetDirPathFromFilePath(t *testing.T) {
 			want:     "",
 			err:      "no directory path found",
 		},
+		{
+			name:     "file name with dot",
+			filePath: "H:/tmp/testdir/01 - funky cool song (feat. coolman).m4a",
+			want:     "H:/tmp/testdir/",
+			err:      "",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -199,6 +211,12 @@ func TestGetFileNameFromFilePath(t *testing.T) {
 			filePath: "H:/Music/processed/",
 			want:     "",
 			err:      "no file name found",
+		},
+		{
+			name:     "file name with dot",
+			filePath: "H:/tmp/testdir/01 - funky cool song (feat. coolman).m4a",
+			want:     "01 - funky cool song (feat. coolman)",
+			err:      "",
 		},
 	}
 	for _, tt := range tests {

@@ -22,9 +22,9 @@ func (d *Data) startConvertFolderMp3(processContainerOuter *fyne.Container, star
 	// new context
 	ctx := context.Background()
 	// create cancelFunc from context
-	ctx, cancelFunc := context.WithCancel(ctx)
+	ctx, cancelCauseFunc := context.WithCancelCause(ctx)
 
-	processContainer := buildProcessContainer(cancelFunc)
+	processContainer := buildProcessContainer(cancelCauseFunc)
 
 	context.AfterFunc(ctx, func() {
 		fmt.Println("context closed because: ", context.Cause(ctx))
@@ -43,6 +43,7 @@ func (d *Data) startConvertFolderMp3(processContainerOuter *fyne.Container, star
 		*d.Config,
 		OperationProcess{
 			progressBar: processContainer.ProgressBar,
+			ctxClose:    cancelCauseFunc,
 		},
 		operations.ConvertFolderMp3Params{
 			InDirPath: *opts.dirPath,

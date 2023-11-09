@@ -35,7 +35,7 @@ func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, t
 
 	tracksChan := pipeline.Emit(tracks...)
 
-	convertOut := pipeline.ProcessConcurrently(ctx, 1, pipeline.NewProcessor(func(ctx context.Context, t ConvertTrack) (ConvertTrack, error) {
+	convertOut := pipeline.ProcessConcurrently(ctx, 4, pipeline.NewProcessor(func(ctx context.Context, t ConvertTrack) (ConvertTrack, error) {
 		t, err := convertTrack(t)
 		if err != nil {
 			return t, err
@@ -46,7 +46,7 @@ func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, t
 		return t, nil
 	}, func(t ConvertTrack, err error) {
 		completedTracks++
-		fmt.Printf("t.Name: %s failed because: %s\n", t.Name, err.Error())
+		fmt.Printf("%s failed because: %s\n", t.Name, err.Error())
 	}), tracksChan)
 
 	for range convertOut {
@@ -54,10 +54,7 @@ func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, t
 		case <-ctx.Done():
 			return
 		case t := <-convertOut:
-			fmt.Println(t)
-			_ = t
-		default:
-			continue
+			fmt.Printf("%s completed\n", t.Name)
 		}
 	}
 }
@@ -69,7 +66,7 @@ func convertTrack(track ConvertTrack) (ConvertTrack, error) {
 	}
 
 	if helpers.DoesFileExist(track.NewFile.FileInfo.FullPath) {
-		return track, errors.New("file already exists: " + track.NewFile.FileInfo.FullPath)
+		return track, errors.New("file already exists")
 	}
 
 	// create dir for new file if it doesn't exist
