@@ -2,14 +2,18 @@ package operations
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"time"
 
 	"github.com/billiem/seren-management/src/helpers"
 	"github.com/deliveryhero/pipeline/v2"
 )
 
-// Gets all of the files in the given dirpath
+/*
+Gets all of the files in the provided directory which can be converted to mp3
+
+if recursion is true, will also get files in subdirectories
+*/
 func getConvertPaths(cfg helpers.Config, inDirPath string, recursion bool) ([]string, error) {
 	convertPaths, err := helpers.GetFilesInDir(inDirPath, recursion)
 	if err != nil {
@@ -29,14 +33,19 @@ func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, t
 	var completedTracks int
 	var totalTracks = len(tracks)
 
-	tracksChan := pipeline.Delay(ctx, time.Millisecond*500, pipeline.Emit(tracks...))
+	tracksChan := pipeline.Emit(tracks...)
 
-	convertOut := pipeline.ProcessConcurrently(ctx, 4, pipeline.NewProcessor(func(ctx context.Context, t ConvertTrack) (ConvertTrack, error) {
+	convertOut := pipeline.ProcessConcurrently(ctx, 1, pipeline.NewProcessor(func(ctx context.Context, t ConvertTrack) (ConvertTrack, error) {
+		t, err := convertTrack(t)
+		if err != nil {
+			return t, err
+		}
 		completedTracks++
 		o.StepCallback(float64(completedTracks) / float64(totalTracks))
 		fmt.Println(completedTracks, totalTracks, float64(completedTracks)/float64(totalTracks))
 		return t, nil
 	}, func(t ConvertTrack, err error) {
+		completedTracks++
 		fmt.Printf("t.Name: %s failed because: %s\n", t.Name, err.Error())
 	}), tracksChan)
 
@@ -47,56 +56,59 @@ func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, t
 		case t := <-convertOut:
 			fmt.Println(t)
 			_ = t
+		default:
+			continue
 		}
 	}
-	// for t := range convertOut {
-	// 	fmt.Println(t)
-	// 	_ = t
-	// }
 }
 
-// func (d *Data) convertMp3(track Track) Track {
+func convertTrack(track ConvertTrack) (ConvertTrack, error) {
 
-// 	if track == (Track{}) {
-// 		return track
-// 	}
+	if track == (ConvertTrack{}) {
+		return track, errors.New("convert track is empty")
+	}
 
-// 	if helpers.doesFileExist(track.NewPath) {
-// 		fmt.Printf("file already exists: %s, skipping\n", track.NewPath)
-// 		return Track{}
-// 	}
+	if helpers.DoesFileExist(track.NewFile.FileInfo.FullPath) {
+		return track, errors.New("file already exists: " + track.NewFile.FileInfo.FullPath)
+	}
 
-// 	fmt.Printf("converting %s to %s\n", track.OriginalPath, track.NewPath)
+	// create dir for new file if it doesn't exist
+	err := helpers.CreateDirIfNotExists(track.NewFile.FileInfo.DirPath)
 
-// 	err := cmdExec(
-// 		"ffmpeg",
-// 		"-i", track.OriginalPath,
-// 		"-b:a", "320k",
-// 		track.NewPath,
-// 	)
+	if err != nil {
+		return track, err
+	}
 
-// 	if err != nil {
-// 		panic(err)
-// 	}
+	err = helpers.CmdExec(
+		"ffmpeg",
+		"-i", track.OriginalFile.FileInfo.FullPath,
+		"-b:a", "320k",
+		track.NewFile.FileInfo.FullPath,
+	)
 
-// 	fmt.Printf("converted %s to %s\n", track.OriginalPath, track.NewPath)
+	if err != nil {
+		return track, err
+	}
 
-// 	// create dir for old file if it doesn't exist
-// 	os.MkdirAll(track.StorageDir, os.ModePerm)
+	// create dir for old file if it doesn't exist
+	err = helpers.CreateDirIfNotExists(track.OriginalFile.FileInfo.DirPath)
 
-// 	// move the original file to the newpathforold
+	if err != nil {
+		return track, err
+	}
 
-// 	err = cmdExec(
-// 		"mv",
-// 		track.OriginalPath,
-// 		track.NewPathForOld,
-// 	)
+	// delete the original file if DeleteOnFinish is true
+	if track.OriginalFile.DeleteOnFinish {
+		err = helpers.CmdExec(
+			"rm",
+			track.OriginalFile.FileInfo.FullPath,
+		)
 
-// 	if err != nil {
-// 		panic(err)
-// 	}
+		if err != nil {
+			return track, err
+		}
+	}
 
-// 	fmt.Printf("moved %s to %s\n", track.OriginalPath, track.NewPathForOld)
+	return track, nil
 
-// 	return track
-// }
+}

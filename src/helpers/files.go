@@ -170,3 +170,15 @@ func GetClosestDir(path string, baseDirPath string, rCnt *int) (string, error) {
 		return GetClosestDir(filepath.Join(path, ".."), baseDirPath, rCnt)
 	}
 }
+
+/*
+ */
+func CreateDirIfNotExists(path string) error {
+	err := os.MkdirAll(path, os.ModePerm)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

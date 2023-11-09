@@ -88,12 +88,15 @@ func ConvertFolderMp3(ctx context.Context, cfg helpers.Config, o OperationProces
 
 	convertTrackArray, errs := buildConvertTrackArray(convertFilePaths, params.OutDirPath)
 
-	// for _, track := range convertTrackArray {
-	// 	pp.Println(track)
-	// }
-
 	for _, err := range errs {
 		pp.Println(err)
+		/*
+			possibly want to write these errors to the log
+
+			think the best way is to pass a logger as part of the OperationProcess interface
+
+			can then implement file based/ UI based logger in the ui package
+		*/
 	}
 
 	parallelProcessConvertTrackArray(ctx, o, convertTrackArray)

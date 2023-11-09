@@ -17,9 +17,6 @@ type AudioFile struct {
 	DeleteOnFinish bool // If true, this file should be deleted after all operations are performed
 }
 
-type ProcessTrack interface {
-}
-
 /*
 ConvertTrack is used as part of the process for converting non-mp3 audio files to mp3
 */
@@ -29,6 +26,12 @@ type ConvertTrack struct {
 	OriginalFile AudioFile
 	NewFile      AudioFile
 }
+
+/*
+Builds an array of ConvertTrack structs from an array of file paths
+
+File paths have been pre-validated to ensure they are valid files which can be converted
+*/
 
 func buildConvertTrackArray(paths []string, outDirPath string) ([]ConvertTrack, []error) {
 	var tracks []ConvertTrack
@@ -49,6 +52,11 @@ func buildConvertTrackArray(paths []string, outDirPath string) ([]ConvertTrack, 
 
 }
 
+/*
+Builds a ConvertTrack struct from a file path
+
+File path has been pre-validated to ensure it is a valid file which can be converted
+*/
 func buildConvertTrack(path string, outDirPath string) (ConvertTrack, error) {
 
 	origFileInfo, err := helpers.SplitFilePathRequired(path)
