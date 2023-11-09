@@ -7,6 +7,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -16,14 +17,18 @@ import (
  */
 
 type OperationProcess struct {
-	progressBar MyProgressBar
-	ctxClose    context.CancelCauseFunc
+	// TODO: may need to use external bindings? idk what they do
+	listBindValue        binding.StringList
+	progressBarBindValue binding.Float
+	ctxClose             context.CancelCauseFunc
 }
 
-func (o OperationProcess) StepCallback(progress float64) {
-	fmt.Println("step callback progress", progress)
-
-	o.progressBar.updateProgressBar(progress)
+func (o OperationProcess) StepCallback(progress float64, message string) {
+	fmt.Println("step callback", progress, message)
+	o.progressBarBindValue.Set(progress)
+	// TODO: may want to add a nicer handler for this
+	// i.e. to show only a limited number of items at any one time
+	// o.listBindValue.Append(message)
 }
 
 func (o OperationProcess) ExitCallback() {
@@ -38,24 +43,28 @@ func (o OperationProcess) ExitCallback() {
 type MyProcessContainer struct {
 	Container   *fyne.Container
 	StopButton  MyStopButton
-	ProgressBar MyProgressBar
+	ProgressBar *widget.ProgressBar
+	List        *widget.List
 }
 
-func buildProcessContainer(cancelCauseFunc context.CancelCauseFunc) MyProcessContainer {
+// TODO: rename all the list calls, should be called 'log' or something
+func buildProcessContainer(cancelCauseFunc context.CancelCauseFunc, progressBarBindVal binding.Float, listBindVal binding.StringList) MyProcessContainer {
 	processContainer := container.NewVBox()
 
-	progressBar := buildProgressBar()
-
+	progressBar := buildProgressBar(progressBarBindVal)
+	list := buildList(listBindVal)
 	stopButton := buildStopButton(cancelCauseFunc)
 
 	processContainer.Add(widget.NewLabel("Processing..."))
 	processContainer.Add(progressBar)
 	processContainer.Add(stopButton)
+	processContainer.Add(list)
 
 	return MyProcessContainer{
 		Container:   processContainer,
 		ProgressBar: progressBar,
 		StopButton:  stopButton,
+		List:        list,
 	}
 }
 
@@ -64,18 +73,33 @@ func buildProcessContainer(cancelCauseFunc context.CancelCauseFunc) MyProcessCon
 
  */
 
-type MyProgressBar struct {
-	*widget.ProgressBar
+func buildProgressBar(bindVal binding.Float) *widget.ProgressBar {
+	return widget.NewProgressBarWithData(bindVal)
 }
 
-func buildProgressBar() MyProgressBar {
-	return MyProgressBar{
-		widget.NewProgressBar(),
-	}
+/*
+
+
+ */
+
+func buildList(bindVal binding.StringList) *widget.List {
+	list := widget.NewList(
+		func() int {
+			return 0
+		},
+		func() fyne.CanvasObject {
+			return widget.NewLabel("template")
+		},
+		func(i widget.ListItemID, o fyne.CanvasObject) {
+			fmt.Println("update item", i)
+		},
+	)
+
+	return list
 }
 
-func (p MyProgressBar) updateProgressBar(value float64) {
-	p.SetValue(value)
+func updateListBinding(list binding.StringList) {
+
 }
 
 /*

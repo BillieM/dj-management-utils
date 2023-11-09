@@ -1,11 +1,24 @@
 package helpers_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/billiem/seren-management/src/helpers"
 )
 
+/*
+Error helper function
+*/
+func ErrorContains(out error, want string) bool {
+	if out == nil {
+		return want == ""
+	}
+	if want == "" {
+		return false
+	}
+	return strings.Contains(out.Error(), want)
+}
 func TestContainsNonEmptyString(t *testing.T) {
 	tests := []struct {
 		name string

@@ -41,8 +41,8 @@ func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, t
 			return t, err
 		}
 		completedTracks++
-		o.StepCallback(float64(completedTracks) / float64(totalTracks))
-		fmt.Println(completedTracks, totalTracks, float64(completedTracks)/float64(totalTracks))
+		completionVal := float64(completedTracks) / float64(totalTracks)
+		o.StepCallback(completionVal, fmt.Sprintf("Finished converting: %s", t.Name))
 		return t, nil
 	}, func(t ConvertTrack, err error) {
 		completedTracks++
@@ -54,7 +54,7 @@ func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, t
 		case <-ctx.Done():
 			return
 		case t := <-convertOut:
-			fmt.Printf("%s completed\n", t.Name)
+			_ = t
 		}
 	}
 }
@@ -65,6 +65,8 @@ func convertTrack(track ConvertTrack) (ConvertTrack, error) {
 		return track, errors.New("convert track is empty")
 	}
 
+	// TODO: may be worth checking if the new file already exists during the buildConvertTrackArray step
+	// check if new file already exists
 	if helpers.DoesFileExist(track.NewFile.FileInfo.FullPath) {
 		return track, errors.New("file already exists")
 	}

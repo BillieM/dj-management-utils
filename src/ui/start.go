@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/widget"
 	"github.com/billiem/seren-management/src/operations"
 )
@@ -19,12 +20,14 @@ func (d *Data) startConvertFolderMp3(processContainerOuter *fyne.Container, star
 
 	d.State.processing = true
 
-	// new context
+	// new context & cancel function
 	ctx := context.Background()
-	// create cancelFunc from context
 	ctx, cancelCauseFunc := context.WithCancelCause(ctx)
 
-	processContainer := buildProcessContainer(cancelCauseFunc)
+	progressBarBinding := binding.NewFloat()
+	listBinding := binding.NewStringList()
+
+	processContainer := buildProcessContainer(cancelCauseFunc, progressBarBinding, listBinding)
 
 	context.AfterFunc(ctx, func() {
 		fmt.Println("context closed because: ", context.Cause(ctx))
@@ -42,8 +45,8 @@ func (d *Data) startConvertFolderMp3(processContainerOuter *fyne.Container, star
 		ctx,
 		*d.Config,
 		OperationProcess{
-			progressBar: processContainer.ProgressBar,
-			ctxClose:    cancelCauseFunc,
+			progressBarBindValue: progressBarBinding,
+			ctxClose:             cancelCauseFunc,
 		},
 		operations.ConvertFolderMp3Params{
 			InDirPath: *opts.dirPath,

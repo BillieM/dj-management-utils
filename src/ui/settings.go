@@ -64,6 +64,11 @@ func (d *Data) settingsList(w fyne.Window) []fyne.CanvasObject {
 
 func (d *Data) saveButton(w fyne.Window) *widget.Button {
 	btn := widget.NewButton("Save", func() {
+		if d.State.processing {
+			pleaseWaitForProcess(w)
+			return
+		}
+
 		d.Config = d.TmpConfig
 		err := d.Config.SaveConfig()
 		if err != nil {

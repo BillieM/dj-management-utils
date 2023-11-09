@@ -39,6 +39,10 @@ func (d *Data) makeNavMenu(w fyne.Window, contentStack *fyne.Container) fyne.Can
 				helpers.HandleFatalError(errors.New("Operation not found"))
 				return
 			}
+			if d.processing {
+				pleaseWaitForProcess(w)
+				return
+			}
 			d.setMainContent(w, contentStack, op)
 		},
 	}

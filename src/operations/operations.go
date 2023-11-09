@@ -13,7 +13,7 @@ This file serves as an entrypoint for all operations
 */
 
 type OperationProcess interface {
-	StepCallback(float64)
+	StepCallback(float64, string)
 	ExitCallback()
 }
 

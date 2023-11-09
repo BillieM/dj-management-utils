@@ -5,11 +5,6 @@ import (
 	"github.com/billiem/seren-management/src/helpers"
 )
 
-type Operation struct {
-	Name string
-	View func(w fyne.Window) fyne.CanvasObject
-}
-
 type Data struct {
 	*helpers.Config
 	*State
@@ -18,9 +13,35 @@ type Data struct {
 	OperationIndex map[string][]string
 }
 
+/*
+builds the main data object for the application
+*/
+func buildData(c *helpers.Config) *Data {
+	d := &Data{c, nil, nil, nil, nil}
+
+	s := &State{}
+	operations := d.getOperationsList()
+	operationIndex := d.getOperationIndex()
+
+	d.State = s
+	d.Operations = operations
+	d.OperationIndex = operationIndex
+
+	return d
+}
+
 type State struct {
 	settingsAlreadyOpen bool
 	processing          bool
+}
+
+/*
+Operations are the main views of the application
+*/
+
+type Operation struct {
+	Name string
+	View func(w fyne.Window) fyne.CanvasObject
 }
 
 func (d *Data) getOperationsList() map[string]Operation {

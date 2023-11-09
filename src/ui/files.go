@@ -18,6 +18,11 @@ func (d *Data) openFileCanvas(w fyne.Window, title string, updateVal *string, fi
 	pathCard := buildPathCard(*updateVal, "file")
 
 	buttonWidget := widget.NewButtonWithIcon("Open", theme.FolderOpenIcon(), func() {
+		if d.State.processing {
+			pleaseWaitForProcess(w)
+			return
+		}
+
 		f := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err != nil {
 				dialogErr(w, err)
@@ -46,6 +51,12 @@ func (d *Data) openDirCanvas(w fyne.Window, title string, updateVal *string, cal
 	pathCard := buildPathCard(*updateVal, "directory")
 
 	buttonWidget := widget.NewButtonWithIcon("Open", theme.FolderOpenIcon(), func() {
+
+		if d.State.processing {
+			pleaseWaitForProcess(w)
+			return
+		}
+
 		f := dialog.NewFolderOpen(func(reader fyne.ListableURI, err error) {
 			if err != nil {
 				dialogErr(w, err)

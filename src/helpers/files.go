@@ -6,7 +6,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"regexp"
 )
 
 type FileInfo struct {
@@ -50,39 +49,36 @@ func ReplaceTrackExtension(s string, r string, a []string) string {
 }
 
 func GetDirPathFromFilePath(s string) (string, error) {
-	fileInfo, err := SplitFilePath(s)
-	if err != nil {
-		return "", err
-	}
-	if fileInfo.DirPath == "" {
+	dir, _ := filepath.Split(s)
+	if dir == "" {
 		return "", errors.New("no directory path found")
 	}
-	return fileInfo.DirPath, nil
+	return dir, nil
 }
 
 func GetFileNameFromFilePath(s string) (string, error) {
-	fileInfo, err := SplitFilePath(s)
-	if err != nil {
-		return "", err
-	}
-	if fileInfo.FileName == "" {
+	_, file := filepath.Split(s)
+	if file == "" {
 		return "", errors.New("no file name found")
 	}
-	return fileInfo.FileName, nil
+	fileName := file[:len(file)-len(filepath.Ext(file))]
+
+	if fileName == "" {
+		return "", errors.New("no file name found")
+	}
+
+	return fileName, nil
 }
 
 /*
 Returns the file extension from a given file path (including the dot)
 */
 func GetFileExtensionFromFilePath(s string) (string, error) {
-	fileInfo, err := SplitFilePath(s)
-	if err != nil {
-		return "", err
-	}
-	if fileInfo.FileExtension == "" {
+	ext := filepath.Ext(s)
+	if ext == "" {
 		return "", errors.New("no file extension found")
 	}
-	return fileInfo.FileExtension, nil
+	return ext, nil
 }
 
 /*
@@ -91,17 +87,21 @@ Returns FileInfo struct from a given file path
 FileInfo contains information about the file path, including the directory path, file name, and file extension
 */
 func SplitFilePath(s string) (FileInfo, error) {
-	re := regexp.MustCompile(`(.*/)?(.*?)(\..*)?$`)
-	matches := re.FindStringSubmatch(s)
-	if !ContainsNonEmptyString(matches) {
+
+	// errors don't matter in this case
+	dirPath, _ := GetDirPathFromFilePath(s)
+	fileName, _ := GetFileNameFromFilePath(s)
+	fileExtension, _ := GetFileExtensionFromFilePath(s)
+
+	if dirPath == "" && fileName == "" && fileExtension == "" {
 		return FileInfo{}, errors.New("no matches found")
 	}
 
 	return FileInfo{
 		FullPath:      s,
-		DirPath:       matches[1],
-		FileName:      matches[2],
-		FileExtension: matches[3],
+		DirPath:       dirPath,
+		FileName:      fileName,
+		FileExtension: fileExtension,
 	}, nil
 }
 

@@ -28,22 +28,3 @@ func Entry(c *helpers.Config) {
 	w.SetContent(split)
 	w.ShowAndRun()
 }
-
-/*
-builds the main data object for the application
-
-TODO: this may want to be moved out of the ui package
-*/
-func buildData(c *helpers.Config) *Data {
-	d := &Data{c, nil, nil, nil, nil}
-
-	s := &State{}
-	operations := d.getOperationsList()
-	operationIndex := d.getOperationIndex()
-
-	d.State = s
-	d.Operations = operations
-	d.OperationIndex = operationIndex
-
-	return d
-}

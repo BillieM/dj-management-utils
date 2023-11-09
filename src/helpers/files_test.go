@@ -1,9 +1,12 @@
-package helpers
+package helpers_test
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/billiem/seren-management/src/helpers"
+	"github.com/google/go-cmp/cmp"
 )
 
 // TODO: Convert these tests to use generic paths
@@ -35,7 +38,7 @@ func TestReplaceTrackExtension(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			newPath := ReplaceTrackExtension(tt.filePath, tt.newExtension, tt.extensions)
+			newPath := helpers.ReplaceTrackExtension(tt.filePath, tt.newExtension, tt.extensions)
 
 			if newPath != tt.want {
 				t.Errorf("Expected %s, got %s", tt.want, newPath)
@@ -67,7 +70,7 @@ func TestIsExtensionInArray(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IsExtensionInArray(tt.filename, tt.extensions); got != tt.want {
+			if got := helpers.IsExtensionInArray(tt.filename, tt.extensions); got != tt.want {
 				t.Errorf("IsExtensionInArray() = %v, want %v", got, tt.want)
 			}
 		})
@@ -121,10 +124,10 @@ func TestGetFileExtensionFromFilePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fileExtension, err := GetFileExtensionFromFilePath(tt.filePath)
+			fileExtension, err := helpers.GetFileExtensionFromFilePath(tt.filePath)
 
-			if err != nil && err.Error() != tt.err {
-				t.Errorf("Unexpected error: %v", err)
+			if !ErrorContains(err, tt.err) {
+				t.Errorf("Expected error %v, got %v", tt.err, err)
 			}
 
 			if fileExtension != tt.want {
@@ -174,10 +177,10 @@ func TestGetDirPathFromFilePath(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetDirPathFromFilePath(tt.filePath)
+			got, err := helpers.GetDirPathFromFilePath(tt.filePath)
 
-			if err != nil && err.Error() != tt.err {
-				t.Errorf("GetDirPathFromFilePath() error = %v, wantErr %v", err, tt.err)
+			if !ErrorContains(err, tt.err) {
+				t.Errorf("Expected error %v, got %v", tt.err, err)
 			}
 
 			if got != tt.want {
@@ -221,10 +224,10 @@ func TestGetFileNameFromFilePath(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetFileNameFromFilePath(tt.filePath)
+			got, err := helpers.GetFileNameFromFilePath(tt.filePath)
 
-			if err != nil && err.Error() != tt.err {
-				t.Errorf("GetFileNameFromFilePath() error = %v, wantErr %v", err, tt.err)
+			if !ErrorContains(err, tt.err) {
+				t.Errorf("Expected error %v, got %v", tt.err, err)
 			}
 
 			if got != tt.want {
@@ -287,10 +290,105 @@ func TestGetClosestDir(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			var recursionCount int
-			path, _ := GetClosestDir(tt.path, tt.baseDir, &recursionCount)
+			path, _ := helpers.GetClosestDir(tt.path, tt.baseDir, &recursionCount)
 
 			if path != tt.expected {
 				t.Errorf("getListableURI(%s) returned %v, expected %v", tt.path, path, tt.expected)
+			}
+		})
+	}
+}
+func TestSplitDirPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		filePath string
+		want     helpers.FileInfo
+		err      string
+	}{
+		{
+			name:     "file with extension",
+			filePath: "H:/Music/processed/funky cool song.mp3",
+			want: helpers.FileInfo{
+				FullPath:      "H:/Music/processed/funky cool song.mp3",
+				DirPath:       "H:/Music/processed/",
+				FileName:      "funky cool song",
+				FileExtension: ".mp3",
+			},
+			err: "",
+		},
+		{
+			name:     "file without extension",
+			filePath: "H:/Music/processed/funky cool song",
+			want: helpers.FileInfo{
+				FullPath:      "H:/Music/processed/funky cool song",
+				DirPath:       "H:/Music/processed/",
+				FileName:      "funky cool song",
+				FileExtension: "",
+			},
+			err: "",
+		},
+		{
+			name:     "file without dir path",
+			filePath: "funky cool song.mp3",
+			want: helpers.FileInfo{
+				FullPath:      "funky cool song.mp3",
+				DirPath:       "",
+				FileName:      "funky cool song",
+				FileExtension: ".mp3",
+			},
+			err: "",
+		},
+		{
+			name:     "file without dir path or extension",
+			filePath: "funky cool song",
+			want: helpers.FileInfo{
+				FullPath:      "funky cool song",
+				DirPath:       "",
+				FileName:      "funky cool song",
+				FileExtension: "",
+			},
+			err: "",
+		},
+		{
+			name:     "dir path only",
+			filePath: "H:/Music/processed/",
+			want: helpers.FileInfo{
+				FullPath:      "H:/Music/processed/",
+				DirPath:       "H:/Music/processed/",
+				FileName:      "",
+				FileExtension: "",
+			},
+			err: "",
+		},
+		{
+			name:     "file name with dot",
+			filePath: "H:/tmp/testdir/01 - funky cool song (feat. coolman).m4a",
+			want: helpers.FileInfo{
+				FullPath:      "H:/tmp/testdir/01 - funky cool song (feat. coolman).m4a",
+				DirPath:       "H:/tmp/testdir/",
+				FileName:      "01 - funky cool song (feat. coolman)",
+				FileExtension: ".m4a",
+			},
+			err: "",
+		},
+		{
+			name:     "empty string",
+			filePath: "",
+			want:     helpers.FileInfo{},
+			err:      "no matches found",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fileInfo, err := helpers.SplitFilePath(tt.filePath)
+
+			if !ErrorContains(err, tt.err) {
+				t.Errorf("Expected error %v, got %v", tt.err, err)
+			}
+
+			if !cmp.Equal(fileInfo, tt.want) {
+				t.Errorf("Expected %s, got %s", tt.want, fileInfo)
 			}
 		})
 	}
