@@ -71,6 +71,7 @@ func (p ConvertFolderMp3Params) check() error {
 func ConvertFolderMp3(ctx context.Context, cfg helpers.Config, o OperationProcess, params ConvertFolderMp3Params) {
 
 	ctx, cancelCauseFunc := context.WithCancelCause(ctx)
+	defer cancelCauseFunc(errors.New("operation finished"))
 
 	err := params.check()
 
@@ -85,16 +86,17 @@ func ConvertFolderMp3(ctx context.Context, cfg helpers.Config, o OperationProces
 		cancelCauseFunc(err)
 	}
 
-	convertTrackArray, errors := buildConvertTrackArray(convertFilePaths, params.OutDirPath)
+	convertTrackArray, errs := buildConvertTrackArray(convertFilePaths, params.OutDirPath)
 
-	for _, track := range convertTrackArray {
-		pp.Println(track)
-	}
+	// for _, track := range convertTrackArray {
+	// 	pp.Println(track)
+	// }
 
-	for _, err := range errors {
+	for _, err := range errs {
 		pp.Println(err)
 	}
 
-	_ = errors
-	_ = convertTrackArray
+	parallelProcessConvertTrackArray(ctx, o, convertTrackArray)
+
+	cancelCauseFunc(errors.New("operation finished end of fn"))
 }

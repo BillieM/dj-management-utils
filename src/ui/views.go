@@ -1,13 +1,9 @@
 package ui
 
 import (
-	"context"
-	"fmt"
-
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
-	"github.com/billiem/seren-management/src/operations"
 )
 
 func (d *Data) setMainContent(w fyne.Window, contentStack *fyne.Container, operation Operation) {
@@ -78,53 +74,22 @@ func (d *Data) convertFolderMp3View(w fyne.Window) fyne.CanvasObject {
 	}
 
 	var dirPath string
-	processContainer := container.NewVBox()
-	processContainer.Hidden = true
+	optionsContainer := container.NewVBox()
+	optionsContainer.Hide()
 
-	trackPathCanvas := d.openDirCanvas(w, "Folder Path", &dirPath, func() { processContainer.Hidden = false })
+	// show the options container when a valid dir path is selected
+	trackPathCanvas := d.openDirCanvas(w, "Folder Path", &dirPath, func() { optionsContainer.Show() })
 
-	processContainer.Add(widget.NewButton("Convert folder to mp3", func() {
-		progressBar := d.buildProgressBar()
-		d.State.processing = true
-		processContainer.Add(widget.NewLabel("Processing..."))
-		processContainer.Add(progressBar)
+	processContainerOuter := container.NewVBox()
 
-		// new context
-		ctx := context.Background()
-		// create cancelFunc from context
-		ctx, cancelFunc := context.WithCancel(ctx)
+	startButton := widget.NewButton("Convert folder to mp3", nil)
+	startFunc := func() {
+		d.startConvertFolderMp3(processContainerOuter, startButton, startConvertFolderMp3Options{dirPath: &dirPath})
+	}
+	startButton.OnTapped = startFunc
+	optionsContainer.Add(startButton)
 
-		context.AfterFunc(ctx, func() {
-			/*
-				rather than pass a callback through, we should just be able to do post processing steps here i.e.:
-					restoring interface state
-					reporting any failures
-					reporting progress if early shutdown
-						possibly also for cleaning up any residue files on early shutdown ?
-			*/
-			fmt.Println("context closed because: ", context.Cause(ctx))
-
-			d.State.processing = false
-		})
-
-		stopButton := widget.NewButton("Stop", func() {
-			cancelFunc()
-		})
-		processContainer.Add(stopButton)
-
-		operations.ConvertFolderMp3(
-			ctx,
-			*d.Config,
-			OperationProcess{
-				progressBar: progressBar,
-			},
-			operations.ConvertFolderMp3Params{
-				InDirPath: dirPath,
-			},
-		)
-	}))
-
-	return container.NewVBox(trackPathCanvas, processContainer)
+	return container.NewVBox(trackPathCanvas, optionsContainer, processContainerOuter)
 }
 
 func (d *Data) convertCollectionMp3View(w fyne.Window) fyne.CanvasObject {

@@ -2,8 +2,11 @@ package operations
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/billiem/seren-management/src/helpers"
+	"github.com/deliveryhero/pipeline/v2"
 )
 
 // Gets all of the files in the given dirpath
@@ -21,13 +24,35 @@ func getConvertPaths(cfg helpers.Config, inDirPath string, recursion bool) ([]st
 	return validConvertPaths, nil
 }
 
-func parallelProcessConvertTrackArray(ctx context.Context, tracks []ConvertTrack) {
+func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, tracks []ConvertTrack) {
 
-	/*
-		2 parts:
+	var completedTracks int
+	var totalTracks = len(tracks)
 
+	tracksChan := pipeline.Delay(ctx, time.Millisecond*500, pipeline.Emit(tracks...))
 
-	*/
+	convertOut := pipeline.ProcessConcurrently(ctx, 4, pipeline.NewProcessor(func(ctx context.Context, t ConvertTrack) (ConvertTrack, error) {
+		completedTracks++
+		o.StepCallback(float64(completedTracks) / float64(totalTracks))
+		fmt.Println(completedTracks, totalTracks, float64(completedTracks)/float64(totalTracks))
+		return t, nil
+	}, func(t ConvertTrack, err error) {
+		fmt.Printf("t.Name: %s failed because: %s\n", t.Name, err.Error())
+	}), tracksChan)
+
+	for range convertOut {
+		select {
+		case <-ctx.Done():
+			return
+		case t := <-convertOut:
+			fmt.Println(t)
+			_ = t
+		}
+	}
+	// for t := range convertOut {
+	// 	fmt.Println(t)
+	// 	_ = t
+	// }
 }
 
 // func (d *Data) convertMp3(track Track) Track {

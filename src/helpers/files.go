@@ -36,6 +36,7 @@ func IsExtensionInArray(s string, a []string) bool {
 	return false
 }
 
+// TODO: do i actually need this anymore, we're using FileInfo instead?
 func ReplaceTrackExtension(s string, r string, a []string) string {
 	for _, v := range a {
 		s = regexReplace(s, `(?i)\.`+v+`$`, r)

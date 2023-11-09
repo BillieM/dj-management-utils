@@ -1,8 +1,6 @@
 package operations
 
 import (
-	"fmt"
-
 	"github.com/billiem/seren-management/src/helpers"
 )
 
@@ -52,8 +50,6 @@ func buildConvertTrackArray(paths []string, outDirPath string) ([]ConvertTrack, 
 }
 
 func buildConvertTrack(path string, outDirPath string) (ConvertTrack, error) {
-
-	fmt.Println()
 
 	origFileInfo, err := helpers.SplitFilePathRequired(path)
 
