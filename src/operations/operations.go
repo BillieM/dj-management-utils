@@ -12,7 +12,7 @@ This file serves as an entrypoint for all operations
 */
 
 type OperationProcess interface {
-	StepCallback(float64, string)
+	StepCallback(StepInfo)
 	ExitCallback()
 }
 
@@ -94,14 +94,10 @@ func ConvertFolderMp3(ctx context.Context, cfg helpers.Config, o OperationProces
 	convertTrackArray, errs := buildConvertTrackArray(convertFilePaths, params.OutDirPath)
 
 	for _, err := range errs {
-		/*
-			possibly want to write these errors to the log
-
-			think the best way is to pass a logger as part of the OperationProcess interface
-
-			can then implement file based/ UI based logger in the ui package
-		*/
-		o.StepCallback(0, err.Error())
+		o.StepCallback(StepInfo{
+			Progress: 0,
+			Message:  err.Error(),
+		})
 	}
 
 	parallelProcessConvertTrackArray(ctx, o, convertTrackArray)

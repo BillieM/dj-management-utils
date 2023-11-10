@@ -41,13 +41,18 @@ func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, t
 			return t, err
 		}
 		completedTracks++
-		completionVal := float64(completedTracks) / float64(totalTracks)
-		o.StepCallback(completionVal, fmt.Sprintf("Finished converting: %s", t.Name))
+		o.StepCallback(StepInfo{
+			Progress: float64(completedTracks) / float64(totalTracks),
+			Message:  fmt.Sprintf("Finished converting: %s", t.Name),
+		})
+
 		return t, nil
 	}, func(t ConvertTrack, err error) {
 		completedTracks++
-		completionVal := float64(completedTracks) / float64(totalTracks)
-		o.StepCallback(completionVal, t.formatError(err).Error())
+		o.StepCallback(StepInfo{
+			Progress: float64(completedTracks) / float64(totalTracks),
+			Message:  t.formatError(err).Error(),
+		})
 	}), tracksChan)
 
 	for range convertOut {

@@ -8,10 +8,20 @@ import (
 	"github.com/billiem/seren-management/src/operations"
 )
 
+func sharedStartBuild() {
+
+}
+
+/*
+startConvertFolderMp3Options serves as a way to pass arguments to startConvertFolderMp3
+*/
 type startConvertFolderMp3Options struct {
 	dirPath *string
 }
 
+/*
+startConvertFolderMp3 is the entrypoint for the ConvertFolderMp3 operation from the UI
+*/
 func (d *Data) startConvertFolderMp3(w fyne.Window, processContainerOuter *fyne.Container, opts startConvertFolderMp3Options) {
 
 	if d.State.processing {
@@ -26,33 +36,33 @@ func (d *Data) startConvertFolderMp3(w fyne.Window, processContainerOuter *fyne.
 	ctx, cancelCauseFunc := context.WithCancelCause(ctx)
 
 	progressBarBinding := binding.NewFloat()
-	listBinding := binding.NewStringList()
+	listBinding := progressBindingList{}
 
-	processContainer := buildProcessContainer(cancelCauseFunc, progressBarBinding, listBinding)
+	processContainer := buildProcessContainer(cancelCauseFunc, progressBarBinding, &listBinding)
 
 	stepFunc := func() {
-		processContainer.List.ScrollToBottom()
+		processContainer.log.ScrollToBottom()
 	}
 
 	finishedFunc := func() {
-		processContainerOuter.Remove(processContainer.Container)
+		processContainerOuter.Remove(processContainer.container)
 		d.State.processing = false
 		dialogInfo(w, "Finished", "Process finished")
 	}
 
 	context.AfterFunc(ctx, func() {
-		listBinding.Append("Operation cancelled, finishing off running processes...")
+		listBinding.Append(&progressBindingItem{message: "Process cancelled"})
 		stepFunc()
 	})
 
-	processContainerOuter.Add(processContainer.Container)
+	processContainerOuter.Add(processContainer.container)
 
 	go operations.ConvertFolderMp3(
 		ctx,
 		*d.Config,
 		OperationProcess{
 			ctxClose:             cancelCauseFunc,
-			listBindValue:        listBinding,
+			bindVals:             &listBinding,
 			progressBarBindValue: progressBarBinding,
 			stepFunc:             stepFunc,
 			finishedFunc:         finishedFunc,
