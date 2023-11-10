@@ -42,6 +42,10 @@ func (d *Data) openSettingsWindow(a fyne.App) bool {
 
 /*
 TODO: implement 'tabs' for settings, will likely require some refactoring
+
+settingsList generates a list of canvas objects for the settings window
+
+any altered settings are stored in the TmpConfig struct, which is discarded if the user closes the window without saving
 */
 func (d *Data) settingsList(w fyne.Window) []fyne.CanvasObject {
 
@@ -62,6 +66,10 @@ func (d *Data) settingsList(w fyne.Window) []fyne.CanvasObject {
 
 }
 
+/*
+saveButton returns a button that saves the current state of the TmpConfig struct to the Config struct
+and then saves the Config struct to the config file
+*/
 func (d *Data) saveButton(w fyne.Window) *widget.Button {
 	btn := widget.NewButton("Save", func() {
 		if d.State.processing {

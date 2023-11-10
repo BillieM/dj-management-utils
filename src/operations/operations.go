@@ -16,6 +16,11 @@ type OperationProcess interface {
 	ExitCallback()
 }
 
+type StepInfo struct {
+	Progress float64
+	Message  string
+}
+
 /*
 Converts a single (non-mp3) file to mp3
 

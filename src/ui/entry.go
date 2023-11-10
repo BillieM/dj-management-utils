@@ -13,9 +13,10 @@ func Entry(c *helpers.Config) {
 	d := buildData(c)
 
 	a := app.New()
-	w := a.NewWindow("Seren Library Management")
+	w := a.NewWindow("Library Utilities")
 
-	w.SetMainMenu(d.makeMenu(a, w))
+	// Seems strange this method is called SetMainMenu as it really defines the top bar of the application, but hey :)
+	w.SetMainMenu(d.makeNavBar(a, w))
 
 	w.Resize(fyne.NewSize(960, 720))
 

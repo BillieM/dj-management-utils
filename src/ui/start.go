@@ -2,7 +2,6 @@ package ui
 
 import (
 	"context"
-	"fmt"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/data/binding"
@@ -31,12 +30,19 @@ func (d *Data) startConvertFolderMp3(w fyne.Window, processContainerOuter *fyne.
 
 	processContainer := buildProcessContainer(cancelCauseFunc, progressBarBinding, listBinding)
 
-	context.AfterFunc(ctx, func() {
-		fmt.Println("context closed because: ", context.Cause(ctx))
+	stepFunc := func() {
+		processContainer.List.ScrollToBottom()
+	}
 
+	finishedFunc := func() {
 		processContainerOuter.Remove(processContainer.Container)
-
 		d.State.processing = false
+		dialogInfo(w, "Finished", "Process finished")
+	}
+
+	context.AfterFunc(ctx, func() {
+		listBinding.Append("Operation cancelled, finishing off running processes...")
+		stepFunc()
 	})
 
 	processContainerOuter.Add(processContainer.Container)
@@ -45,8 +51,11 @@ func (d *Data) startConvertFolderMp3(w fyne.Window, processContainerOuter *fyne.
 		ctx,
 		*d.Config,
 		OperationProcess{
-			progressBarBindValue: progressBarBinding,
 			ctxClose:             cancelCauseFunc,
+			listBindValue:        listBinding,
+			progressBarBindValue: progressBarBinding,
+			stepFunc:             stepFunc,
+			finishedFunc:         finishedFunc,
 		},
 		operations.ConvertFolderMp3Params{
 			InDirPath: *opts.dirPath,

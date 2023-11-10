@@ -51,12 +51,8 @@ func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, t
 	}), tracksChan)
 
 	for range convertOut {
-		select {
-		case <-ctx.Done():
-			return
-		case t := <-convertOut:
-			_ = t
-		}
+		t := <-convertOut
+		_ = t
 	}
 }
 

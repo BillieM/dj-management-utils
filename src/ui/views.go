@@ -8,7 +8,9 @@ import (
 
 func (d *Data) setMainContent(w fyne.Window, contentStack *fyne.Container, operation Operation) {
 
-	contentContainer := container.NewVBox(widget.NewLabel(operation.Name), widget.NewSeparator(), operation.View(w))
+	labelContainer := container.NewVBox(widget.NewLabel(operation.Name), widget.NewSeparator())
+
+	contentContainer := container.NewBorder(labelContainer, nil, nil, nil, operation.View(w))
 
 	contentStack.Objects = []fyne.CanvasObject{contentContainer}
 	contentStack.Refresh()
@@ -80,7 +82,7 @@ func (d *Data) convertFolderMp3View(w fyne.Window) fyne.CanvasObject {
 	// show the options container when a valid dir path is selected
 	trackPathCanvas := d.openDirCanvas(w, "Folder Path", &dirPath, func() { optionsContainer.Show() })
 
-	processContainerOuter := container.NewVBox()
+	processContainerOuter := container.NewStack()
 
 	startFunc := func() {
 		d.startConvertFolderMp3(w, processContainerOuter, startConvertFolderMp3Options{dirPath: &dirPath})
@@ -88,7 +90,10 @@ func (d *Data) convertFolderMp3View(w fyne.Window) fyne.CanvasObject {
 	startButton := widget.NewButton("Convert folder to mp3", startFunc)
 	optionsContainer.Add(startButton)
 
-	return container.NewVBox(trackPathCanvas, optionsContainer, processContainerOuter)
+	return container.NewBorder(
+		container.NewVBox(trackPathCanvas, optionsContainer), nil, nil, nil,
+		processContainerOuter,
+	)
 }
 
 func (d *Data) convertCollectionMp3View(w fyne.Window) fyne.CanvasObject {

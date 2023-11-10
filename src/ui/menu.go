@@ -1,36 +1,61 @@
 package ui
 
 import (
+	"errors"
+	"fmt"
+
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/widget"
+	"github.com/billiem/seren-management/src/helpers"
 )
 
-func (d *Data) makeMenu(a fyne.App, w fyne.Window) *fyne.MainMenu {
+/*
+makeNavMenu builds the navigation menu on the left side of the application
 
-	fileMenu := d.makeFileMenu(a, w)
-	helpMenu := d.makeHelpMenu(a, w)
+the navigation menu is a tree object and is dynamically built from the operations list inside data.go
+*/
 
-	return fyne.NewMainMenu(
-		fileMenu,
-		helpMenu,
-	)
+func (d *Data) makeNavMenu(w fyne.Window, contentStack *fyne.Container) fyne.CanvasObject {
 
-}
-
-func (d *Data) makeFileMenu(a fyne.App, w fyne.Window) *fyne.Menu {
-	return fyne.NewMenu("File",
-		fyne.NewMenuItem("Settings", func() {
-			alreadyOpen := d.openSettingsWindow(a)
-			if alreadyOpen {
-				dialog.ShowInformation("Settings", "Settings window is already open", w)
+	tree := &widget.Tree{
+		ChildUIDs: func(uid string) []string {
+			return d.OperationIndex[uid]
+		},
+		IsBranch: func(uid string) bool {
+			children, ok := d.OperationIndex[uid]
+			return ok && len(children) > 0
+		},
+		CreateNode: func(branch bool) fyne.CanvasObject {
+			return widget.NewLabel("Node")
+		},
+		UpdateNode: func(uid string, branch bool, node fyne.CanvasObject) {
+			op, ok := d.Operations[uid]
+			if !ok {
+				fmt.Println("updatenode", uid)
+				helpers.HandleFatalError(errors.New("Operation not found"))
+				return
 			}
-		}),
-		fyne.NewMenuItem("Quit", func() { a.Quit() }),
-	)
-}
+			node.(*widget.Label).SetText(op.Name)
+		},
+		OnSelected: func(uid string) {
+			op, ok := d.Operations[uid]
+			if !ok {
+				fmt.Println("onselected", uid)
+				helpers.HandleFatalError(errors.New("Operation not found"))
+				return
+			}
+			if d.processing {
+				pleaseWaitForProcess(w)
+				return
+			}
+			d.setMainContent(w, contentStack, op)
+		},
+	}
 
-func (d *Data) makeHelpMenu(a fyne.App, w fyne.Window) *fyne.Menu {
-	return fyne.NewMenu("Help",
-		fyne.NewMenuItem("About", func() {}),
-	)
+	tree.OpenAllBranches()
+
+	navContainer := container.NewBorder(widget.NewLabel("menu <3"), nil, nil, nil, tree)
+
+	return navContainer
 }

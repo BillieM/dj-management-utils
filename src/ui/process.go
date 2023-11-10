@@ -12,109 +12,80 @@ import (
 )
 
 /*
+Operation Process
 
+Implements methods defined in the OperationsProcess interface defined in operations/operations.go
 
- */
+The callbacks are used to update the UI as the process runs
+*/
 
 type OperationProcess struct {
-	// TODO: may need to use external bindings? idk what they do
+	ctxClose             context.CancelCauseFunc
 	listBindValue        binding.StringList
 	progressBarBindValue binding.Float
-	ctxClose             context.CancelCauseFunc
+	stepFunc             func()
+	finishedFunc         func()
 }
 
 func (o OperationProcess) StepCallback(progress float64, message string) {
-	fmt.Println("step callback", progress, message)
+	fmt.Println("hit StepCallback() in process.go", progress, message)
 	o.progressBarBindValue.Set(progress)
-	// TODO: may want to add a nicer handler for this
-	// i.e. to show only a limited number of items at any one time
-	// o.listBindValue.Append(message)
+	o.listBindValue.Append(message)
+	o.stepFunc()
 }
 
 func (o OperationProcess) ExitCallback() {
-	o.ctxClose(errors.New("Operation finished"))
+	fmt.Println("hit ExitCallback() in process.go")
+	o.finishedFunc()
 }
 
 /*
+ProcessContainer is used to store widgets associated with a running process
 
-
- */
+The container will be added to the main content stack, and removed when the process is finished
+*/
 
 type MyProcessContainer struct {
 	Container   *fyne.Container
-	StopButton  MyStopButton
+	StopButton  *widget.Button
 	ProgressBar *widget.ProgressBar
 	List        *widget.List
 }
 
-// TODO: rename all the list calls, should be called 'log' or something
+/*
+TODO: rename all the list calls, should be called 'log' or something
+
+Builds the processContainer widget, which is used to display the progress of a running process
+*/
 func buildProcessContainer(cancelCauseFunc context.CancelCauseFunc, progressBarBindVal binding.Float, listBindVal binding.StringList) MyProcessContainer {
-	processContainer := container.NewVBox()
+	processContainerTop := container.NewVBox()
 
-	progressBar := buildProgressBar(progressBarBindVal)
-	list := buildList(listBindVal)
-	stopButton := buildStopButton(cancelCauseFunc)
+	progressBar := widget.NewProgressBarWithData(progressBarBindVal)
+	stopButton := widget.NewButton("Stop", func() {
+		cancelCauseFunc(errors.New("user stopped process"))
+	})
+	list := widget.NewListWithData(listBindVal,
+		func() fyne.CanvasObject {
+			return widget.NewLabel("template")
+		},
+		func(i binding.DataItem, o fyne.CanvasObject) {
+			o.(*widget.Label).Bind(i.(binding.String))
+		},
+	)
 
-	processContainer.Add(widget.NewLabel("Processing..."))
-	processContainer.Add(progressBar)
-	processContainer.Add(stopButton)
-	processContainer.Add(list)
+	processContainerTop.Add(progressBar)
+	processContainerTop.Add(stopButton)
+
+	processContainer := container.NewBorder(
+		container.NewBorder(nil, nil, nil, stopButton, progressBar),
+		nil, nil, nil,
+		list,
+	)
 
 	return MyProcessContainer{
 		Container:   processContainer,
 		ProgressBar: progressBar,
 		StopButton:  stopButton,
 		List:        list,
-	}
-}
-
-/*
-
-
- */
-
-func buildProgressBar(bindVal binding.Float) *widget.ProgressBar {
-	return widget.NewProgressBarWithData(bindVal)
-}
-
-/*
-
-
- */
-
-func buildList(bindVal binding.StringList) *widget.List {
-	list := widget.NewList(
-		func() int {
-			return 0
-		},
-		func() fyne.CanvasObject {
-			return widget.NewLabel("template")
-		},
-		func(i widget.ListItemID, o fyne.CanvasObject) {
-			fmt.Println("update item", i)
-		},
-	)
-
-	return list
-}
-
-func updateListBinding(list binding.StringList) {
-
-}
-
-/*
-
-
- */
-
-type MyStopButton struct {
-	*widget.Button
-}
-
-func buildStopButton(cancelCauseFunc context.CancelCauseFunc) MyStopButton {
-	return MyStopButton{
-		widget.NewButton("Stop", func() {
-			cancelCauseFunc(errors.New("user stopped process"))
-		}),
 	}
 }
