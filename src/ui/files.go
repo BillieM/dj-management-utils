@@ -13,6 +13,18 @@ import (
 	"github.com/billiem/seren-management/src/helpers"
 )
 
+/*
+TODO:
+
+Investigate adding click behaviour to the file path label
+This would allow the user to click the path label to open the file/directory &
+remove the need for a seperate button
+
+See:
+https://stackoverflow.com/a/69911474
+https://developer.fyne.io/extend/extending-widgets.html
+*/
+
 func (d *Data) openFileCanvas(w fyne.Window, title string, updateVal *string, fileFilter []string, callbackFn func()) fyne.CanvasObject {
 
 	pathCard := buildPathCard(*updateVal, "file")
@@ -83,8 +95,6 @@ func (d *Data) openDirCanvas(w fyne.Window, title string, updateVal *string, cal
 Builds a fyne card given a path and pathType
 
 pathType is used to determine the default card text if path is empty
-
-used as a way of displaying paths kinda nicely?
 */
 func buildPathCard(path string, pathType string) *widget.Card {
 
