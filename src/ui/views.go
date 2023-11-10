@@ -82,11 +82,10 @@ func (d *Data) convertFolderMp3View(w fyne.Window) fyne.CanvasObject {
 
 	processContainerOuter := container.NewVBox()
 
-	startButton := widget.NewButton("Convert folder to mp3", nil)
 	startFunc := func() {
-		d.startConvertFolderMp3(processContainerOuter, startButton, startConvertFolderMp3Options{dirPath: &dirPath})
+		d.startConvertFolderMp3(w, processContainerOuter, startConvertFolderMp3Options{dirPath: &dirPath})
 	}
-	startButton.OnTapped = startFunc
+	startButton := widget.NewButton("Convert folder to mp3", startFunc)
 	optionsContainer.Add(startButton)
 
 	return container.NewVBox(trackPathCanvas, optionsContainer, processContainerOuter)

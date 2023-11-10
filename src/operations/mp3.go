@@ -46,7 +46,8 @@ func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, t
 		return t, nil
 	}, func(t ConvertTrack, err error) {
 		completedTracks++
-		fmt.Printf("%s failed because: %s\n", t.Name, err.Error())
+		completionVal := float64(completedTracks) / float64(totalTracks)
+		o.StepCallback(completionVal, t.formatError(err).Error())
 	}), tracksChan)
 
 	for range convertOut {
@@ -63,12 +64,6 @@ func convertTrack(track ConvertTrack) (ConvertTrack, error) {
 
 	if track == (ConvertTrack{}) {
 		return track, errors.New("convert track is empty")
-	}
-
-	// TODO: may be worth checking if the new file already exists during the buildConvertTrackArray step
-	// check if new file already exists
-	if helpers.DoesFileExist(track.NewFile.FileInfo.FullPath) {
-		return track, errors.New("file already exists")
 	}
 
 	// create dir for new file if it doesn't exist

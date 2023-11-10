@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/billiem/seren-management/src/helpers"
-	"github.com/k0kubun/pp"
 )
 
 /*
@@ -90,7 +89,6 @@ func ConvertFolderMp3(ctx context.Context, cfg helpers.Config, o OperationProces
 	convertTrackArray, errs := buildConvertTrackArray(convertFilePaths, params.OutDirPath)
 
 	for _, err := range errs {
-		pp.Println(err)
 		/*
 			possibly want to write these errors to the log
 
@@ -98,6 +96,7 @@ func ConvertFolderMp3(ctx context.Context, cfg helpers.Config, o OperationProces
 
 			can then implement file based/ UI based logger in the ui package
 		*/
+		o.StepCallback(0, err.Error())
 	}
 
 	parallelProcessConvertTrackArray(ctx, o, convertTrackArray)

@@ -1,6 +1,8 @@
 package operations
 
 import (
+	"errors"
+
 	"github.com/billiem/seren-management/src/helpers"
 )
 
@@ -28,6 +30,13 @@ type ConvertTrack struct {
 }
 
 /*
+formats an error message for a failed conversion
+*/
+func (t ConvertTrack) formatError(err error) error {
+	return errors.New("failed to convert " + t.Name + " because: " + err.Error())
+}
+
+/*
 Builds an array of ConvertTrack structs from an array of file paths
 
 File paths have been pre-validated to ensure they are valid files which can be converted
@@ -35,20 +44,25 @@ File paths have been pre-validated to ensure they are valid files which can be c
 
 func buildConvertTrackArray(paths []string, outDirPath string) ([]ConvertTrack, []error) {
 	var tracks []ConvertTrack
-	var errors []error
+	var errs []error
 
 	for _, path := range paths {
 		track, err := buildConvertTrack(path, outDirPath)
 
 		if err != nil {
-			errors = append(errors, err)
+			errs = append(errs, err)
+			continue
+		}
+
+		if helpers.DoesFileExist(track.NewFile.FileInfo.FullPath) {
+			errs = append(errs, track.formatError(errors.New("converted file already exists")))
 			continue
 		}
 
 		tracks = append(tracks, track)
 	}
 
-	return tracks, errors
+	return tracks, errs
 
 }
 
