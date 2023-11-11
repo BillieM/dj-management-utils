@@ -9,7 +9,7 @@ import (
 )
 
 /*
-Gets all of the files in the provided directory which can be converted to mp3
+getConvertPath gets all of the files in the provided directory which should be converted to mp3 based on the config
 
 if recursion is true, will also get files in subdirectories
 */
