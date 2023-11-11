@@ -1,9 +1,6 @@
 package ui
 
 import (
-	"errors"
-	"fmt"
-
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
@@ -32,8 +29,7 @@ func (d *Data) makeNavMenu(w fyne.Window, contentStack *fyne.Container) fyne.Can
 		UpdateNode: func(uid string, branch bool, node fyne.CanvasObject) {
 			op, ok := d.Operations[uid]
 			if !ok {
-				fmt.Println("updatenode", uid)
-				helpers.HandleFatalError(errors.New("Operation not found"))
+				helpers.HandleFatalError(helpers.ErrOperationNotFound)
 				return
 			}
 			node.(*widget.Label).SetText(op.Name)
@@ -41,12 +37,11 @@ func (d *Data) makeNavMenu(w fyne.Window, contentStack *fyne.Container) fyne.Can
 		OnSelected: func(uid string) {
 			op, ok := d.Operations[uid]
 			if !ok {
-				fmt.Println("onselected", uid)
-				helpers.HandleFatalError(errors.New("Operation not found"))
+				helpers.HandleFatalError(helpers.ErrOperationNotFound)
 				return
 			}
 			if d.processing {
-				pleaseWaitForProcess(w)
+				showErrorDialog(w, helpers.ErrPleaseWaitForProcess)
 				return
 			}
 			d.setMainContent(w, contentStack, op)

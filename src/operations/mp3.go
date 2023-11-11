@@ -2,7 +2,6 @@ package operations
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/billiem/seren-management/src/helpers"
@@ -36,23 +35,27 @@ func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, t
 	tracksChan := pipeline.Emit(tracks...)
 
 	convertOut := pipeline.ProcessConcurrently(ctx, 4, pipeline.NewProcessor(func(ctx context.Context, t ConvertTrack) (ConvertTrack, error) {
+
+		o.StepCallback(stepStartedStepInfo(fmt.Sprintf("Converting: %s", t.Name)))
+
 		t, err := convertTrack(t)
 		if err != nil {
 			return t, err
 		}
 		completedTracks++
-		o.StepCallback(StepInfo{
-			Progress: float64(completedTracks) / float64(totalTracks),
-			Message:  fmt.Sprintf("Finished converting: %s", t.Name),
-		})
+
+		o.StepCallback(stepFinishedStepInfo(
+			fmt.Sprintf("Converted: %s", t.Name),
+			float64(completedTracks)/float64(totalTracks),
+		))
 
 		return t, nil
 	}, func(t ConvertTrack, err error) {
 		completedTracks++
-		o.StepCallback(StepInfo{
-			Progress: float64(completedTracks) / float64(totalTracks),
-			Message:  t.formatError(err).Error(),
-		})
+		o.StepCallback(stepWarningStepInfo(
+			helpers.GenErrConvertTrack(t.Name, err),
+			float64(completedTracks)/float64(totalTracks),
+		))
 	}), tracksChan)
 
 	for range convertOut {
@@ -64,7 +67,7 @@ func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, t
 func convertTrack(track ConvertTrack) (ConvertTrack, error) {
 
 	if track == (ConvertTrack{}) {
-		return track, errors.New("convert track is empty")
+		return track, helpers.ErrConvertTrackEmpty
 	}
 
 	// create dir for new file if it doesn't exist

@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"errors"
 	"fmt"
 
 	"fyne.io/fyne/v2"
@@ -31,17 +30,13 @@ func (d *Data) openFileCanvas(w fyne.Window, title string, updateVal *string, fi
 
 	buttonWidget := widget.NewButtonWithIcon("Open", theme.FolderOpenIcon(), func() {
 		if d.State.processing {
-			pleaseWaitForProcess(w)
+			showErrorDialog(w, helpers.ErrPleaseWaitForProcess)
 			return
 		}
 
 		f := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err != nil {
-				dialogErr(w, err)
-				return
-			}
-			if reader == nil {
-				helpers.WriteToLog("no writer")
+				showErrorDialog(w, err)
 				return
 			}
 			// Below runs if file selection was valid
@@ -50,7 +45,12 @@ func (d *Data) openFileCanvas(w fyne.Window, title string, updateVal *string, fi
 			callbackFn()
 		}, w)
 		// Set properties of the file open dialog
-		f.SetLocation(d.getListableURI(*updateVal))
+		location, err := d.getListableURI(*updateVal)
+		if err != nil {
+			showErrorDialog(w, err)
+			return
+		}
+		f.SetLocation(location)
 		f.SetFilter(storage.NewExtensionFileFilter(fileFilter))
 		f.Show()
 	})
@@ -65,17 +65,13 @@ func (d *Data) openDirCanvas(w fyne.Window, title string, updateVal *string, cal
 	buttonWidget := widget.NewButtonWithIcon("Open", theme.FolderOpenIcon(), func() {
 
 		if d.State.processing {
-			pleaseWaitForProcess(w)
+			showErrorDialog(w, helpers.ErrPleaseWaitForProcess)
 			return
 		}
 
 		f := dialog.NewFolderOpen(func(reader fyne.ListableURI, err error) {
 			if err != nil {
-				dialogErr(w, err)
-				return
-			}
-			if reader == nil {
-				helpers.WriteToLog("no writer")
+				showErrorDialog(w, err)
 				return
 			}
 			// Below runs if directory selection was valid
@@ -84,7 +80,12 @@ func (d *Data) openDirCanvas(w fyne.Window, title string, updateVal *string, cal
 			callbackFn()
 		}, w)
 		// Set properties of the folder open dialog
-		f.SetLocation(d.getListableURI(*updateVal))
+		location, err := d.getListableURI(*updateVal)
+		if err != nil {
+			showErrorDialog(w, err)
+			return
+		}
+		f.SetLocation(location)
 		f.Show()
 	})
 
@@ -116,19 +117,19 @@ Accepts a path and returns a listable URI for the closest directory
 If no 'close directory' is found, it will return the base directory
 If the base directory is not found, it will return the root directory (i.e. /)
 */
-func (d *Data) getListableURI(path string) fyne.ListableURI {
+func (d *Data) getListableURI(path string) (fyne.ListableURI, error) {
 
 	var recursionCount int
 	dirPath, err := helpers.GetClosestDir(path, d.Config.BaseDir, &recursionCount)
 	if err != nil {
-		helpers.HandleFatalError(errors.New("Something went wrong getting the closest dir, err: " + err.Error()))
+		return nil, helpers.GenErrGettingClosestDir(err)
 	}
 	dirURI := storage.NewFileURI(dirPath)
 	dirListableURI, err := storage.ListerForURI(dirURI)
 	if err != nil {
-		helpers.HandleFatalError(errors.New("Something went wrong getting the listable URI, err: " + err.Error()))
+		return nil, helpers.GenErrGettingListableURI(err)
 	}
-	return dirListableURI
+	return dirListableURI, nil
 }
 
 /*

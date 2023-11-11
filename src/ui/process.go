@@ -2,25 +2,22 @@ package ui
 
 import (
 	"context"
-	"errors"
 	"sync"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/widget"
+	"github.com/billiem/seren-management/src/helpers"
 	"github.com/billiem/seren-management/src/operations"
 )
 
 /*
-Operation Process
-
-Implements methods defined in the OperationsProcess interface defined in operations/operations.go
+operationProcess Implements methods defined in the OperationsProcess interface defined in operations/operations.go
 
 The callbacks are used to update the UI as the process runs
 */
-
-type OperationProcess struct {
+type operationProcess struct {
 	ctxClose             context.CancelCauseFunc
 	bindVals             *progressBindingList
 	progressBarBindValue binding.Float
@@ -28,24 +25,31 @@ type OperationProcess struct {
 	finishedFunc         func()
 }
 
-func (o OperationProcess) StepCallback(stepInfo operations.StepInfo) {
-	o.progressBarBindValue.Set(stepInfo.Progress)
+/*
+StepCallback is executed each time a step finishes inside the operations package
+*/
+func (o operationProcess) StepCallback(stepInfo operations.StepInfo) {
+	if stepInfo.Progress != 0 {
+		o.progressBarBindValue.Set(stepInfo.Progress)
+	}
 	o.bindVals.Append(&progressBindingItem{
-		message: stepInfo.Message,
+		message:    stepInfo.Message,
+		err:        stepInfo.Error,
+		importance: stepInfo.Importance.GetFyneImportance(),
 	})
 	o.stepFunc()
 }
 
-func (o OperationProcess) ExitCallback() {
+/*
+ExitCallback is executed when the process finishes in the operations package
+*/
+func (o operationProcess) ExitCallback() {
 	o.finishedFunc()
 }
 
 /*
 Custom bindings for the log to allow for appending log messages with additional information
-
-TODO: can probably make these private
 */
-
 type bindBase struct {
 	sync.RWMutex
 	listeners sync.Map // map[DataListener]bool
@@ -54,7 +58,9 @@ type bindBase struct {
 type progressBindingItem struct {
 	bindBase
 
-	message string
+	message    string
+	err        error
+	importance widget.Importance
 }
 
 type progressBindingList struct {
@@ -89,7 +95,7 @@ func (i *progressBindingList) RemoveListener(l binding.DataListener) {
 
 func (l *progressBindingList) GetItem(index int) (binding.DataItem, error) {
 	if index < 0 || index >= len(l.Items) {
-		return nil, errors.New("index out of bounds")
+		return nil, helpers.ErrIndexOutOfBounds
 	}
 
 	return l.Items[index], nil
@@ -104,35 +110,41 @@ func (l *progressBindingList) Append(message *progressBindingItem) {
 }
 
 /*
-ProcessContainer is used to store widgets associated with a running process
-
-The container will be added to the main content stack, and removed when the process is finished
+operationsProcessContainer is used to store widgets associated with a running process
 */
-
 type operationProcessContainer struct {
 	container   *fyne.Container
+	stopButton  *widget.Button
 	progressBar *widget.ProgressBar
 	log         *widget.List
 }
 
 /*
-TODO: rename all the list calls, should be called 'log' or something
-
-Builds the processContainer widget, which is used to display the progress of a running process
+buildProcessContainer builds the processContainer widget,
+which is used to display the progress of a running process and allow the user to stop it
 */
 func buildProcessContainer(cancelCauseFunc context.CancelCauseFunc, progressBarBindVal binding.Float, logBindVals *progressBindingList) operationProcessContainer {
 	processContainerTop := container.NewVBox()
 	progressBar := widget.NewProgressBarWithData(progressBarBindVal)
 	stopButton := widget.NewButton("Stop", func() {
-		cancelCauseFunc(errors.New("user stopped process"))
+		cancelCauseFunc(helpers.ErrUserStoppedProcess)
 	})
 	log := widget.NewListWithData(logBindVals,
 		func() fyne.CanvasObject {
+			// Template function for the list, called when the list is created
 			return widget.NewLabel("template")
 		},
 		func(i binding.DataItem, o fyne.CanvasObject) {
+			// Update function for the list, called when the bind value changes
 			msg := i.(*progressBindingItem).message
-			o.(*widget.Label).Bind(binding.BindString(&msg))
+			err := i.(*progressBindingItem).err
+			if err != nil {
+				errMsg := err.Error()
+				o.(*widget.Label).Bind(binding.BindString(&errMsg))
+			} else {
+				o.(*widget.Label).Bind(binding.BindString(&msg))
+			}
+			o.(*widget.Label).Importance = i.(*progressBindingItem).importance
 		},
 	)
 
@@ -149,5 +161,6 @@ func buildProcessContainer(cancelCauseFunc context.CancelCauseFunc, progressBarB
 		container:   processContainer,
 		progressBar: progressBar,
 		log:         log,
+		stopButton:  stopButton,
 	}
 }

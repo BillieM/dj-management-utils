@@ -1,8 +1,6 @@
 package operations
 
 import (
-	"errors"
-
 	"github.com/billiem/seren-management/src/helpers"
 )
 
@@ -30,44 +28,37 @@ type ConvertTrack struct {
 }
 
 /*
-formats an error message for a failed conversion
-*/
-func (t ConvertTrack) formatError(err error) error {
-	return errors.New("failed to convert " + t.Name + " because: " + err.Error())
-}
-
-/*
-Builds an array of ConvertTrack structs from an array of file paths
+buildConvertTrackArray builds an array of ConvertTrack structs from an array of file paths
 
 File paths have been pre-validated to ensure they are valid files which can be converted
 */
-
-func buildConvertTrackArray(paths []string, outDirPath string) ([]ConvertTrack, []error) {
+func buildConvertTrackArray(paths []string, outDirPath string) ([]ConvertTrack, int, []error) {
 	var tracks []ConvertTrack
 	var errs []error
+	var alreadyExistsCnt int
 
 	for _, path := range paths {
 		track, err := buildConvertTrack(path, outDirPath)
 
 		if err != nil {
-			errs = append(errs, err)
-			continue
-		}
+			if err == helpers.ErrConvertedFileExists {
+				alreadyExistsCnt++
+				continue
+			}
 
-		if helpers.DoesFileExist(track.NewFile.FileInfo.FullPath) {
-			errs = append(errs, track.formatError(errors.New("converted file already exists")))
+			errs = append(errs, helpers.GenErrBuildingConvertTrack(path, err))
 			continue
 		}
 
 		tracks = append(tracks, track)
 	}
 
-	return tracks, errs
+	return tracks, alreadyExistsCnt, errs
 
 }
 
 /*
-Builds a ConvertTrack struct from a file path
+buildConvertTrack builds a ConvertTrack struct from a file path
 
 File path has been pre-validated to ensure it is a valid file which can be converted
 */
@@ -90,6 +81,10 @@ func buildConvertTrack(path string, outDirPath string) (ConvertTrack, error) {
 		newFileInfo.DirPath = outDirPath
 	}
 	newFileInfo.FullPath = newFileInfo.BuildFullPath()
+
+	if helpers.DoesFileExist(newFileInfo.FullPath) {
+		return ConvertTrack{}, helpers.ErrConvertedFileExists
+	}
 
 	return ConvertTrack{
 		Track: Track{

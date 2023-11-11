@@ -51,7 +51,7 @@ func ReplaceTrackExtension(s string, r string, a []string) string {
 func GetDirPathFromFilePath(s string) (string, error) {
 	dir, _ := filepath.Split(s)
 	if dir == "" {
-		return "", errors.New("no directory path found")
+		return "", ErrNoDirPath
 	}
 	return dir, nil
 }
@@ -59,12 +59,12 @@ func GetDirPathFromFilePath(s string) (string, error) {
 func GetFileNameFromFilePath(s string) (string, error) {
 	_, file := filepath.Split(s)
 	if file == "" {
-		return "", errors.New("no file name found")
+		return "", ErrNoFileName
 	}
 	fileName := file[:len(file)-len(filepath.Ext(file))]
 
 	if fileName == "" {
-		return "", errors.New("no file name found")
+		return "", ErrNoFileName
 	}
 
 	return fileName, nil
@@ -76,7 +76,7 @@ Returns the file extension from a given file path (including the dot)
 func GetFileExtensionFromFilePath(s string) (string, error) {
 	ext := filepath.Ext(s)
 	if ext == "" {
-		return "", errors.New("no file extension found")
+		return "", ErrNoFileExtension
 	}
 	return ext, nil
 }
@@ -94,7 +94,7 @@ func SplitFilePath(s string) (FileInfo, error) {
 	fileExtension, _ := GetFileExtensionFromFilePath(s)
 
 	if dirPath == "" && fileName == "" && fileExtension == "" {
-		return FileInfo{}, errors.New("no matches found")
+		return FileInfo{}, ErrNoMatchesFound
 	}
 
 	return FileInfo{
@@ -114,7 +114,7 @@ func SplitFilePathRequired(s string) (FileInfo, error) {
 		return fileInfo, err
 	}
 	if fileInfo.DirPath == "" || fileInfo.FileName == "" || fileInfo.FileExtension == "" {
-		return fileInfo, errors.New("missing required fields")
+		return fileInfo, ErrMissingRequiredFields
 	}
 	return fileInfo, nil
 }
@@ -166,7 +166,7 @@ func GetClosestDir(path string, baseDirPath string, rCnt *int) (string, error) {
 		} else if *rCnt == 6 {
 			return GetClosestDir(filepath.Join("/"), baseDirPath, rCnt)
 		} else {
-			return "", errors.New("Something went very wrong getting the cloest dir, err: " + err.Error())
+			return "", GenErrClosestDirUnknown(path, err)
 		}
 	}
 	if fi.IsDir() {

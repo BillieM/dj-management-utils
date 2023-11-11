@@ -5,6 +5,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
+	"github.com/billiem/seren-management/src/helpers"
 )
 
 func (d *Data) openSettingsWindow(a fyne.App) bool {
@@ -73,14 +74,14 @@ and then saves the Config struct to the config file
 func (d *Data) saveButton(w fyne.Window) *widget.Button {
 	btn := widget.NewButton("Save", func() {
 		if d.State.processing {
-			pleaseWaitForProcess(w)
+			showErrorDialog(w, helpers.ErrPleaseWaitForProcess)
 			return
 		}
 
 		d.Config = d.TmpConfig
 		err := d.Config.SaveConfig()
 		if err != nil {
-			dialogErr(w, err)
+			showErrorDialog(w, err)
 			return
 		}
 		dialog.ShowInformation("Settings", "Settings saved", w)
