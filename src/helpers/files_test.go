@@ -82,43 +82,43 @@ func TestGetFileExtensionFromFilePath(t *testing.T) {
 		name     string
 		filePath string
 		want     string
-		err      string
+		err      error
 	}{
 		{
 			name:     "file with extension",
 			filePath: "H:/Music/processed/funky cool song.mp3",
 			want:     ".mp3",
-			err:      "",
+			err:      nil,
 		},
 		{
 			name:     "file without extension",
 			filePath: "H:/Music/processed/funky cool song",
 			want:     "",
-			err:      "no file extension found",
+			err:      helpers.ErrNoFileExtension,
 		},
 		{
 			name:     "file without dir path",
 			filePath: "funky cool song.mp3",
 			want:     ".mp3",
-			err:      "",
+			err:      nil,
 		},
 		{
 			name:     "file without dir path or extension",
 			filePath: "funky cool song",
 			want:     "",
-			err:      "no file extension found",
+			err:      helpers.ErrNoFileExtension,
 		},
 		{
 			name:     "dir path only",
 			filePath: "H:/Music/processed/",
 			want:     "",
-			err:      "no file extension found",
+			err:      helpers.ErrNoFileExtension,
 		},
 		{
 			name:     "file name with dot",
 			filePath: "H:/tmp/testdir/01 - funky cool song (feat. coolman).m4a",
 			want:     ".m4a",
-			err:      "",
+			err:      nil,
 		},
 	}
 
@@ -126,7 +126,7 @@ func TestGetFileExtensionFromFilePath(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			fileExtension, err := helpers.GetFileExtensionFromFilePath(tt.filePath)
 
-			if !ErrorContains(err, tt.err) {
+			if !helpers.ErrorContains(err, tt.err) {
 				t.Errorf("Expected error %v, got %v", tt.err, err)
 			}
 
@@ -142,44 +142,44 @@ func TestGetDirPathFromFilePath(t *testing.T) {
 		name     string
 		filePath string
 		want     string
-		err      string
+		err      error
 	}{
 		{
 			name:     "file with extension",
 			filePath: "H:/Music/processed/funky cool song.mp3",
 			want:     "H:/Music/processed/",
-			err:      "",
+			err:      nil,
 		},
 		{
 			name:     "file without extension",
 			filePath: "H:/Music/processed/funky cool song",
 			want:     "H:/Music/processed/",
-			err:      "",
+			err:      nil,
 		},
 		{
 			name:     "directory path only (trailing /)",
 			filePath: "H:/Music/processed/",
 			want:     "H:/Music/processed/",
-			err:      "",
+			err:      nil,
 		},
 		{
 			name:     "file name only",
 			filePath: "funky cool song",
 			want:     "",
-			err:      "no directory path found",
+			err:      helpers.ErrNoDirPath,
 		},
 		{
 			name:     "file name with dot",
 			filePath: "H:/tmp/testdir/01 - funky cool song (feat. coolman).m4a",
 			want:     "H:/tmp/testdir/",
-			err:      "",
+			err:      nil,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := helpers.GetDirPathFromFilePath(tt.filePath)
 
-			if !ErrorContains(err, tt.err) {
+			if !helpers.ErrorContains(err, tt.err) {
 				t.Errorf("Expected error %v, got %v", tt.err, err)
 			}
 
@@ -195,38 +195,38 @@ func TestGetFileNameFromFilePath(t *testing.T) {
 		name     string
 		filePath string
 		want     string
-		err      string
+		err      error
 	}{
 		{
 			name:     "file with extension",
 			filePath: "H:/Music/processed/funky cool song.mp3",
 			want:     "funky cool song",
-			err:      "",
+			err:      nil,
 		},
 		{
 			name:     "file without extension",
 			filePath: "H:/Music/processed/funky cool song",
 			want:     "funky cool song",
-			err:      "",
+			err:      nil,
 		},
 		{
 			name:     "directory path only (trailing /)",
 			filePath: "H:/Music/processed/",
 			want:     "",
-			err:      "no file name found",
+			err:      helpers.ErrNoFileName,
 		},
 		{
 			name:     "file name with dot",
 			filePath: "H:/tmp/testdir/01 - funky cool song (feat. coolman).m4a",
 			want:     "01 - funky cool song (feat. coolman)",
-			err:      "",
+			err:      nil,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := helpers.GetFileNameFromFilePath(tt.filePath)
 
-			if !ErrorContains(err, tt.err) {
+			if !helpers.ErrorContains(err, tt.err) {
 				t.Errorf("Expected error %v, got %v", tt.err, err)
 			}
 
@@ -303,7 +303,7 @@ func TestSplitDirPath(t *testing.T) {
 		name     string
 		filePath string
 		want     helpers.FileInfo
-		err      string
+		err      error
 	}{
 		{
 			name:     "file with extension",
@@ -314,7 +314,7 @@ func TestSplitDirPath(t *testing.T) {
 				FileName:      "funky cool song",
 				FileExtension: ".mp3",
 			},
-			err: "",
+			err: nil,
 		},
 		{
 			name:     "file without extension",
@@ -325,7 +325,7 @@ func TestSplitDirPath(t *testing.T) {
 				FileName:      "funky cool song",
 				FileExtension: "",
 			},
-			err: "",
+			err: nil,
 		},
 		{
 			name:     "file without dir path",
@@ -336,7 +336,7 @@ func TestSplitDirPath(t *testing.T) {
 				FileName:      "funky cool song",
 				FileExtension: ".mp3",
 			},
-			err: "",
+			err: nil,
 		},
 		{
 			name:     "file without dir path or extension",
@@ -347,7 +347,7 @@ func TestSplitDirPath(t *testing.T) {
 				FileName:      "funky cool song",
 				FileExtension: "",
 			},
-			err: "",
+			err: nil,
 		},
 		{
 			name:     "dir path only",
@@ -358,7 +358,7 @@ func TestSplitDirPath(t *testing.T) {
 				FileName:      "",
 				FileExtension: "",
 			},
-			err: "",
+			err: nil,
 		},
 		{
 			name:     "file name with dot",
@@ -369,13 +369,13 @@ func TestSplitDirPath(t *testing.T) {
 				FileName:      "01 - funky cool song (feat. coolman)",
 				FileExtension: ".m4a",
 			},
-			err: "",
+			err: nil,
 		},
 		{
 			name:     "empty string",
 			filePath: "",
 			want:     helpers.FileInfo{},
-			err:      "no matches found",
+			err:      helpers.ErrNoMatchesFound,
 		},
 	}
 
@@ -383,7 +383,7 @@ func TestSplitDirPath(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			fileInfo, err := helpers.SplitFilePath(tt.filePath)
 
-			if !ErrorContains(err, tt.err) {
+			if !helpers.ErrorContains(err, tt.err) {
 				t.Errorf("Expected error %v, got %v", tt.err, err)
 			}
 

@@ -13,7 +13,7 @@ func TestBuildConvertTrack(t *testing.T) {
 		path        string
 		outDirPath  string
 		expected    ConvertTrack
-		expectedErr string
+		expectedErr error
 	}{
 		{
 			name: "valid path",
@@ -39,7 +39,7 @@ func TestBuildConvertTrack(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: "",
+			expectedErr: nil,
 		},
 		{
 			name:       "valid path with outDirPath",
@@ -66,25 +66,25 @@ func TestBuildConvertTrack(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: "",
+			expectedErr: nil,
 		},
 		{
 			name:        "invalid path (no extension)",
 			path:        "/path/to/nonexistent/file",
 			expected:    ConvertTrack{},
-			expectedErr: "missing required fields",
+			expectedErr: helpers.ErrMissingRequiredFields,
 		},
 		{
 			name:        "invalid path (no file name/extension)",
 			path:        "/path/to/nonexistent/",
 			expected:    ConvertTrack{},
-			expectedErr: "missing required fields",
+			expectedErr: helpers.ErrMissingRequiredFields,
 		},
 		{
 			name:        "invalid path (no dir path)",
 			path:        "file.wav",
 			expected:    ConvertTrack{},
-			expectedErr: "missing required fields",
+			expectedErr: helpers.ErrMissingRequiredFields,
 		},
 	}
 
@@ -92,8 +92,8 @@ func TestBuildConvertTrack(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			actual, actualErr := buildConvertTrack(tt.path, tt.outDirPath)
 
-			if actualErr != nil && actualErr.Error() != tt.expectedErr {
-				t.Errorf("expected error %v, but got %v", tt.expectedErr, actualErr)
+			if !helpers.ErrorContains(actualErr, tt.expectedErr) {
+				t.Errorf("expected %v, but got %v", tt.expectedErr, actualErr)
 			}
 
 			// compare actual and expected ConvertTrack structs here
