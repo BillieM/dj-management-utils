@@ -5,12 +5,18 @@ import (
 	"os"
 )
 
+/*
+Config is the main config struct for the application
+
+Built from config.json
+*/
 type Config struct {
-	TraktorCollectionPath    string   `json:"traktorCollectionPath"`
-	TmpDir                   string   `json:"tmpDir"`
-	BaseDir                  string   `json:"baseDir"`
-	BaseOutputDir            string   `json:"baseOutputDir"`
-	ExtensionsToConvertToMp3 []string `json:"extensionsToConvertToMp3"`
+	TraktorCollectionPath      string   `json:"traktorCollectionPath"`
+	TmpDir                     string   `json:"tmpDir"`
+	BaseDir                    string   `json:"baseDir"`
+	BaseOutputDir              string   `json:"baseOutputDir"`
+	ExtensionsToConvertToMp3   []string `json:"extensionsToConvertToMp3"`
+	ExtensionsToConvertToStems []string `json:"extensionsToConvertToStems"`
 }
 
 func LoadConfig() (*Config, error) {
@@ -41,6 +47,11 @@ func (c *Config) SaveConfig() error {
 
 	return nil
 }
+
+/*
+Below config validation functions are called by views to ensure required config values are
+present and valid before allowing the user to proceed
+*/
 
 func (c *Config) CheckTraktorCollectionPath() (bool, string) {
 	if _, err := os.Stat(c.TraktorCollectionPath); os.IsNotExist(err) {

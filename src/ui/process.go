@@ -32,11 +32,13 @@ func (o operationProcess) StepCallback(stepInfo operations.StepInfo) {
 	if stepInfo.Progress != 0 {
 		o.progressBarBindValue.Set(stepInfo.Progress)
 	}
-	o.bindVals.Append(&progressBindingItem{
-		message:    stepInfo.Message,
-		err:        stepInfo.Error,
-		importance: stepInfo.Importance.GetFyneImportance(),
-	})
+	if !stepInfo.SkipLog {
+		o.bindVals.Append(&progressBindingItem{
+			message:    stepInfo.Message,
+			err:        stepInfo.Error,
+			importance: stepInfo.Importance.GetFyneImportance(),
+		})
+	}
 	o.stepFunc()
 }
 

@@ -57,15 +57,15 @@ func (d *Data) getOperationsList() map[string]Operation {
 		},
 		"separateTrack": {
 			Name: "Separate Track",
-			View: d.separateTrackView,
+			View: d.separateSingleStemView,
 		},
 		"separateFolder": {
 			Name: "Separate Folder",
-			View: d.separateFolderView,
+			View: d.separateFolderStemView,
 		},
 		"separateCollection": {
 			Name: "Separate Collection",
-			View: d.separateCollectionView,
+			View: d.separateCollectionStemView,
 		},
 		"mp3s": {
 			Name: "Convert MP3s",

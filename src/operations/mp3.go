@@ -3,6 +3,7 @@ package operations
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/billiem/seren-management/src/helpers"
 	"github.com/deliveryhero/pipeline/v2"
@@ -52,10 +53,16 @@ func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, t
 		return t, nil
 	}, func(t ConvertTrack, err error) {
 		completedTracks++
-		o.StepCallback(stepWarningStepInfo(
-			helpers.GenErrConvertTrack(t.Name, err),
-			float64(completedTracks)/float64(totalTracks),
-		))
+		if strings.Contains(err.Error(), "context canceled") {
+			o.StepCallback(
+				progressOnlyStepInfo(float64(completedTracks) / float64(totalTracks)),
+			)
+		} else {
+			o.StepCallback(stepWarningStepInfo(
+				helpers.GenErrConvertTrack(t.Name, err),
+				float64(completedTracks)/float64(totalTracks),
+			))
+		}
 	}), tracksChan)
 
 	for range convertOut {

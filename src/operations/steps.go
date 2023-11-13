@@ -56,3 +56,10 @@ func dangerStepInfo(err error) StepInfo {
 		Importance: helpers.DangerImportance,
 	}
 }
+
+func progressOnlyStepInfo(progress float64) StepInfo {
+	return StepInfo{
+		Progress: progress,
+		SkipLog:  true,
+	}
+}

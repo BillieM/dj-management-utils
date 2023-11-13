@@ -9,5 +9,8 @@
     "ogg",
     "m4a",
     "wav"
+  ],
+  "extensionsToConvertToStems": [
+    "mp3", "wav"
   ]
 }

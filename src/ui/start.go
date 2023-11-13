@@ -55,16 +55,69 @@ func (d *Data) sharedStartBuild(w fyne.Window, processContainerOuter *fyne.Conta
 }
 
 /*
-startConvertFolderMp3Options serves as a way to pass arguments to startConvertFolderMp3
+startSeparateSingleStem is the entrypoint for the SeperateSingleStem operation from the UI
 */
-type startConvertFolderMp3Options struct {
-	dirPath *string
+func (d *Data) startSeparateSingleStem(w fyne.Window, processContainerOuter *fyne.Container, opts operations.SeparateSingleStemOpts) {
+
+	ctx, op, err := d.sharedStartBuild(w, processContainerOuter)
+
+	if err != nil {
+		showErrorDialog(w, err)
+		return
+	}
+
+	go operations.SeparateSingleStem(
+		ctx,
+		*d.Config,
+		op,
+		opts,
+	)
+}
+
+/*
+startSeparateFolderStem is the entrypoint for the SeperateFolderStem operation from the UI
+*/
+func (d *Data) startSeparateFolderStem(w fyne.Window, processContainerOuter *fyne.Container, opts operations.SeparateFolderStemOpts) {
+
+	ctx, op, err := d.sharedStartBuild(w, processContainerOuter)
+
+	if err != nil {
+		showErrorDialog(w, err)
+		return
+	}
+
+	go operations.SeparateFolderStem(
+		ctx,
+		*d.Config,
+		op,
+		opts,
+	)
+}
+
+/*
+startConvertSingleMp3 is the entrypoint for the ConvertSingleMp3 operation from the UI
+*/
+func (d *Data) startConvertSingleMp3(w fyne.Window, processContainerOuter *fyne.Container, opts operations.ConvertSingleMp3Opts) {
+
+	ctx, op, err := d.sharedStartBuild(w, processContainerOuter)
+
+	if err != nil {
+		showErrorDialog(w, err)
+		return
+	}
+
+	go operations.ConvertSingleMp3(
+		ctx,
+		*d.Config,
+		op,
+		opts,
+	)
 }
 
 /*
 startConvertFolderMp3 is the entrypoint for the ConvertFolderMp3 operation from the UI
 */
-func (d *Data) startConvertFolderMp3(w fyne.Window, processContainerOuter *fyne.Container, opts startConvertFolderMp3Options) {
+func (d *Data) startConvertFolderMp3(w fyne.Window, processContainerOuter *fyne.Container, opts operations.ConvertFolderMp3Opts) {
 
 	ctx, op, err := d.sharedStartBuild(w, processContainerOuter)
 
@@ -77,8 +130,6 @@ func (d *Data) startConvertFolderMp3(w fyne.Window, processContainerOuter *fyne.
 		ctx,
 		*d.Config,
 		op,
-		operations.ConvertFolderMp3Params{
-			InDirPath: *opts.dirPath,
-		},
+		opts,
 	)
 }
