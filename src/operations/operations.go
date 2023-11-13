@@ -32,43 +32,103 @@ type StepInfo struct {
 	Importance helpers.Importance
 }
 
+/*
+SeperateSingleStem separates stems from a single file
+*/
 func SeparateSingleStem(ctx context.Context, cfg helpers.Config, o OperationProcess, opts SeparateSingleStemOpts) {
 
+	defer func() {
+		o.StepCallback(progressOnlyStepInfo(1))
+		o.ExitCallback()
+	}()
+
 	err := opts.check()
 
 	if err != nil {
-		panic(err)
+		o.StepCallback(dangerStepInfo(err))
+		return
 	}
 
 }
 
+/*
+SeparateFolderStem separates stems from all files in a folder
+*/
 func SeparateFolderStem(ctx context.Context, cfg helpers.Config, o OperationProcess, opts SeparateFolderStemOpts) {
 
+	defer func() {
+		o.StepCallback(progressOnlyStepInfo(1))
+		o.ExitCallback()
+	}()
+
 	err := opts.check()
 
 	if err != nil {
-		panic(err)
+		o.StepCallback(dangerStepInfo(err))
+		return
 	}
 
+	stemFilePaths, err := getStemPaths(cfg, opts.InDirPath, opts.Recursion)
+
+	if err != nil {
+		o.StepCallback(dangerStepInfo(err))
+		return
+	}
+
+	stemTrackArray, alreadyExistsCnt, errs := buildStemTrackArray(stemFilePaths, opts.OutDirPath, opts.Type)
+
+	for _, err := range errs {
+		o.StepCallback(warningStepInfo(err))
+	}
+
+	_ = alreadyExistsCnt
+	_ = stemTrackArray
 }
 
+/*
+ConvertSingleMp3 converts a single file to mp3
+*/
 func ConvertSingleMp3(ctx context.Context, cfg helpers.Config, o OperationProcess, opts ConvertSingleMp3Opts) {
+
+	defer func() {
+		o.StepCallback(progressOnlyStepInfo(1))
+		o.ExitCallback()
+	}()
 
 	err := opts.check()
 
 	if err != nil {
-		panic(err)
+		o.StepCallback(dangerStepInfo(err))
+		return
 	}
 
+	o.StepCallback(stageStepInfo("Checking file to convert"))
 	convertTrackArray, alreadyExistsCnt, errs := buildConvertTrackArray([]string{opts.InFilePath}, opts.OutDirPath)
 
-	_, _, _ = convertTrackArray, alreadyExistsCnt, errs
+	if len(errs) > 0 {
+		o.StepCallback(warningStepInfo(errs[0]))
+		return
+	}
+
+	if alreadyExistsCnt > 0 {
+		o.StepCallback(warningStepInfo(helpers.ErrConvertedFileExists))
+		return
+	}
+
+	o.StepCallback(stageStepInfo("Converting file to mp3"))
+	parallelProcessConvertTrackArray(ctx, o, convertTrackArray)
+	o.StepCallback(processFinishedStepInfo("Finished converting file to mp3"))
 }
 
 /*
 ConvertFolderMp3 converts all files in a folder to mp3
 */
 func ConvertFolderMp3(ctx context.Context, cfg helpers.Config, o OperationProcess, opts ConvertFolderMp3Opts) {
+
+	defer func() {
+		o.StepCallback(progressOnlyStepInfo(1))
+		o.ExitCallback()
+	}()
 
 	err := opts.check()
 
@@ -98,6 +158,4 @@ func ConvertFolderMp3(ctx context.Context, cfg helpers.Config, o OperationProces
 	parallelProcessConvertTrackArray(ctx, o, convertTrackArray)
 
 	o.StepCallback(processFinishedStepInfo("Finished converting files to mp3"))
-
-	o.ExitCallback()
 }

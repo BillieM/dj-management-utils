@@ -2,7 +2,6 @@ package helpers_test
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/billiem/seren-management/src/helpers"
@@ -244,7 +243,7 @@ func TestGetClosestDir(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	baseTestDataDir := filepath.Join(workingDir, "../../test_data")
+	baseTestDataDir := helpers.JoinFilepathToSlash(workingDir, "../../test_data")
 
 	tests := []struct {
 		name     string
@@ -254,35 +253,35 @@ func TestGetClosestDir(t *testing.T) {
 	}{
 		{
 			name:     "existing dir",
-			path:     filepath.Join(baseTestDataDir, "files_test_dir"),
-			expected: filepath.Join(baseTestDataDir, "files_test_dir"),
+			path:     helpers.JoinFilepathToSlash(baseTestDataDir, "files_test_dir"),
+			expected: helpers.JoinFilepathToSlash(baseTestDataDir, "files_test_dir"),
 		},
 		{
 			name:     "existing file",
-			path:     filepath.Join(baseTestDataDir, "files_test_dir/files_test_file.txt"),
-			expected: filepath.Join(baseTestDataDir, "files_test_dir"),
+			path:     helpers.JoinFilepathToSlash(baseTestDataDir, "files_test_dir/files_test_file.txt"),
+			expected: helpers.JoinFilepathToSlash(baseTestDataDir, "files_test_dir"),
 		},
 		{
 			name:     "non-existing file, existing parent dir",
-			path:     filepath.Join(baseTestDataDir, "files_test_dir/fake_file.txt"),
-			expected: filepath.Join(baseTestDataDir, "files_test_dir"),
+			path:     helpers.JoinFilepathToSlash(baseTestDataDir, "files_test_dir/fake_file.txt"),
+			expected: helpers.JoinFilepathToSlash(baseTestDataDir, "files_test_dir"),
 		},
 		{
 			name:     "non-existing file, non-existing parent dir",
-			path:     filepath.Join(baseTestDataDir, "fake_dir/fake_file.txt"),
-			expected: filepath.Join(baseTestDataDir),
+			path:     helpers.JoinFilepathToSlash(baseTestDataDir, "fake_dir/fake_file.txt"),
+			expected: helpers.JoinFilepathToSlash(baseTestDataDir),
 		},
 		{
 			name:     "Many levels deep, returns BaseDir",
-			path:     filepath.Join("/fake_dir_1/fake_dir2/fake_dir_3/fake_dir_4/file.txt"),
-			expected: filepath.Join(baseTestDataDir),
+			path:     helpers.JoinFilepathToSlash("/fake_dir_1/fake_dir2/fake_dir_3/fake_dir_4/file.txt"),
+			expected: helpers.JoinFilepathToSlash(baseTestDataDir),
 			baseDir:  baseTestDataDir,
 		},
 		{
 			name:     "Many levels deep, fake BaseDir, returns default /",
-			path:     filepath.Join(baseTestDataDir, "fake_dir_1/fake_dir2/fake_dir_3/fake_dir_4/file.txt"),
-			expected: filepath.Join("/"),
-			baseDir:  filepath.Join("/fake_dir/weeoeoeoeo/"),
+			path:     helpers.JoinFilepathToSlash(baseTestDataDir, "fake_dir_1/fake_dir2/fake_dir_3/fake_dir_4/file.txt"),
+			expected: helpers.JoinFilepathToSlash("/"),
+			baseDir:  helpers.JoinFilepathToSlash("/fake_dir/weeoeoeoeo/"),
 		},
 	}
 
@@ -389,6 +388,43 @@ func TestSplitDirPath(t *testing.T) {
 
 			if !cmp.Equal(fileInfo, tt.want) {
 				t.Errorf("Expected %s, got %s", tt.want, fileInfo)
+			}
+		})
+	}
+}
+
+func TestBuildFullPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		fileInfo helpers.FileInfo
+		want     string
+	}{
+		{
+			name: "trailing slash on dir",
+			fileInfo: helpers.FileInfo{
+				DirPath:       "H:/Music/processed/",
+				FileName:      "funky cool song",
+				FileExtension: ".mp3",
+			},
+			want: "H:/Music/processed/funky cool song.mp3",
+		},
+		{
+			name: "no trailing slash on dir",
+			fileInfo: helpers.FileInfo{
+				DirPath:       "/mnt/h/Music/processed",
+				FileName:      "funky cool song",
+				FileExtension: ".wav",
+			},
+			want: "/mnt/h/Music/processed/funky cool song.wav",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fullPath := tt.fileInfo.BuildFullPath()
+
+			if fullPath != tt.want {
+				t.Errorf("Expected %s, got %s", tt.want, fullPath)
 			}
 		})
 	}

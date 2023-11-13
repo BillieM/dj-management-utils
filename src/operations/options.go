@@ -3,11 +3,26 @@ package operations
 import "github.com/billiem/seren-management/src/helpers"
 
 /*
+StemSeparationType is used to determine the type of stem output
+*/
+type StemSeparationType int
+
+const (
+	FourTrack StemSeparationType = iota // 4 .wav files for drums, bass, other, vocals
+	Traktor                             // Traktor stems .stem.m4a
+)
+
+func (s StemSeparationType) String() string {
+	return [...]string{"4 Track", "Traktor"}[s]
+}
+
+/*
 SeperateSingleStemOptions is used as a way to pass arguments to SeperateSingleStem
 */
 type SeparateSingleStemOpts struct {
-	InFilePath string // Mandatory
-	OutDirPath string // Optional - if not provided, will use the same dir as the input file
+	InFilePath string             // Mandatory
+	OutDirPath string             // Optional - if not provided, will use the same dir as the input file
+	Type       StemSeparationType // Mandatory
 }
 
 /*
@@ -25,9 +40,10 @@ func (p SeparateSingleStemOpts) check() error {
 SeperateFolderStemOptions contains the options for SeperateFolderStem
 */
 type SeparateFolderStemOpts struct {
-	InDirPath  string // Mandatory
-	OutDirPath string // Optional - if not provided, will use the same dir as the input file
-	Recursion  bool   // Optional
+	InDirPath  string             // Mandatory
+	OutDirPath string             // Optional - if not provided, will use the same dir as the input file
+	Recursion  bool               // Optional
+	Type       StemSeparationType // Mandatory
 }
 
 /*

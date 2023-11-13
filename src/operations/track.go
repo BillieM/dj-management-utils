@@ -105,9 +105,124 @@ StemTrack is used as part of the process for converting audio files into stems
 type StemTrack struct {
 	Track
 
-	stemFiles []StemFile
+	OriginalFile AudioFile
+	NewFile      AudioFile // If this is empty, just create stem files
+
+	BassFile   StemFile
+	DrumsFile  StemFile
+	OtherFile  StemFile
+	VocalsFile StemFile
 }
 
 type StemFile struct {
 	AudioFile
+}
+
+/*
+buildStemTrackArray builds an array of StemTrack structs from an array of file paths
+*/
+
+func buildStemTrackArray(paths []string, outDirPath string, stemType StemSeparationType) ([]StemTrack, int, []error) {
+	var tracks []StemTrack
+	var errs []error
+	var alreadyExistsCnt int
+
+	for _, path := range paths {
+		track, err := buildStemTrack(path, outDirPath, stemType)
+
+		if err != nil {
+			if err == helpers.ErrConvertedFileExists {
+				alreadyExistsCnt++
+				continue
+			}
+
+			errs = append(errs, helpers.GenErrBuildingStemTrack(path, err))
+			continue
+		}
+
+		tracks = append(tracks, track)
+	}
+
+	return tracks, alreadyExistsCnt, errs
+}
+
+/*
+buildStemTrack builds a StemTrack struct from a file path
+*/
+func buildStemTrack(path string, outDirPath string, stemType StemSeparationType) (StemTrack, error) {
+
+	origFileInfo, err := helpers.SplitFilePathRequired(path)
+
+	if err != nil {
+		return StemTrack{}, err
+	}
+
+	var newFileInfo helpers.FileInfo
+
+	baseStemDirPath := helpers.JoinFilepathToSlash(origFileInfo.DirPath, origFileInfo.FileName) + "/"
+	if outDirPath != "" {
+		baseStemDirPath = helpers.JoinFilepathToSlash(outDirPath, origFileInfo.FileName) + "/"
+	}
+
+	deleteOnFinish := stemType == Traktor
+
+	bassFile := buildStemFile(baseStemDirPath, "bass", deleteOnFinish)
+	drumsFile := buildStemFile(baseStemDirPath, "drums", deleteOnFinish)
+	otherFile := buildStemFile(baseStemDirPath, "other", deleteOnFinish)
+	vocalsFile := buildStemFile(baseStemDirPath, "vocals", deleteOnFinish)
+
+	// Build the new file only if generating a Traktor stem file
+	if stemType == Traktor {
+		newFileInfo = origFileInfo
+		newFileInfo.FileExtension = ".stem.m4a"
+		if outDirPath != "" {
+			newFileInfo.DirPath = outDirPath
+		}
+		newFileInfo.FullPath = newFileInfo.BuildFullPath()
+
+		if helpers.DoesFileExist(newFileInfo.FullPath) {
+			return StemTrack{}, helpers.ErrStemOutputExists
+		}
+	} else if stemType == FourTrack {
+		if helpers.DoesFileExist(bassFile.FileInfo.FullPath) &&
+			helpers.DoesFileExist(drumsFile.FileInfo.FullPath) &&
+			helpers.DoesFileExist(otherFile.FileInfo.FullPath) &&
+			helpers.DoesFileExist(vocalsFile.FileInfo.FullPath) {
+			return StemTrack{}, helpers.ErrStemOutputExists
+		}
+	}
+
+	return StemTrack{
+		Track: Track{
+			Name: origFileInfo.FileName,
+		},
+		OriginalFile: AudioFile{
+			FileInfo: origFileInfo,
+		},
+		NewFile: AudioFile{
+			FileInfo: newFileInfo,
+		},
+		BassFile:   bassFile,
+		DrumsFile:  drumsFile,
+		OtherFile:  otherFile,
+		VocalsFile: vocalsFile,
+	}, nil
+}
+
+func buildStemFile(baseStemDirPath string, fileName string, deleteOnFinish bool) StemFile {
+
+	stemFileInfo := helpers.FileInfo{
+		DirPath:       baseStemDirPath,
+		FileName:      fileName,
+		FileExtension: ".wav",
+	}
+
+	stemFileInfo.FullPath = stemFileInfo.BuildFullPath()
+
+	return StemFile{
+		AudioFile: AudioFile{
+			FileInfo:       stemFileInfo,
+			DeleteOnFinish: deleteOnFinish,
+		},
+	}
 }

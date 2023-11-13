@@ -44,6 +44,8 @@ var (
 	ErrOperationNotFound     = errors.New("operation not found")
 	ErrPleaseWaitForProcess  = errors.New("please wait for the current process to finish")
 	ErrUserStoppedProcess    = errors.New("user stopped process")
+	ErrBuildingStemTrack     = errors.New("error building stem track")
+	ErrStemOutputExists      = errors.New("stem extraction output already exists")
 )
 
 var (
@@ -64,6 +66,9 @@ var (
 	}
 	GenErrConvertTrack = func(name string, err error) error {
 		return fmt.Errorf("%s %s: %w", ErrConvertTrack, name, err)
+	}
+	GenErrBuildingStemTrack = func(name string, err error) error {
+		return fmt.Errorf("%s %s: %w", ErrBuildingStemTrack, name, err)
 	}
 )
 

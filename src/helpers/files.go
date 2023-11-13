@@ -16,7 +16,7 @@ type FileInfo struct {
 }
 
 func (f FileInfo) BuildFullPath() string {
-	return fmt.Sprintf("%s%s%s", f.DirPath, f.FileName, f.FileExtension)
+	return JoinFilepathToSlash(f.DirPath, f.FileName+f.FileExtension)
 }
 
 func DoesFileExist(path string) bool {
@@ -50,6 +50,7 @@ func ReplaceTrackExtension(s string, r string, a []string) string {
 
 func GetDirPathFromFilePath(s string) (string, error) {
 	dir, _ := filepath.Split(s)
+	dir = filepath.ToSlash(dir)
 	if dir == "" {
 		return "", ErrNoDirPath
 	}
@@ -160,11 +161,11 @@ func GetClosestDir(path string, baseDirPath string, rCnt *int) (string, error) {
 	// fmt.Println(*rCnt, path)
 	if err != nil {
 		if *rCnt <= 4 {
-			return GetClosestDir(filepath.Join(path, ".."), baseDirPath, rCnt)
+			return GetClosestDir(JoinFilepathToSlash(path, ".."), baseDirPath, rCnt)
 		} else if *rCnt == 5 {
 			return GetClosestDir(baseDirPath, baseDirPath, rCnt)
 		} else if *rCnt == 6 {
-			return GetClosestDir(filepath.Join("/"), baseDirPath, rCnt)
+			return GetClosestDir(JoinFilepathToSlash("/"), baseDirPath, rCnt)
 		} else {
 			return "", GenErrClosestDirUnknown(path, err)
 		}
@@ -172,7 +173,10 @@ func GetClosestDir(path string, baseDirPath string, rCnt *int) (string, error) {
 	if fi.IsDir() {
 		return path, nil
 	} else {
-		return GetClosestDir(filepath.Join(path, ".."), baseDirPath, rCnt)
+		return GetClosestDir(
+			JoinFilepathToSlash(path, ".."),
+			baseDirPath, rCnt,
+		)
 	}
 }
 
@@ -186,4 +190,8 @@ func CreateDirIfNotExists(path string) error {
 	}
 
 	return nil
+}
+
+func JoinFilepathToSlash(a ...string) string {
+	return filepath.ToSlash(filepath.Join(a...))
 }
