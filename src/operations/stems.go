@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"sync"
 
 	b64 "encoding/base64"
 
@@ -86,7 +85,6 @@ func parallelProcessStemTrackArray(ctx context.Context, o OperationProcess, trac
 	p := buildProgress(len(tracks), numSteps)
 
 	tracksChan := pipeline.Emit(tracks...)
-	var wg sync.WaitGroup
 
 	// TODO: may be able to see about passing multiple files as a batch ?
 	demucsOut := pipeline.ProcessConcurrently(ctx, 1, pipeline.NewProcessor(func(ctx context.Context, t StemTrack) (StemTrack, error) {
