@@ -42,13 +42,29 @@ func SeparateSingleStem(ctx context.Context, cfg helpers.Config, o OperationProc
 		o.ExitCallback()
 	}()
 
-	err := opts.check()
+	_, err := opts.Check()
 
 	if err != nil {
 		o.StepCallback(dangerStepInfo(err))
 		return
 	}
 
+	o.StepCallback(stageStepInfo("Checking file to separate"))
+	stemTrackArray, alreadyExistsCnt, errs := buildStemTrackArray([]string{opts.InFilePath}, opts.OutDirPath, opts.Type)
+
+	if len(errs) > 0 {
+		o.StepCallback(warningStepInfo(errs[0]))
+		return
+	}
+
+	if alreadyExistsCnt > 0 {
+		o.StepCallback(warningStepInfo(helpers.ErrConvertedFileExists))
+		return
+	}
+
+	o.StepCallback(stageStepInfo("Converting file to stems"))
+	parallelProcessStemTrackArray(ctx, o, stemTrackArray)
+	o.StepCallback(processFinishedStepInfo("Finished seperating file to stems"))
 }
 
 /*
@@ -61,28 +77,34 @@ func SeparateFolderStem(ctx context.Context, cfg helpers.Config, o OperationProc
 		o.ExitCallback()
 	}()
 
-	err := opts.check()
+	_, err := opts.Check()
 
 	if err != nil {
 		o.StepCallback(dangerStepInfo(err))
 		return
 	}
 
+	o.StepCallback(stageStepInfo("Finding files to convert"))
 	stemFilePaths, err := getStemPaths(cfg, opts.InDirPath, opts.Recursion)
+	o.StepCallback(stageStepInfo(fmt.Sprintf("Found %v potential files to convert", len(stemFilePaths))))
 
 	if err != nil {
 		o.StepCallback(dangerStepInfo(err))
 		return
 	}
 
+	o.StepCallback(stageStepInfo("Checking found files"))
 	stemTrackArray, alreadyExistsCnt, errs := buildStemTrackArray(stemFilePaths, opts.OutDirPath, opts.Type)
+	o.StepCallback(stageStepInfo(fmt.Sprintf("%v files already exist, %v left to convert", alreadyExistsCnt, len(stemTrackArray))))
 
 	for _, err := range errs {
 		o.StepCallback(warningStepInfo(err))
 	}
 
-	_ = alreadyExistsCnt
-	_ = stemTrackArray
+	o.StepCallback(stageStepInfo("Converting files to stems"))
+	parallelProcessStemTrackArray(ctx, o, stemTrackArray)
+	o.StepCallback(processFinishedStepInfo("Finished seperating files to stems"))
+
 }
 
 /*
@@ -95,7 +117,7 @@ func ConvertSingleMp3(ctx context.Context, cfg helpers.Config, o OperationProces
 		o.ExitCallback()
 	}()
 
-	err := opts.check()
+	_, err := opts.Check()
 
 	if err != nil {
 		o.StepCallback(dangerStepInfo(err))
@@ -130,7 +152,7 @@ func ConvertFolderMp3(ctx context.Context, cfg helpers.Config, o OperationProces
 		o.ExitCallback()
 	}()
 
-	err := opts.check()
+	_, err := opts.Check()
 
 	if err != nil {
 		o.StepCallback(dangerStepInfo(err))

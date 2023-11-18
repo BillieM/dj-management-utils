@@ -22,6 +22,8 @@ ConvertTrack is used as part of the process for converting non-mp3 audio files t
 */
 
 type ConvertTrack struct {
+	ID int
+
 	Track
 	OriginalFile AudioFile
 	NewFile      AudioFile
@@ -37,8 +39,8 @@ func buildConvertTrackArray(paths []string, outDirPath string) ([]ConvertTrack, 
 	var errs []error
 	var alreadyExistsCnt int
 
-	for _, path := range paths {
-		track, err := buildConvertTrack(path, outDirPath)
+	for i, path := range paths {
+		track, err := buildConvertTrack(i, path, outDirPath)
 
 		if err != nil {
 			if err == helpers.ErrConvertedFileExists {
@@ -62,7 +64,7 @@ buildConvertTrack builds a ConvertTrack struct from a file path
 
 File path has been pre-validated to ensure it is a valid file which can be converted
 */
-func buildConvertTrack(path string, outDirPath string) (ConvertTrack, error) {
+func buildConvertTrack(id int, path string, outDirPath string) (ConvertTrack, error) {
 
 	origFileInfo, err := helpers.SplitFilePathRequired(path)
 
@@ -87,6 +89,7 @@ func buildConvertTrack(path string, outDirPath string) (ConvertTrack, error) {
 	}
 
 	return ConvertTrack{
+		ID: id,
 		Track: Track{
 			Name: origFileInfo.FileName,
 		},
@@ -101,12 +104,21 @@ func buildConvertTrack(path string, outDirPath string) (ConvertTrack, error) {
 
 /*
 StemTrack is used as part of the process for converting audio files into stems
+
+TODO: slim down these horrible nested structs
 */
 type StemTrack struct {
 	Track
 
+	ID int
+
 	OriginalFile AudioFile
-	NewFile      AudioFile // If this is empty, just create stem files
+
+	OutFile AudioFile // this is the .stem.m4a used by Traktor
+
+	StemDir    string // The directory where the stem files will be created
+	SkipDemucs bool   // If true, skip the demucs step (i.e. stem files exist on Traktor type)
+	StemsOnly  bool   // If true, skip the merge/ metadata steps (i.e. only stems are required)
 
 	BassFile   StemFile
 	DrumsFile  StemFile
@@ -127,8 +139,8 @@ func buildStemTrackArray(paths []string, outDirPath string, stemType StemSeparat
 	var errs []error
 	var alreadyExistsCnt int
 
-	for _, path := range paths {
-		track, err := buildStemTrack(path, outDirPath, stemType)
+	for i, path := range paths {
+		track, err := buildStemTrack(i, path, outDirPath, stemType)
 
 		if err != nil {
 			if err == helpers.ErrConvertedFileExists {
@@ -149,7 +161,7 @@ func buildStemTrackArray(paths []string, outDirPath string, stemType StemSeparat
 /*
 buildStemTrack builds a StemTrack struct from a file path
 */
-func buildStemTrack(path string, outDirPath string, stemType StemSeparationType) (StemTrack, error) {
+func buildStemTrack(id int, path string, outDirPath string, stemType StemSeparationType) (StemTrack, error) {
 
 	origFileInfo, err := helpers.SplitFilePathRequired(path)
 
@@ -165,13 +177,21 @@ func buildStemTrack(path string, outDirPath string, stemType StemSeparationType)
 	}
 
 	deleteOnFinish := stemType == Traktor
+	var skipDemucs bool
+	var stemsOnly bool
 
-	bassFile := buildStemFile(baseStemDirPath, "bass", deleteOnFinish)
-	drumsFile := buildStemFile(baseStemDirPath, "drums", deleteOnFinish)
-	otherFile := buildStemFile(baseStemDirPath, "other", deleteOnFinish)
-	vocalsFile := buildStemFile(baseStemDirPath, "vocals", deleteOnFinish)
+	bassFile := buildStemFile(baseStemDirPath, "bass", origFileInfo.FileExtension, deleteOnFinish)
+	drumsFile := buildStemFile(baseStemDirPath, "drums", origFileInfo.FileExtension, deleteOnFinish)
+	otherFile := buildStemFile(baseStemDirPath, "other", origFileInfo.FileExtension, deleteOnFinish)
+	vocalsFile := buildStemFile(baseStemDirPath, "vocals", origFileInfo.FileExtension, deleteOnFinish)
 
-	// Build the new file only if generating a Traktor stem file
+	// Check if the demucs output already exists
+	stemsExist := helpers.DoesFileExist(bassFile.FileInfo.FullPath) &&
+		helpers.DoesFileExist(drumsFile.FileInfo.FullPath) &&
+		helpers.DoesFileExist(otherFile.FileInfo.FullPath) &&
+		helpers.DoesFileExist(vocalsFile.FileInfo.FullPath)
+
+	// Build the out file only if generating a Traktor stem file (out file is the .stem.m4a used by Traktor)
 	if stemType == Traktor {
 		newFileInfo = origFileInfo
 		newFileInfo.FileExtension = ".stem.m4a"
@@ -180,28 +200,36 @@ func buildStemTrack(path string, outDirPath string, stemType StemSeparationType)
 		}
 		newFileInfo.FullPath = newFileInfo.BuildFullPath()
 
+		if stemsExist {
+			skipDemucs = true
+		}
+
 		if helpers.DoesFileExist(newFileInfo.FullPath) {
 			return StemTrack{}, helpers.ErrStemOutputExists
 		}
 	} else if stemType == FourTrack {
-		if helpers.DoesFileExist(bassFile.FileInfo.FullPath) &&
-			helpers.DoesFileExist(drumsFile.FileInfo.FullPath) &&
-			helpers.DoesFileExist(otherFile.FileInfo.FullPath) &&
-			helpers.DoesFileExist(vocalsFile.FileInfo.FullPath) {
+
+		stemsOnly = true
+
+		if stemsExist {
 			return StemTrack{}, helpers.ErrStemOutputExists
 		}
 	}
 
 	return StemTrack{
+		ID: id,
 		Track: Track{
 			Name: origFileInfo.FileName,
 		},
 		OriginalFile: AudioFile{
 			FileInfo: origFileInfo,
 		},
-		NewFile: AudioFile{
+		OutFile: AudioFile{
 			FileInfo: newFileInfo,
 		},
+		StemDir:    baseStemDirPath,
+		SkipDemucs: skipDemucs,
+		StemsOnly:  stemsOnly,
 		BassFile:   bassFile,
 		DrumsFile:  drumsFile,
 		OtherFile:  otherFile,
@@ -209,12 +237,12 @@ func buildStemTrack(path string, outDirPath string, stemType StemSeparationType)
 	}, nil
 }
 
-func buildStemFile(baseStemDirPath string, fileName string, deleteOnFinish bool) StemFile {
+func buildStemFile(baseStemDirPath string, fileName string, extension string, deleteOnFinish bool) StemFile {
 
 	stemFileInfo := helpers.FileInfo{
 		DirPath:       baseStemDirPath,
 		FileName:      fileName,
-		FileExtension: ".wav",
+		FileExtension: extension,
 	}
 
 	stemFileInfo.FullPath = stemFileInfo.BuildFullPath()

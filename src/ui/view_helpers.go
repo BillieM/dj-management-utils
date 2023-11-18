@@ -4,6 +4,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"github.com/billiem/seren-management/src/operations"
 )
 
 /*
@@ -39,4 +40,28 @@ func (d *Data) checkConfig(checks []func() (bool, string)) (bool, fyne.CanvasObj
 	}
 
 	return true, nil
+}
+
+func buildStemTypeSelect(t *operations.StemSeparationType, callbackFn func()) *widget.Select {
+	w := widget.NewSelect(
+		[]string{"Traktor Stem File", "4 Stem Files"},
+		func(s string) {
+			if s == "Traktor Stem File" {
+				*t = operations.Traktor
+			} else if s == "4 Stem Files" {
+				*t = operations.FourTrack
+			}
+			callbackFn()
+		},
+	)
+	w.PlaceHolder = "Please select the type of stem extraction you would like to perform"
+
+	return w
+}
+
+func enableBtnIfOptsOkay(o operations.OperationOptions, btn *widget.Button) {
+	ok, _ := o.Check()
+	if ok {
+		btn.Enable()
+	}
 }

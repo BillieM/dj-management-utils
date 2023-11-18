@@ -34,6 +34,7 @@ func (o operationProcess) StepCallback(stepInfo operations.StepInfo) {
 	}
 	if !stepInfo.SkipLog {
 		o.bindVals.Append(&progressBindingItem{
+			id:         len(o.bindVals.Items),
 			message:    stepInfo.Message,
 			err:        stepInfo.Error,
 			importance: stepInfo.Importance.GetFyneImportance(),
@@ -60,6 +61,7 @@ type bindBase struct {
 type progressBindingItem struct {
 	bindBase
 
+	id         int
 	message    string
 	err        error
 	importance widget.Importance
@@ -131,22 +133,33 @@ func buildProcessContainer(cancelCauseFunc context.CancelCauseFunc, progressBarB
 	stopButton := widget.NewButton("Stop", func() {
 		cancelCauseFunc(helpers.ErrUserStoppedProcess)
 	})
-	log := widget.NewListWithData(logBindVals,
+	var log *widget.List
+	log = widget.NewListWithData(logBindVals,
 		func() fyne.CanvasObject {
 			// Template function for the list, called when the list is created
 			return widget.NewLabel("template")
 		},
 		func(i binding.DataItem, o fyne.CanvasObject) {
 			// Update function for the list, called when the bind value changes
+			label := o.(*widget.Label)
+
+			id := i.(*progressBindingItem).id
 			msg := i.(*progressBindingItem).message
 			err := i.(*progressBindingItem).err
+
+			var labelText string
 			if err != nil {
-				errMsg := err.Error()
-				o.(*widget.Label).Bind(binding.BindString(&errMsg))
+				labelText = err.Error()
 			} else {
-				o.(*widget.Label).Bind(binding.BindString(&msg))
+				labelText = msg
 			}
-			o.(*widget.Label).Importance = i.(*progressBindingItem).importance
+
+			label.Bind(binding.BindString(&labelText))
+			label.Importance = i.(*progressBindingItem).importance
+			log.SetItemHeight(
+				id,
+				label.MinSize().Height,
+			)
 		},
 	)
 

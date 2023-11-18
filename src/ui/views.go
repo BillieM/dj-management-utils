@@ -50,7 +50,40 @@ func (d *Data) separateSingleStemView(w fyne.Window) fyne.CanvasObject {
 	startButton := widget.NewButton("Separate stem", startFunc)
 	startButton.Disable()
 
-	trackPathCanvas := d.openFileCanvas(w, "Track Path", &opts.InFilePath, []string{".wav", ".flac"}, func() { startButton.Enable() })
+	trackPathCanvas := d.openFileCanvas(w, "Track Path", &opts.InFilePath, []string{".wav", ".mp3"}, func() { enableBtnIfOptsOkay(opts, startButton) })
+	stemTypeSelect := buildStemTypeSelect(&opts.Type, func() { enableBtnIfOptsOkay(opts, startButton) })
+
+	return container.NewBorder(
+		container.NewVBox(
+			container.NewVBox(
+				trackPathCanvas,
+				stemTypeSelect,
+			),
+			startButton,
+		), nil, nil, nil,
+		processContainerOuter,
+	)
+}
+
+func (d *Data) separateFolderStemView(w fyne.Window) fyne.CanvasObject {
+	ok, canvas := d.checkConfig([]func() (bool, string){d.Config.CheckTmpDir})
+
+	if !ok {
+		return canvas
+	}
+
+	processContainerOuter := container.NewStack()
+
+	opts := operations.SeparateFolderStemOpts{}
+
+	startFunc := func() {
+		d.startSeparateFolderStem(w, processContainerOuter, opts)
+	}
+
+	startButton := widget.NewButton("Separate folder", startFunc)
+	startButton.Disable()
+
+	trackPathCanvas := d.openDirCanvas(w, "Folder Path", &opts.InDirPath, func() { startButton.Enable() })
 
 	return container.NewBorder(
 		container.NewVBox(
@@ -61,10 +94,6 @@ func (d *Data) separateSingleStemView(w fyne.Window) fyne.CanvasObject {
 		), nil, nil, nil,
 		processContainerOuter,
 	)
-}
-
-func (d *Data) separateFolderStemView(w fyne.Window) fyne.CanvasObject {
-	return widget.NewLabel("separateFolderView")
 }
 
 func (d *Data) separateCollectionStemView(w fyne.Window) fyne.CanvasObject {

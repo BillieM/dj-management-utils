@@ -88,9 +88,9 @@ func TestBuildConvertTrack(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual, actualErr := buildConvertTrack(tt.path, tt.outDirPath)
+			actual, actualErr := buildConvertTrack(i, tt.path, tt.outDirPath)
 
 			if !helpers.ErrorContains(actualErr, tt.expectedErr) {
 				t.Errorf("expected %v, but got %v", tt.expectedErr, actualErr)
@@ -130,7 +130,7 @@ func TestBuildStemTrack(t *testing.T) {
 						FullPath:      "/path/to/valid/file.mp3",
 					},
 				},
-				NewFile: AudioFile{
+				OutFile: AudioFile{
 					FileInfo: helpers.FileInfo{
 						DirPath:       "/path/to/valid/",
 						FileName:      "file",
@@ -138,13 +138,14 @@ func TestBuildStemTrack(t *testing.T) {
 						FullPath:      "/path/to/valid/file.stem.m4a",
 					},
 				},
+				StemDir: "/path/to/valid/file/",
 				BassFile: StemFile{
 					AudioFile{
 						FileInfo: helpers.FileInfo{
 							DirPath:       "/path/to/valid/file/",
 							FileName:      "bass",
-							FileExtension: ".wav",
-							FullPath:      "/path/to/valid/file/bass.wav",
+							FileExtension: ".mp3",
+							FullPath:      "/path/to/valid/file/bass.mp3",
 						},
 						DeleteOnFinish: true,
 					},
@@ -154,8 +155,8 @@ func TestBuildStemTrack(t *testing.T) {
 						FileInfo: helpers.FileInfo{
 							DirPath:       "/path/to/valid/file/",
 							FileName:      "drums",
-							FileExtension: ".wav",
-							FullPath:      "/path/to/valid/file/drums.wav",
+							FileExtension: ".mp3",
+							FullPath:      "/path/to/valid/file/drums.mp3",
 						},
 						DeleteOnFinish: true,
 					},
@@ -165,8 +166,8 @@ func TestBuildStemTrack(t *testing.T) {
 						FileInfo: helpers.FileInfo{
 							DirPath:       "/path/to/valid/file/",
 							FileName:      "other",
-							FileExtension: ".wav",
-							FullPath:      "/path/to/valid/file/other.wav",
+							FileExtension: ".mp3",
+							FullPath:      "/path/to/valid/file/other.mp3",
 						},
 						DeleteOnFinish: true,
 					},
@@ -176,8 +177,8 @@ func TestBuildStemTrack(t *testing.T) {
 						FileInfo: helpers.FileInfo{
 							DirPath:       "/path/to/valid/file/",
 							FileName:      "vocals",
-							FileExtension: ".wav",
-							FullPath:      "/path/to/valid/file/vocals.wav",
+							FileExtension: ".mp3",
+							FullPath:      "/path/to/valid/file/vocals.mp3",
 						},
 						DeleteOnFinish: true,
 					},
@@ -202,7 +203,8 @@ func TestBuildStemTrack(t *testing.T) {
 						FullPath:      "/path/to/valid/chicken.wav",
 					},
 				},
-				NewFile: AudioFile{},
+				OutFile: AudioFile{},
+				StemDir: "/out/dir/path/chicken/",
 				BassFile: StemFile{
 					AudioFile{
 						FileInfo: helpers.FileInfo{
@@ -253,9 +255,9 @@ func TestBuildStemTrack(t *testing.T) {
 		// TODO: add some negative test cases
 	}
 
-	for _, tt := range tests {
+	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			output, err := buildStemTrack(tt.path, tt.outDirPath, tt.stemType)
+			output, err := buildStemTrack(i, tt.path, tt.outDirPath, tt.stemType)
 
 			if diff := cmp.Diff(output, tt.expectedOutput); diff != "" {
 				t.Errorf("buildStemTrack() output mismatch (-got +want):\n%s", diff)
@@ -273,6 +275,7 @@ func TestBuildStemFile(t *testing.T) {
 		name           string
 		baseStemDir    string
 		fileName       string
+		extension      string
 		deleteOnFinish bool
 		want           StemFile
 	}{
@@ -280,6 +283,7 @@ func TestBuildStemFile(t *testing.T) {
 			name:           "bass stem delete on finish",
 			baseStemDir:    "/path/to/stems/",
 			fileName:       "bass",
+			extension:      ".wav",
 			deleteOnFinish: true,
 			want: StemFile{
 				AudioFile: AudioFile{
@@ -297,14 +301,15 @@ func TestBuildStemFile(t *testing.T) {
 			name:           "drum stem don't delete on finish",
 			baseStemDir:    "/path/to/stems/",
 			fileName:       "drums",
+			extension:      ".mp3",
 			deleteOnFinish: false,
 			want: StemFile{
 				AudioFile: AudioFile{
 					FileInfo: helpers.FileInfo{
 						DirPath:       "/path/to/stems/",
 						FileName:      "drums",
-						FileExtension: ".wav",
-						FullPath:      "/path/to/stems/drums.wav",
+						FileExtension: ".mp3",
+						FullPath:      "/path/to/stems/drums.mp3",
 					},
 					DeleteOnFinish: false,
 				},
@@ -314,7 +319,7 @@ func TestBuildStemFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := buildStemFile(tt.baseStemDir, tt.fileName, tt.deleteOnFinish)
+			got := buildStemFile(tt.baseStemDir, tt.fileName, tt.extension, tt.deleteOnFinish)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("buildStemFile() mismatch (-want +got):\n%s", diff)
 			}

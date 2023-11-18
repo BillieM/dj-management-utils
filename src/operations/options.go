@@ -1,6 +1,8 @@
 package operations
 
-import "github.com/billiem/seren-management/src/helpers"
+import (
+	"github.com/billiem/seren-management/src/helpers"
+)
 
 /*
 StemSeparationType is used to determine the type of stem output
@@ -8,12 +10,25 @@ StemSeparationType is used to determine the type of stem output
 type StemSeparationType int
 
 const (
-	FourTrack StemSeparationType = iota // 4 .wav files for drums, bass, other, vocals
-	Traktor                             // Traktor stems .stem.m4a
+	NotSelected StemSeparationType = iota // no value selected - needed for validation
+	FourTrack                             // 4 .wav files for drums, bass, other, vocals
+	Traktor                               // Traktor stems .stem.m4a
 )
 
 func (s StemSeparationType) String() string {
-	return [...]string{"4 Track", "Traktor"}[s]
+	return [...]string{"Not Selected", "4 Track", "Traktor"}[s]
+}
+
+func (s StemSeparationType) check() bool {
+
+	if s != FourTrack && s != Traktor {
+		return false
+	}
+	return true
+}
+
+type OperationOptions interface {
+	Check() (bool, error)
 }
 
 /*
@@ -28,12 +43,15 @@ type SeparateSingleStemOpts struct {
 /*
 check checks the options for the SeperateSingleStem operation
 */
-func (p SeparateSingleStemOpts) check() error {
+func (p SeparateSingleStemOpts) Check() (bool, error) {
 	if p.InFilePath == "" {
-		return helpers.ErrInFilePathRequired
+		return false, helpers.ErrInFilePathRequired
+	}
+	if !p.Type.check() {
+		return false, helpers.ErrInvalidStemSeparationType
 	}
 
-	return nil
+	return true, nil
 }
 
 /*
@@ -49,12 +67,12 @@ type SeparateFolderStemOpts struct {
 /*
 check checks the options for the SeperateFolderStem operation
 */
-func (p SeparateFolderStemOpts) check() error {
+func (p SeparateFolderStemOpts) Check() (bool, error) {
 	if p.InDirPath == "" {
-		return helpers.ErrInDirPathRequired
+		return false, helpers.ErrInDirPathRequired
 	}
 
-	return nil
+	return true, nil
 }
 
 /*
@@ -68,12 +86,12 @@ type ConvertSingleMp3Opts struct {
 /*
 check checks the options for the ConvertSingleMp3 operation
 */
-func (p ConvertSingleMp3Opts) check() error {
+func (p ConvertSingleMp3Opts) Check() (bool, error) {
 	if p.InFilePath == "" {
-		return helpers.ErrInFilePathRequired
+		return false, helpers.ErrInFilePathRequired
 	}
 
-	return nil
+	return true, nil
 }
 
 /*
@@ -88,10 +106,10 @@ type ConvertFolderMp3Opts struct {
 /*
 check checks the options for the ConvertFolderMp3 operation
 */
-func (p ConvertFolderMp3Opts) check() error {
+func (p ConvertFolderMp3Opts) Check() (bool, error) {
 	if p.InDirPath == "" {
-		return helpers.ErrInDirPathRequired
+		return false, helpers.ErrInDirPathRequired
 	}
 
-	return nil
+	return true, nil
 }

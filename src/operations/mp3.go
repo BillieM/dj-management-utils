@@ -37,6 +37,10 @@ func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, t
 
 	convertOut := pipeline.ProcessConcurrently(ctx, 4, pipeline.NewProcessor(func(ctx context.Context, t ConvertTrack) (ConvertTrack, error) {
 
+		if t == (ConvertTrack{}) {
+			return t, helpers.ErrConvertTrackEmpty
+		}
+
 		o.StepCallback(stepStartedStepInfo(fmt.Sprintf("Converting: %s", t.Name)))
 
 		t, err := convertTrack(t)
@@ -73,10 +77,6 @@ func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, t
 
 func convertTrack(track ConvertTrack) (ConvertTrack, error) {
 
-	if track == (ConvertTrack{}) {
-		return track, helpers.ErrConvertTrackEmpty
-	}
-
 	// create dir for new file if it doesn't exist
 	err := helpers.CreateDirIfNotExists(track.NewFile.FileInfo.DirPath)
 
@@ -84,7 +84,7 @@ func convertTrack(track ConvertTrack) (ConvertTrack, error) {
 		return track, err
 	}
 
-	err = helpers.CmdExec(
+	_, err = helpers.CmdExec(
 		"ffmpeg",
 		"-i", track.OriginalFile.FileInfo.FullPath,
 		"-b:a", "320k",
@@ -104,7 +104,7 @@ func convertTrack(track ConvertTrack) (ConvertTrack, error) {
 
 	// delete the original file if DeleteOnFinish is true
 	if track.OriginalFile.DeleteOnFinish {
-		err = helpers.CmdExec(
+		_, err = helpers.CmdExec(
 			"rm",
 			track.OriginalFile.FileInfo.FullPath,
 		)

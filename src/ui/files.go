@@ -39,6 +39,9 @@ func (d *Data) openFileCanvas(w fyne.Window, title string, updateVal *string, fi
 				showErrorDialog(w, err)
 				return
 			}
+			if reader == nil {
+				return
+			}
 			// Below runs if file selection was valid
 			*updateVal = reader.URI().Path()
 			pathCard.SetSubTitle(*updateVal)
@@ -72,6 +75,9 @@ func (d *Data) openDirCanvas(w fyne.Window, title string, updateVal *string, cal
 		f := dialog.NewFolderOpen(func(reader fyne.ListableURI, err error) {
 			if err != nil {
 				showErrorDialog(w, err)
+				return
+			}
+			if reader == nil {
 				return
 			}
 			// Below runs if directory selection was valid
