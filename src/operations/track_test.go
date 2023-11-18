@@ -19,6 +19,7 @@ func TestBuildConvertTrack(t *testing.T) {
 			name: "valid path",
 			path: "/path/to/file.wav",
 			expected: ConvertTrack{
+				ID: 0,
 				Track: Track{
 					Name: "file",
 				},
@@ -46,6 +47,7 @@ func TestBuildConvertTrack(t *testing.T) {
 			path:       "/path/to/file.wav",
 			outDirPath: "/path/to/output/",
 			expected: ConvertTrack{
+				ID: 1,
 				Track: Track{
 					Name: "file",
 				},
@@ -119,9 +121,13 @@ func TestBuildStemTrack(t *testing.T) {
 			outDirPath: "",
 			stemType:   Traktor,
 			expectedOutput: StemTrack{
+				ID: 0,
 				Track: Track{
 					Name: "file",
 				},
+				StemDir:    "/path/to/valid/file/",
+				SkipDemucs: false,
+				StemsOnly:  false,
 				OriginalFile: AudioFile{
 					FileInfo: helpers.FileInfo{
 						DirPath:       "/path/to/valid/",
@@ -138,7 +144,6 @@ func TestBuildStemTrack(t *testing.T) {
 						FullPath:      "/path/to/valid/file.stem.m4a",
 					},
 				},
-				StemDir: "/path/to/valid/file/",
 				BassFile: StemFile{
 					AudioFile{
 						FileInfo: helpers.FileInfo{
@@ -192,9 +197,13 @@ func TestBuildStemTrack(t *testing.T) {
 			outDirPath: "/out/dir/path/",
 			stemType:   FourTrack,
 			expectedOutput: StemTrack{
+				ID: 1,
 				Track: Track{
 					Name: "chicken",
 				},
+				StemDir:    "/out/dir/path/chicken/",
+				SkipDemucs: false,
+				StemsOnly:  true,
 				OriginalFile: AudioFile{
 					FileInfo: helpers.FileInfo{
 						DirPath:       "/path/to/valid/",
@@ -204,7 +213,6 @@ func TestBuildStemTrack(t *testing.T) {
 					},
 				},
 				OutFile: AudioFile{},
-				StemDir: "/out/dir/path/chicken/",
 				BassFile: StemFile{
 					AudioFile{
 						FileInfo: helpers.FileInfo{
