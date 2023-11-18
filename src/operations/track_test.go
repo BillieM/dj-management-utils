@@ -260,7 +260,6 @@ func TestBuildStemTrack(t *testing.T) {
 			},
 			expectedError: nil,
 		},
-		// TODO: add some negative test cases
 	}
 
 	for i, tt := range tests {

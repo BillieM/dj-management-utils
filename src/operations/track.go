@@ -77,9 +77,6 @@ func buildConvertTrack(id int, path string, outDirPath string) (ConvertTrack, er
 	// Populate info for the new file
 	newFileInfo.FileExtension = ".mp3"
 	if outDirPath != "" {
-		// TODO: option to preserve folder structure if call was recursive
-		// currently, recursive calls will only preserve the folder structure
-		// if outDirPath is not provided
 		newFileInfo.DirPath = outDirPath
 	}
 	newFileInfo.FullPath = newFileInfo.BuildFullPath()
@@ -104,8 +101,6 @@ func buildConvertTrack(id int, path string, outDirPath string) (ConvertTrack, er
 
 /*
 StemTrack is used as part of the process for converting audio files into stems
-
-TODO: slim down these horrible nested structs
 */
 type StemTrack struct {
 	Track
@@ -160,8 +155,6 @@ func buildStemTrackArray(paths []string, outDirPath string, stemType StemSeparat
 
 /*
 buildStemTrack builds a StemTrack struct from a file path
-
-TODO: Add support for more file types, files other than wav will require main file converting for merging to m4a
 */
 func buildStemTrack(id int, path string, outDirPath string, stemType StemSeparationType) (StemTrack, error) {
 

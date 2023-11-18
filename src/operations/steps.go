@@ -4,8 +4,6 @@ import "github.com/billiem/seren-management/src/helpers"
 
 /*
 Provides helper functions for building step information
-
-TODO: Include some prebuilt messages for common steps
 */
 
 func processFinishedStepInfo(msg string) StepInfo {

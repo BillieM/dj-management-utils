@@ -8,9 +8,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-// TODO: Convert these tests to use generic paths
-// TODO: Add tests for the other functions in files.go
-
 func TestReplaceTrackExtension(t *testing.T) {
 	tests := []struct {
 		name         string

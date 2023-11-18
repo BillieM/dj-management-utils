@@ -42,8 +42,6 @@ func (d *Data) openSettingsWindow(a fyne.App) bool {
 }
 
 /*
-TODO: implement 'tabs' for settings, will likely require some refactoring
-
 settingsList generates a list of canvas objects for the settings window
 
 any altered settings are stored in the TmpConfig struct, which is discarded if the user closes the window without saving
@@ -51,8 +49,6 @@ any altered settings are stored in the TmpConfig struct, which is discarded if t
 func (d *Data) settingsList(w fyne.Window) []fyne.CanvasObject {
 
 	objs := []fyne.CanvasObject{}
-
-	// TODO: may want to add a settings wrapper around these canvas calls in order to add a label to each call?
 
 	objs = append(objs, d.openFileCanvas(
 		w, "Traktor Collection Filepath", &d.TmpConfig.TraktorCollectionPath, []string{".nml"}, func() {},

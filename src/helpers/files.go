@@ -28,8 +28,6 @@ func DoesFileExist(path string) bool {
 
 /*
 Uses regex to check if a string contains any of the given extensions
-
-TODO: May want to adjust this to use GetExtensionFromFilePath for maintainabilities sake
 */
 func IsExtensionInArray(s string, a []string) bool {
 	for _, v := range a {
@@ -40,7 +38,6 @@ func IsExtensionInArray(s string, a []string) bool {
 	return false
 }
 
-// TODO: do i actually need this anymore, we're using FileInfo instead?
 func ReplaceTrackExtension(s string, r string, a []string) string {
 	for _, v := range a {
 		s = regexReplace(s, `(?i)\.`+v+`$`, r)

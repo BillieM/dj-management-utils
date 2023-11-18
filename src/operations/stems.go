@@ -86,7 +86,6 @@ func parallelProcessStemTrackArray(ctx context.Context, o OperationProcess, trac
 
 	tracksChan := pipeline.Emit(tracks...)
 
-	// TODO: may be able to see about passing multiple files as a batch ?
 	demucsOut := pipeline.ProcessConcurrently(ctx, 1, pipeline.NewProcessor(func(ctx context.Context, t StemTrack) (StemTrack, error) {
 		if t == (StemTrack{}) {
 			return t, helpers.ErrStemTrackEmpty
@@ -209,8 +208,8 @@ func demucsSeparate(track StemTrack) (StemTrack, error) {
 		"demucs",
 		"--out", track.StemDir,
 		"--filename", fmt.Sprintf("%s{stem}.{ext}", track.StemDir),
-		"--jobs", "4", // TODO: make this configurable
-		"--name", "htdemucs", // TODO: make this configurable
+		"--jobs", "4",
+		"--name", "htdemucs",
 		"-d", "cuda",
 		track.OriginalFile.FileInfo.FullPath,
 	}
