@@ -4,6 +4,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"github.com/billiem/seren-management/src/collection"
 	"github.com/billiem/seren-management/src/operations"
 )
 
@@ -177,7 +178,19 @@ func (d *Data) convertFolderMp3View(w fyne.Window) fyne.CanvasObject {
 
 // convertCollectionMp3View returns the view for the convert collection mp3 operation
 func (d *Data) convertCollectionMp3View(w fyne.Window) fyne.CanvasObject {
-	return widget.NewLabel("convertCollectionMp3View")
+
+	path := widget.NewLabel("collection path: " + d.Config.TraktorCollectionPath)
+	btn := widget.NewButton("do collection things :D", func() {
+		collection.ReadCollection(d.Config.TraktorCollectionPath)
+	})
+
+	return container.NewBorder(
+		nil, nil, nil, nil,
+		container.NewVBox(
+			path,
+			btn,
+		),
+	)
 }
 
 func (d *Data) tagsView(w fyne.Window) fyne.CanvasObject {
