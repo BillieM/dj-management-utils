@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 
 	b64 "encoding/base64"
 
@@ -72,6 +73,10 @@ func getStemPaths(cfg helpers.Config, inDirPath string, recursion bool) ([]strin
 
 func parallelProcessStemTrackArray(ctx context.Context, o OperationProcess, tracks []StemTrack) {
 
+	if len(tracks) == 0 {
+		return
+	}
+
 	numSteps := 3
 
 	if tracks[0].StemsOnly {
@@ -81,6 +86,7 @@ func parallelProcessStemTrackArray(ctx context.Context, o OperationProcess, trac
 	p := buildProgress(len(tracks), numSteps)
 
 	tracksChan := pipeline.Emit(tracks...)
+	var wg sync.WaitGroup
 
 	// TODO: may be able to see about passing multiple files as a batch ?
 	demucsOut := pipeline.ProcessConcurrently(ctx, 1, pipeline.NewProcessor(func(ctx context.Context, t StemTrack) (StemTrack, error) {
@@ -189,9 +195,8 @@ func parallelProcessStemTrackArray(ctx context.Context, o OperationProcess, trac
 
 	for range cleanupOut {
 		t := <-cleanupOut
-		p.complete(t.ID)
+		o.StepCallback(trackFinishedStepInfo(fmt.Sprintf("Finished processing: %s", t.Name), p.complete(t.ID)))
 	}
-
 }
 
 /*
@@ -202,21 +207,23 @@ func demucsSeparate(track StemTrack) (StemTrack, error) {
 	// create stem dir if it doesn't exist
 	os.MkdirAll(track.StemDir, os.ModePerm)
 
-	convertToMp3Arg := ""
-	if track.OriginalFile.FileInfo.FileExtension == ".mp3" {
-		convertToMp3Arg = "--mp3" // defaults to 320kbps
-	}
-
-	// run demucs
-	_, err := helpers.CmdExec(
+	demucsArgs := []string{
 		"demucs",
 		"--out", track.StemDir,
 		"--filename", fmt.Sprintf("%s{stem}.{ext}", track.StemDir),
 		"--jobs", "4", // TODO: make this configurable
 		"--name", "htdemucs", // TODO: make this configurable
 		"-d", "cuda",
-		convertToMp3Arg,
 		track.OriginalFile.FileInfo.FullPath,
+	}
+
+	if track.OriginalFile.FileInfo.FileExtension == ".mp3" {
+		demucsArgs = append(demucsArgs, "--mp3")
+	}
+
+	// run demucs
+	_, err := helpers.CmdExec(
+		demucsArgs...,
 	)
 
 	if err != nil {

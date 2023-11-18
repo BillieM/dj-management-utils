@@ -143,7 +143,7 @@ func buildStemTrackArray(paths []string, outDirPath string, stemType StemSeparat
 		track, err := buildStemTrack(i, path, outDirPath, stemType)
 
 		if err != nil {
-			if err == helpers.ErrConvertedFileExists {
+			if err == helpers.ErrStemOutputExists {
 				alreadyExistsCnt++
 				continue
 			}
@@ -160,6 +160,8 @@ func buildStemTrackArray(paths []string, outDirPath string, stemType StemSeparat
 
 /*
 buildStemTrack builds a StemTrack struct from a file path
+
+TODO: Add support for more file types, files other than wav will require main file converting for merging to m4a
 */
 func buildStemTrack(id int, path string, outDirPath string, stemType StemSeparationType) (StemTrack, error) {
 

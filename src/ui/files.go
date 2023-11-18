@@ -54,6 +54,7 @@ func (d *Data) openFileCanvas(w fyne.Window, title string, updateVal *string, fi
 			return
 		}
 		f.SetLocation(location)
+		f.Resize(fyne.NewSize(640, 480))
 		f.SetFilter(storage.NewExtensionFileFilter(fileFilter))
 		f.Show()
 	})
@@ -92,6 +93,7 @@ func (d *Data) openDirCanvas(w fyne.Window, title string, updateVal *string, cal
 			return
 		}
 		f.SetLocation(location)
+		f.Resize(fyne.NewSize(640, 480))
 		f.Show()
 	})
 

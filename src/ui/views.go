@@ -83,12 +83,14 @@ func (d *Data) separateFolderStemView(w fyne.Window) fyne.CanvasObject {
 	startButton := widget.NewButton("Separate folder", startFunc)
 	startButton.Disable()
 
-	trackPathCanvas := d.openDirCanvas(w, "Folder Path", &opts.InDirPath, func() { startButton.Enable() })
+	trackPathCanvas := d.openDirCanvas(w, "Folder Path", &opts.InDirPath, func() { enableBtnIfOptsOkay(opts, startButton) })
+	stemTypeSelect := buildStemTypeSelect(&opts.Type, func() { enableBtnIfOptsOkay(opts, startButton) })
 
 	return container.NewBorder(
 		container.NewVBox(
 			container.NewVBox(
 				trackPathCanvas,
+				stemTypeSelect,
 			),
 			startButton,
 		), nil, nil, nil,

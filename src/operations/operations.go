@@ -64,7 +64,7 @@ func SeparateSingleStem(ctx context.Context, cfg helpers.Config, o OperationProc
 
 	o.StepCallback(stageStepInfo("Converting file to stems"))
 	parallelProcessStemTrackArray(ctx, o, stemTrackArray)
-	o.StepCallback(processFinishedStepInfo("Finished seperating file to stems"))
+	o.StepCallback(processFinishedStepInfo("Finished"))
 }
 
 /*
@@ -103,8 +103,7 @@ func SeparateFolderStem(ctx context.Context, cfg helpers.Config, o OperationProc
 
 	o.StepCallback(stageStepInfo("Converting files to stems"))
 	parallelProcessStemTrackArray(ctx, o, stemTrackArray)
-	o.StepCallback(processFinishedStepInfo("Finished seperating files to stems"))
-
+	o.StepCallback(processFinishedStepInfo("Finished"))
 }
 
 /*
@@ -139,7 +138,7 @@ func ConvertSingleMp3(ctx context.Context, cfg helpers.Config, o OperationProces
 
 	o.StepCallback(stageStepInfo("Converting file to mp3"))
 	parallelProcessConvertTrackArray(ctx, o, convertTrackArray)
-	o.StepCallback(processFinishedStepInfo("Finished converting file to mp3"))
+	o.StepCallback(processFinishedStepInfo("Finished"))
 }
 
 /*
@@ -178,6 +177,5 @@ func ConvertFolderMp3(ctx context.Context, cfg helpers.Config, o OperationProces
 
 	o.StepCallback(stageStepInfo("Converting files to mp3"))
 	parallelProcessConvertTrackArray(ctx, o, convertTrackArray)
-
-	o.StepCallback(processFinishedStepInfo("Finished converting files to mp3"))
+	o.StepCallback(processFinishedStepInfo("Finished"))
 }

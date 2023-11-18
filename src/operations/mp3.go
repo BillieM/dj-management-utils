@@ -30,6 +30,10 @@ func getConvertPaths(cfg helpers.Config, inDirPath string, recursion bool) ([]st
 
 func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, tracks []ConvertTrack) {
 
+	if len(tracks) == 0 {
+		return
+	}
+
 	var completedTracks int
 	var totalTracks = len(tracks)
 

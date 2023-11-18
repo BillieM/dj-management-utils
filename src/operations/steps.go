@@ -12,7 +12,7 @@ func processFinishedStepInfo(msg string) StepInfo {
 	return StepInfo{
 		Message:    msg,
 		Progress:   1,
-		Importance: helpers.SuccessImportance,
+		Importance: helpers.HighImportance,
 	}
 }
 
@@ -35,6 +35,14 @@ func stepFinishedStepInfo(msg string, progress float64) StepInfo {
 		Message:    msg,
 		Progress:   progress,
 		Importance: helpers.MediumImportance,
+	}
+}
+
+func trackFinishedStepInfo(msg string, progress float64) StepInfo {
+	return StepInfo{
+		Message:    msg,
+		Progress:   progress,
+		Importance: helpers.SuccessImportance,
 	}
 }
 

@@ -24,7 +24,7 @@ func (p *progress) progress() float64 {
 	totalProgress := 0.0
 	totalProgress += float64(p.completedTracks) / float64(p.totalTracks)
 	for _, v := range p.inProcess {
-		totalProgress += float64(v/p.numSteps) / float64(p.totalTracks)
+		totalProgress += (float64(v) / float64(p.numSteps) / float64(p.totalTracks))
 	}
 	return totalProgress
 }
