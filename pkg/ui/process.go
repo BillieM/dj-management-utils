@@ -8,8 +8,8 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/widget"
-	"github.com/billiem/seren-management/src/helpers"
-	"github.com/billiem/seren-management/src/operations"
+	"github.com/billiem/seren-management/pkg/helpers"
+	"github.com/billiem/seren-management/pkg/operations"
 )
 
 /*

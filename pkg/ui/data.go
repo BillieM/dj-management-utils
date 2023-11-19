@@ -2,7 +2,7 @@ package ui
 
 import (
 	"fyne.io/fyne/v2"
-	"github.com/billiem/seren-management/src/helpers"
+	"github.com/billiem/seren-management/pkg/helpers"
 )
 
 type Data struct {

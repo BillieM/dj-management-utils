@@ -4,8 +4,8 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
-	"github.com/billiem/seren-management/src/collection"
-	"github.com/billiem/seren-management/src/operations"
+	"github.com/billiem/seren-management/pkg/collection"
+	"github.com/billiem/seren-management/pkg/operations"
 )
 
 /*

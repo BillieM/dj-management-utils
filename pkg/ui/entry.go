@@ -5,10 +5,16 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 
-	"github.com/billiem/seren-management/src/helpers"
+	"github.com/billiem/seren-management/pkg/helpers"
 )
 
-func Entry(c *helpers.Config) {
+func Entry() {
+
+	c, err := helpers.LoadConfig()
+
+	if err != nil {
+		helpers.HandleFatalError(err)
+	}
 
 	d := buildData(c)
 

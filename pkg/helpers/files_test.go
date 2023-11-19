@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/billiem/seren-management/src/helpers"
+	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/google/go-cmp/cmp"
 )
 

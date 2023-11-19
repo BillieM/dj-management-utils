@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/billiem/seren-management/src/helpers"
+	"github.com/billiem/seren-management/pkg/helpers"
 )
 
 /*

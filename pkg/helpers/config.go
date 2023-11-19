@@ -20,7 +20,13 @@ type Config struct {
 }
 
 func LoadConfig() (*Config, error) {
-	data, err := os.ReadFile("../config.json")
+	workingDir, err := os.Getwd()
+
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := os.ReadFile(JoinFilepathToSlash(workingDir, "config.json"))
 	if err != nil {
 		return nil, err
 	}

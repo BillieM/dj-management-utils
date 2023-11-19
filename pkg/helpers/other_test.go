@@ -3,7 +3,7 @@ package helpers_test
 import (
 	"testing"
 
-	"github.com/billiem/seren-management/src/helpers"
+	"github.com/billiem/seren-management/pkg/helpers"
 )
 
 func TestContainsNonEmptyString(t *testing.T) {

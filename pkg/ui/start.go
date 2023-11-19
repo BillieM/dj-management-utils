@@ -5,8 +5,8 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/data/binding"
-	"github.com/billiem/seren-management/src/helpers"
-	"github.com/billiem/seren-management/src/operations"
+	"github.com/billiem/seren-management/pkg/helpers"
+	"github.com/billiem/seren-management/pkg/operations"
 )
 
 func (d *Data) sharedStartBuild(w fyne.Window, processContainerOuter *fyne.Container) (context.Context, operationProcess, error) {

@@ -1,6 +1,6 @@
 package operations
 
-import "github.com/billiem/seren-management/src/helpers"
+import "github.com/billiem/seren-management/pkg/helpers"
 
 /*
 Provides helper functions for building step information
