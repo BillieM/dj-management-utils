@@ -2,6 +2,7 @@ package collection
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/billiem/seren-management/pkg/helpers"
 )
@@ -34,6 +35,26 @@ func (c Traktor) String() string {
 	return "Traktor"
 }
 
-func (t Traktor) ReadCollection() {
-	fmt.Println("read traktor collection")
+func (t Traktor) ReadCollection() error {
+	fmt.Println("read traktor collection", t.CollectionPath)
+
+	// read xml
+	data, err := os.ReadFile(t.CollectionPath)
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(data))
+
+	return nil
+}
+
+func (t Traktor) WriteCollection() error {
+	fmt.Println("write traktor collection")
+
+	return nil
+}
+
+type TraktorCollectionXML struct {
 }

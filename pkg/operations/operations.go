@@ -187,5 +187,10 @@ func (e *OpEnv) ReadCollection(ctx context.Context, opts ReadCollectionOpts) {
 
 	collection := opts.Build(e.Config)
 
-	collection.ReadCollection()
+	err := collection.ReadCollection()
+
+	if err != nil {
+		e.step(dangerStepInfo(err))
+		return
+	}
 }
