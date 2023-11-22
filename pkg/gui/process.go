@@ -13,11 +13,11 @@ import (
 )
 
 /*
-operationProcess Implements methods defined in the OperationsProcess interface defined in operations/operations.go
+stepHandler Implements methods defined in the StepHandler interface defined in operations/operations.go
 
 The callbacks are used to update the UI as the process runs
 */
-type operationProcess struct {
+type stepHandler struct {
 	ctxClose             context.CancelCauseFunc
 	bindVals             *progressBindingList
 	progressBarBindValue binding.Float
@@ -28,7 +28,7 @@ type operationProcess struct {
 /*
 StepCallback is executed each time a step finishes inside the operations package
 */
-func (o operationProcess) StepCallback(stepInfo operations.StepInfo) {
+func (o stepHandler) StepCallback(stepInfo operations.StepInfo) {
 	if stepInfo.Progress != 0 {
 		o.progressBarBindValue.Set(stepInfo.Progress)
 	}
@@ -46,7 +46,7 @@ func (o operationProcess) StepCallback(stepInfo operations.StepInfo) {
 /*
 ExitCallback is executed when the process finishes in the operations package
 */
-func (o operationProcess) ExitCallback() {
+func (o stepHandler) ExitCallback() {
 	o.finishedFunc()
 }
 
@@ -120,9 +120,11 @@ func (i *progressBindingList) Append(message *progressBindingItem) {
 }
 
 /*
-operationsProcessContainer is used to store widgets associated with a running process
+stepsContainer is used to store widgets associated with a running process
+
+stepInfo will be displayed here through the log and progress bar widgets
 */
-type operationProcessContainer struct {
+type stepsContainer struct {
 	container   *fyne.Container
 	stopButton  *widget.Button
 	progressBar *widget.ProgressBar
@@ -133,7 +135,7 @@ type operationProcessContainer struct {
 buildProcessContainer builds the processContainer widget,
 which is used to display the progress of a running process and allow the user to stop it
 */
-func buildProcessContainer(cancelCauseFunc context.CancelCauseFunc, progressBarBindVal binding.Float, logBindVals *progressBindingList) operationProcessContainer {
+func buildProcessContainer(cancelCauseFunc context.CancelCauseFunc, progressBarBindVal binding.Float, logBindVals *progressBindingList) stepsContainer {
 	processContainerTop := container.NewVBox()
 	progressBar := widget.NewProgressBarWithData(progressBarBindVal)
 	stopButton := widget.NewButton("Stop", func() {
@@ -178,7 +180,7 @@ func buildProcessContainer(cancelCauseFunc context.CancelCauseFunc, progressBarB
 		log,
 	)
 
-	return operationProcessContainer{
+	return stepsContainer{
 		container:   processContainer,
 		progressBar: progressBar,
 		log:         log,

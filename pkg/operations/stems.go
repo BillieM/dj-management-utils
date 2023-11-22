@@ -56,21 +56,21 @@ getStemPaths gets all of the files in the provided directory which should be con
 
 if recursion is true, will also get files in subdirectories
 */
-func getStemPaths(inDirPath string, recursion bool, extensionsToSeparate []string) ([]string, error) {
+func (e *OpEnv) getStemPaths(inDirPath string, recursion bool) ([]string, error) {
 	stemPaths, err := helpers.GetFilesInDir(inDirPath, recursion)
 	if err != nil {
 		return nil, err
 	}
 	var validStemPaths []string
 	for _, path := range stemPaths {
-		if helpers.IsExtensionInArray(path, extensionsToSeparate) {
+		if helpers.IsExtensionInArray(path, e.Config.ExtensionsToSeparateToStems) {
 			validStemPaths = append(validStemPaths, path)
 		}
 	}
 	return validStemPaths, nil
 }
 
-func parallelProcessStemTrackArray(ctx context.Context, o OperationProcess, tracks []StemTrack) {
+func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []StemTrack) {
 
 	if len(tracks) == 0 {
 		return
@@ -92,23 +92,23 @@ func parallelProcessStemTrackArray(ctx context.Context, o OperationProcess, trac
 		}
 
 		if t.SkipDemucs {
-			o.StepCallback(stepFinishedStepInfo(fmt.Sprintf("Skipping demucs seperation for: %s", t.Name), p.step(t.ID)))
+			e.step(stepFinishedStepInfo(fmt.Sprintf("Skipping demucs seperation for: %s", t.Name), p.step(t.ID)))
 			return t, nil
 		}
 
-		o.StepCallback(stepStartedStepInfo(fmt.Sprintf("Performing demucs separation for: %s", t.Name)))
-		t, err := demucsSeparate(t)
+		e.step(stepStartedStepInfo(fmt.Sprintf("Performing demucs separation for: %s", t.Name)))
+		t, err := e.demucsSeparate(t)
 
 		if err != nil {
 			return t, err
 		}
 
-		o.StepCallback(stepFinishedStepInfo("Finished demucs separation for "+t.Name, p.step(t.ID)))
+		e.step(stepFinishedStepInfo("Finished demucs separation for "+t.Name, p.step(t.ID)))
 
 		return t, nil
 	}, func(t StemTrack, err error) {
 		if !strings.Contains(err.Error(), "context canceled") {
-			o.StepCallback(
+			e.step(
 				warningStepInfo(helpers.GenErrDemucsSepStep(t.Name, err)),
 			)
 		}
@@ -123,20 +123,20 @@ func parallelProcessStemTrackArray(ctx context.Context, o OperationProcess, trac
 			return t, nil
 		}
 
-		o.StepCallback(stepStartedStepInfo(fmt.Sprintf("Merging files to Traktor stem file for: %s", t.Name)))
+		e.step(stepStartedStepInfo(fmt.Sprintf("Merging files to Traktor stem file for: %s", t.Name)))
 
-		t, err := mergeToM4a(t)
+		t, err := e.mergeToM4a(t)
 
 		if err != nil {
 			return t, err
 		}
 
-		o.StepCallback(stepFinishedStepInfo("Finished merging files for: "+t.Name, p.step(t.ID)))
+		e.step(stepFinishedStepInfo("Finished merging files for: "+t.Name, p.step(t.ID)))
 
 		return t, nil
 	}, func(t StemTrack, err error) {
 		if !strings.Contains(err.Error(), "context canceled") {
-			o.StepCallback(
+			e.step(
 				warningStepInfo(helpers.GenErrMergeM4AStep(t.Name, err)),
 			)
 		}
@@ -151,19 +151,19 @@ func parallelProcessStemTrackArray(ctx context.Context, o OperationProcess, trac
 			return t, nil
 		}
 
-		o.StepCallback(stepStartedStepInfo(fmt.Sprintf("Adding metadata to Traktor stem file for: %s", t.Name)))
-		t, err := addMetadata(t)
+		e.step(stepStartedStepInfo(fmt.Sprintf("Adding metadata to Traktor stem file for: %s", t.Name)))
+		t, err := e.addMetadata(t)
 
 		if err != nil {
 			return t, err
 		}
 
-		o.StepCallback(stepFinishedStepInfo("Finished adding metadata for: "+t.Name, p.step(t.ID)))
+		e.step(stepFinishedStepInfo("Finished adding metadata for: "+t.Name, p.step(t.ID)))
 
 		return t, nil
 	}, func(t StemTrack, err error) {
 		if !strings.Contains(err.Error(), "context canceled") {
-			o.StepCallback(
+			e.step(
 				warningStepInfo(helpers.GenErrAddMetadataStep(t.Name, err)),
 			)
 		}
@@ -174,7 +174,7 @@ func parallelProcessStemTrackArray(ctx context.Context, o OperationProcess, trac
 			return t, helpers.ErrStemTrackEmpty
 		}
 
-		t, err := cleanUp(t)
+		t, err := e.cleanUp(t)
 
 		if err != nil {
 			return t, err
@@ -184,7 +184,7 @@ func parallelProcessStemTrackArray(ctx context.Context, o OperationProcess, trac
 
 	}, func(t StemTrack, err error) {
 		if !strings.Contains(err.Error(), "context canceled") {
-			o.StepCallback(
+			e.step(
 				warningStepInfo(helpers.GenErrCleanupStep(t.Name, err)),
 			)
 		}
@@ -192,14 +192,14 @@ func parallelProcessStemTrackArray(ctx context.Context, o OperationProcess, trac
 
 	for range cleanupOut {
 		t := <-cleanupOut
-		o.StepCallback(trackFinishedStepInfo(fmt.Sprintf("Finished processing: %s", t.Name), p.complete(t.ID)))
+		e.step(trackFinishedStepInfo(fmt.Sprintf("Finished processing: %s", t.Name), p.complete(t.ID)))
 	}
 }
 
 /*
 demucsSeparate calls demucs to split a file into stem tracks
 */
-func demucsSeparate(track StemTrack) (StemTrack, error) {
+func (e *OpEnv) demucsSeparate(track StemTrack) (StemTrack, error) {
 
 	// create stem dir if it doesn't exist
 	os.MkdirAll(track.StemDir, os.ModePerm)
@@ -230,7 +230,7 @@ func demucsSeparate(track StemTrack) (StemTrack, error) {
 	return track, nil
 }
 
-func mergeToM4a(track StemTrack) (StemTrack, error) {
+func (e *OpEnv) mergeToM4a(track StemTrack) (StemTrack, error) {
 
 	// create output file dir if it doesn't exist
 	os.MkdirAll(track.OutFile.FileInfo.DirPath, os.ModePerm)
@@ -254,13 +254,13 @@ func mergeToM4a(track StemTrack) (StemTrack, error) {
 	return track, nil
 }
 
-func addMetadata(track StemTrack) (StemTrack, error) {
+func (e *OpEnv) addMetadata(track StemTrack) (StemTrack, error) {
 
 	// add metadata to m4a
 	_, err := helpers.CmdExec(
 		"MP4Box",
 		track.OutFile.FileInfo.FullPath,
-		"-udta", fmt.Sprintf("0:type=stem:src=base64,%s", getTraktorMetadata()),
+		"-udta", fmt.Sprintf("0:type=stem:src=base64,%s", e.getTraktorMetadata()),
 	)
 	if err != nil {
 		return track, err
@@ -269,7 +269,7 @@ func addMetadata(track StemTrack) (StemTrack, error) {
 	return track, nil
 }
 
-func cleanUp(track StemTrack) (StemTrack, error) {
+func (e *OpEnv) cleanUp(track StemTrack) (StemTrack, error) {
 	// deletes stem files/ dirs
 
 	if !track.StemsOnly {
@@ -279,7 +279,7 @@ func cleanUp(track StemTrack) (StemTrack, error) {
 	return track, nil
 }
 
-func getTraktorMetadata() string {
+func (e *OpEnv) getTraktorMetadata() string {
 	drumColour := "#009E73"
 	bassColour := "#D55E00"
 	otherColour := "#CC79A7"

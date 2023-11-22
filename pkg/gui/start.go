@@ -9,14 +9,14 @@ import (
 	"github.com/billiem/seren-management/pkg/operations"
 )
 
-func (e *guiEnv) sharedStartBuild(w fyne.Window, processContainerOuter *fyne.Container) (context.Context, operationProcess, error) {
+func (e *guiEnv) sharedStartBuild(w fyne.Window, processContainerOuter *fyne.Container) (context.Context, stepHandler, error) {
 
 	processContainerOuter.Objects = nil
 
 	ctx := context.Background()
 
 	if e.guiState.processing {
-		return ctx, operationProcess{}, helpers.ErrPleaseWaitForProcess
+		return ctx, stepHandler{}, helpers.ErrPleaseWaitForProcess
 	}
 
 	e.guiState.processing = true
@@ -45,7 +45,7 @@ func (e *guiEnv) sharedStartBuild(w fyne.Window, processContainerOuter *fyne.Con
 
 	processContainerOuter.Add(processContainer.container)
 
-	return ctx, operationProcess{
+	return ctx, stepHandler{
 		ctxClose:             cancelCauseFunc,
 		bindVals:             &listBinding,
 		progressBarBindValue: progressBarBinding,
@@ -59,17 +59,18 @@ startSeparateSingleStem is the entrypoint for the SeperateSingleStem operation f
 */
 func (e *guiEnv) startSeparateSingleStem(w fyne.Window, processContainerOuter *fyne.Container, opts operations.SeparateSingleStemOpts) {
 
-	ctx, op, err := e.sharedStartBuild(w, processContainerOuter)
+	ctx, sh, err := e.sharedStartBuild(w, processContainerOuter)
 
 	if err != nil {
 		showErrorDialog(w, err)
 		return
 	}
 
-	go operations.SeparateSingleStem(
+	opEnv := e.opEnv()
+	opEnv.RegisterStepHandler(sh)
+
+	go opEnv.SeparateSingleStem(
 		ctx,
-		e.opEnv(),
-		op,
 		opts,
 	)
 }
@@ -79,17 +80,18 @@ startSeparateFolderStem is the entrypoint for the SeperateFolderStem operation f
 */
 func (e *guiEnv) startSeparateFolderStem(w fyne.Window, processContainerOuter *fyne.Container, opts operations.SeparateFolderStemOpts) {
 
-	ctx, op, err := e.sharedStartBuild(w, processContainerOuter)
+	ctx, sh, err := e.sharedStartBuild(w, processContainerOuter)
 
 	if err != nil {
 		showErrorDialog(w, err)
 		return
 	}
 
-	go operations.SeparateFolderStem(
+	opEnv := e.opEnv()
+	opEnv.RegisterStepHandler(sh)
+
+	go opEnv.SeparateFolderStem(
 		ctx,
-		e.opEnv(),
-		op,
 		opts,
 	)
 }
@@ -99,17 +101,18 @@ startConvertSingleMp3 is the entrypoint for the ConvertSingleMp3 operation from 
 */
 func (e *guiEnv) startConvertSingleMp3(w fyne.Window, processContainerOuter *fyne.Container, opts operations.ConvertSingleMp3Opts) {
 
-	ctx, op, err := e.sharedStartBuild(w, processContainerOuter)
+	ctx, sh, err := e.sharedStartBuild(w, processContainerOuter)
 
 	if err != nil {
 		showErrorDialog(w, err)
 		return
 	}
 
-	go operations.ConvertSingleMp3(
+	opEnv := e.opEnv()
+	opEnv.RegisterStepHandler(sh)
+
+	go opEnv.ConvertSingleMp3(
 		ctx,
-		e.opEnv(),
-		op,
 		opts,
 	)
 }
@@ -119,17 +122,18 @@ startConvertFolderMp3 is the entrypoint for the ConvertFolderMp3 operation from 
 */
 func (e *guiEnv) startConvertFolderMp3(w fyne.Window, processContainerOuter *fyne.Container, opts operations.ConvertFolderMp3Opts) {
 
-	ctx, op, err := e.sharedStartBuild(w, processContainerOuter)
+	ctx, sh, err := e.sharedStartBuild(w, processContainerOuter)
 
 	if err != nil {
 		showErrorDialog(w, err)
 		return
 	}
 
-	go operations.ConvertFolderMp3(
+	opEnv := e.opEnv()
+	opEnv.RegisterStepHandler(sh)
+
+	go e.opEnv().ConvertFolderMp3(
 		ctx,
-		e.opEnv(),
-		op,
 		opts,
 	)
 }

@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/billiem/seren-management/pkg/collection"
-	"github.com/billiem/seren-management/pkg/operations"
 	"github.com/urfave/cli/v2"
 )
 
@@ -33,7 +32,10 @@ func readTraktorCollection(c *cli.Context) error {
 		CollectionPath: c.String("path"),
 	}
 
-	operations.ReadCollection(c.Context, e.opEnv(), operationProcess{}, traktorCollectionOpts)
+	opEnv := e.opEnv()
+	opEnv.RegisterStepHandler(stepHandler{})
+
+	opEnv.ReadCollection(c.Context, traktorCollectionOpts)
 
 	return nil
 }

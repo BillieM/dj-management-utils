@@ -19,8 +19,8 @@ type guiEnv struct {
 	viewIndices map[string][]string
 }
 
-func (e *guiEnv) opEnv() operations.OpEnv {
-	return operations.OpEnv{
+func (e *guiEnv) opEnv() *operations.OpEnv {
+	return &operations.OpEnv{
 		Config:  *e.Config,
 		SerenDB: e.SerenDB,
 	}

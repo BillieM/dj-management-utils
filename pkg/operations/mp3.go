@@ -14,21 +14,21 @@ getConvertPath gets all of the files in the provided directory which should be c
 
 if recursion is true, will also get files in subdirectories
 */
-func getConvertPaths(inDirPath string, recursion bool, extensionsToConvert []string) ([]string, error) {
+func (e *OpEnv) getConvertPaths(inDirPath string, recursion bool) ([]string, error) {
 	convertPaths, err := helpers.GetFilesInDir(inDirPath, recursion)
 	if err != nil {
 		return nil, err
 	}
 	var validConvertPaths []string
 	for _, path := range convertPaths {
-		if helpers.IsExtensionInArray(path, extensionsToConvert) {
+		if helpers.IsExtensionInArray(path, e.Config.ExtensionsToConvertToMp3) {
 			validConvertPaths = append(validConvertPaths, path)
 		}
 	}
 	return validConvertPaths, nil
 }
 
-func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, tracks []ConvertTrack) {
+func (e *OpEnv) parallelProcessConvertTrackArray(ctx context.Context, tracks []ConvertTrack) {
 
 	if len(tracks) == 0 {
 		return
@@ -45,15 +45,15 @@ func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, t
 			return t, helpers.ErrConvertTrackEmpty
 		}
 
-		o.StepCallback(stepStartedStepInfo(fmt.Sprintf("Converting: %s", t.Name)))
+		e.step(stepStartedStepInfo(fmt.Sprintf("Converting: %s", t.Name)))
 
-		t, err := convertTrack(t)
+		t, err := e.convertTrack(t)
 		if err != nil {
 			return t, err
 		}
 		completedTracks++
 
-		o.StepCallback(stepFinishedStepInfo(
+		e.step(stepFinishedStepInfo(
 			fmt.Sprintf("Converted: %s", t.Name),
 			float64(completedTracks)/float64(totalTracks),
 		))
@@ -62,11 +62,11 @@ func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, t
 	}, func(t ConvertTrack, err error) {
 		completedTracks++
 		if strings.Contains(err.Error(), "context canceled") {
-			o.StepCallback(
+			e.step(
 				progressOnlyStepInfo(float64(completedTracks) / float64(totalTracks)),
 			)
 		} else {
-			o.StepCallback(stepWarningStepInfo(
+			e.step(stepWarningStepInfo(
 				helpers.GenErrConvertTrack(t.Name, err),
 				float64(completedTracks)/float64(totalTracks),
 			))
@@ -79,7 +79,7 @@ func parallelProcessConvertTrackArray(ctx context.Context, o OperationProcess, t
 	}
 }
 
-func convertTrack(track ConvertTrack) (ConvertTrack, error) {
+func (e *OpEnv) convertTrack(track ConvertTrack) (ConvertTrack, error) {
 
 	// create dir for new file if it doesn't exist
 	err := helpers.CreateDirIfNotExists(track.NewFile.FileInfo.DirPath)
