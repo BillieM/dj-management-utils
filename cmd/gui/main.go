@@ -1,7 +1,7 @@
 package main
 
-import "github.com/billiem/seren-management/pkg/ui"
+import "github.com/billiem/seren-management/pkg/gui"
 
 func main() {
-	ui.Entry()
+	gui.Entry()
 }

@@ -56,14 +56,14 @@ getStemPaths gets all of the files in the provided directory which should be con
 
 if recursion is true, will also get files in subdirectories
 */
-func getStemPaths(cfg helpers.Config, inDirPath string, recursion bool) ([]string, error) {
+func getStemPaths(inDirPath string, recursion bool, extensionsToSeparate []string) ([]string, error) {
 	stemPaths, err := helpers.GetFilesInDir(inDirPath, recursion)
 	if err != nil {
 		return nil, err
 	}
 	var validStemPaths []string
 	for _, path := range stemPaths {
-		if helpers.IsExtensionInArray(path, cfg.ExtensionsToConvertToStems) {
+		if helpers.IsExtensionInArray(path, extensionsToSeparate) {
 			validStemPaths = append(validStemPaths, path)
 		}
 	}

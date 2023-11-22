@@ -1,4 +1,4 @@
-package ui
+package gui
 
 import (
 	"context"
@@ -9,17 +9,17 @@ import (
 	"github.com/billiem/seren-management/pkg/operations"
 )
 
-func (d *Data) sharedStartBuild(w fyne.Window, processContainerOuter *fyne.Container) (context.Context, operationProcess, error) {
+func (e *guiEnv) sharedStartBuild(w fyne.Window, processContainerOuter *fyne.Container) (context.Context, operationProcess, error) {
 
 	processContainerOuter.Objects = nil
 
 	ctx := context.Background()
 
-	if d.State.processing {
+	if e.guiState.processing {
 		return ctx, operationProcess{}, helpers.ErrPleaseWaitForProcess
 	}
 
-	d.State.processing = true
+	e.guiState.processing = true
 
 	ctx, cancelCauseFunc := context.WithCancelCause(ctx)
 
@@ -34,7 +34,7 @@ func (d *Data) sharedStartBuild(w fyne.Window, processContainerOuter *fyne.Conta
 
 	finishedFunc := func() {
 		processContainer.container.Remove(processContainer.stopButton)
-		d.State.processing = false
+		e.guiState.processing = false
 		showInfoDialog(w, "Finished", "Process finished")
 	}
 
@@ -57,9 +57,9 @@ func (d *Data) sharedStartBuild(w fyne.Window, processContainerOuter *fyne.Conta
 /*
 startSeparateSingleStem is the entrypoint for the SeperateSingleStem operation from the UI
 */
-func (d *Data) startSeparateSingleStem(w fyne.Window, processContainerOuter *fyne.Container, opts operations.SeparateSingleStemOpts) {
+func (e *guiEnv) startSeparateSingleStem(w fyne.Window, processContainerOuter *fyne.Container, opts operations.SeparateSingleStemOpts) {
 
-	ctx, op, err := d.sharedStartBuild(w, processContainerOuter)
+	ctx, op, err := e.sharedStartBuild(w, processContainerOuter)
 
 	if err != nil {
 		showErrorDialog(w, err)
@@ -68,7 +68,7 @@ func (d *Data) startSeparateSingleStem(w fyne.Window, processContainerOuter *fyn
 
 	go operations.SeparateSingleStem(
 		ctx,
-		*d.Config,
+		e.opEnv(),
 		op,
 		opts,
 	)
@@ -77,9 +77,9 @@ func (d *Data) startSeparateSingleStem(w fyne.Window, processContainerOuter *fyn
 /*
 startSeparateFolderStem is the entrypoint for the SeperateFolderStem operation from the UI
 */
-func (d *Data) startSeparateFolderStem(w fyne.Window, processContainerOuter *fyne.Container, opts operations.SeparateFolderStemOpts) {
+func (e *guiEnv) startSeparateFolderStem(w fyne.Window, processContainerOuter *fyne.Container, opts operations.SeparateFolderStemOpts) {
 
-	ctx, op, err := d.sharedStartBuild(w, processContainerOuter)
+	ctx, op, err := e.sharedStartBuild(w, processContainerOuter)
 
 	if err != nil {
 		showErrorDialog(w, err)
@@ -88,7 +88,7 @@ func (d *Data) startSeparateFolderStem(w fyne.Window, processContainerOuter *fyn
 
 	go operations.SeparateFolderStem(
 		ctx,
-		*d.Config,
+		e.opEnv(),
 		op,
 		opts,
 	)
@@ -97,9 +97,9 @@ func (d *Data) startSeparateFolderStem(w fyne.Window, processContainerOuter *fyn
 /*
 startConvertSingleMp3 is the entrypoint for the ConvertSingleMp3 operation from the UI
 */
-func (d *Data) startConvertSingleMp3(w fyne.Window, processContainerOuter *fyne.Container, opts operations.ConvertSingleMp3Opts) {
+func (e *guiEnv) startConvertSingleMp3(w fyne.Window, processContainerOuter *fyne.Container, opts operations.ConvertSingleMp3Opts) {
 
-	ctx, op, err := d.sharedStartBuild(w, processContainerOuter)
+	ctx, op, err := e.sharedStartBuild(w, processContainerOuter)
 
 	if err != nil {
 		showErrorDialog(w, err)
@@ -108,7 +108,7 @@ func (d *Data) startConvertSingleMp3(w fyne.Window, processContainerOuter *fyne.
 
 	go operations.ConvertSingleMp3(
 		ctx,
-		*d.Config,
+		e.opEnv(),
 		op,
 		opts,
 	)
@@ -117,9 +117,9 @@ func (d *Data) startConvertSingleMp3(w fyne.Window, processContainerOuter *fyne.
 /*
 startConvertFolderMp3 is the entrypoint for the ConvertFolderMp3 operation from the UI
 */
-func (d *Data) startConvertFolderMp3(w fyne.Window, processContainerOuter *fyne.Container, opts operations.ConvertFolderMp3Opts) {
+func (e *guiEnv) startConvertFolderMp3(w fyne.Window, processContainerOuter *fyne.Container, opts operations.ConvertFolderMp3Opts) {
 
-	ctx, op, err := d.sharedStartBuild(w, processContainerOuter)
+	ctx, op, err := e.sharedStartBuild(w, processContainerOuter)
 
 	if err != nil {
 		showErrorDialog(w, err)
@@ -128,7 +128,7 @@ func (d *Data) startConvertFolderMp3(w fyne.Window, processContainerOuter *fyne.
 
 	go operations.ConvertFolderMp3(
 		ctx,
-		*d.Config,
+		e.opEnv(),
 		op,
 		opts,
 	)

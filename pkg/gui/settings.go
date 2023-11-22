@@ -1,4 +1,4 @@
-package ui
+package gui
 
 import (
 	"fyne.io/fyne/v2"
@@ -8,27 +8,27 @@ import (
 	"github.com/billiem/seren-management/pkg/helpers"
 )
 
-func (d *Data) openSettingsWindow(a fyne.App) bool {
+func (e *guiEnv) openSettingsWindow(a fyne.App) bool {
 
-	if d.settingsAlreadyOpen {
+	if e.settingsAlreadyOpen {
 		return true
 	} else {
-		d.settingsAlreadyOpen = true
+		e.settingsAlreadyOpen = true
 		// clone config state so we can discard changes if the user closes the window without saving
-		tmpConfig := *d.Config
-		d.TmpConfig = &tmpConfig
+		tmpConfig := *e.Config
+		e.tmpConfig = &tmpConfig
 	}
 
 	w := a.NewWindow("Settings")
 
 	w.SetOnClosed(func() {
-		d.settingsAlreadyOpen = false
-		d.TmpConfig = nil
+		e.settingsAlreadyOpen = false
+		e.tmpConfig = nil
 	})
 
 	// Create a new container with a vertical layout
 	container := container.NewVScroll(container.NewVBox(
-		d.settingsList(w)...,
+		e.settingsList(w)...,
 	))
 
 	// Set the window content to the container
@@ -46,18 +46,18 @@ settingsList generates a list of canvas objects for the settings window
 
 any altered settings are stored in the TmpConfig struct, which is discarded if the user closes the window without saving
 */
-func (d *Data) settingsList(w fyne.Window) []fyne.CanvasObject {
+func (e *guiEnv) settingsList(w fyne.Window) []fyne.CanvasObject {
 
 	objs := []fyne.CanvasObject{}
 
-	objs = append(objs, d.openFileCanvas(
-		w, "Traktor Collection Filepath", &d.TmpConfig.TraktorCollectionPath, []string{".nml"}, func() {},
+	objs = append(objs, e.openFileCanvas(
+		w, "Traktor Collection Filepath", &e.tmpConfig.TraktorCollectionPath, []string{".nml"}, func() {},
 	))
-	objs = append(objs, d.openDirCanvas(
-		w, "Temporary Content Directory", &d.TmpConfig.TmpDir, func() {},
+	objs = append(objs, e.openDirCanvas(
+		w, "Temporary Content Directory", &e.tmpConfig.TmpDir, func() {},
 	))
 
-	objs = append(objs, d.saveButton(w))
+	objs = append(objs, e.saveButton(w))
 
 	return objs
 
@@ -67,15 +67,15 @@ func (d *Data) settingsList(w fyne.Window) []fyne.CanvasObject {
 saveButton returns a button that saves the current state of the TmpConfig struct to the Config struct
 and then saves the Config struct to the config file
 */
-func (d *Data) saveButton(w fyne.Window) *widget.Button {
+func (e *guiEnv) saveButton(w fyne.Window) *widget.Button {
 	btn := widget.NewButton("Save", func() {
-		if d.State.processing {
+		if e.guiState.processing {
 			showErrorDialog(w, helpers.ErrPleaseWaitForProcess)
 			return
 		}
 
-		d.Config = d.TmpConfig
-		err := d.Config.SaveConfig()
+		e.Config = e.tmpConfig
+		err := e.Config.SaveConfig()
 		if err != nil {
 			showErrorDialog(w, err)
 			return

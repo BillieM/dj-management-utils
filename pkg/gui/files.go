@@ -1,4 +1,4 @@
-package ui
+package gui
 
 import (
 	"fmt"
@@ -12,12 +12,12 @@ import (
 	"github.com/billiem/seren-management/pkg/helpers"
 )
 
-func (d *Data) openFileCanvas(w fyne.Window, title string, updateVal *string, fileFilter []string, callbackFn func()) fyne.CanvasObject {
+func (e *guiEnv) openFileCanvas(w fyne.Window, title string, updateVal *string, fileFilter []string, callbackFn func()) fyne.CanvasObject {
 
 	pathCard := buildPathCard(*updateVal, "file")
 
 	buttonWidget := widget.NewButtonWithIcon("Open", theme.FolderOpenIcon(), func() {
-		if d.State.processing {
+		if e.guiState.processing {
 			showErrorDialog(w, helpers.ErrPleaseWaitForProcess)
 			return
 		}
@@ -36,7 +36,7 @@ func (d *Data) openFileCanvas(w fyne.Window, title string, updateVal *string, fi
 			callbackFn()
 		}, w)
 		// Set properties of the file open dialog
-		location, err := d.getListableURI(*updateVal)
+		location, err := e.getListableURI(*updateVal)
 		if err != nil {
 			showErrorDialog(w, err)
 			return
@@ -50,13 +50,13 @@ func (d *Data) openFileCanvas(w fyne.Window, title string, updateVal *string, fi
 	return formatOpenCanvas(title, pathCard, buttonWidget)
 }
 
-func (d *Data) openDirCanvas(w fyne.Window, title string, updateVal *string, callbackFn func()) fyne.CanvasObject {
+func (e *guiEnv) openDirCanvas(w fyne.Window, title string, updateVal *string, callbackFn func()) fyne.CanvasObject {
 
 	pathCard := buildPathCard(*updateVal, "directory")
 
 	buttonWidget := widget.NewButtonWithIcon("Open", theme.FolderOpenIcon(), func() {
 
-		if d.State.processing {
+		if e.guiState.processing {
 			showErrorDialog(w, helpers.ErrPleaseWaitForProcess)
 			return
 		}
@@ -75,7 +75,7 @@ func (d *Data) openDirCanvas(w fyne.Window, title string, updateVal *string, cal
 			callbackFn()
 		}, w)
 		// Set properties of the folder open dialog
-		location, err := d.getListableURI(*updateVal)
+		location, err := e.getListableURI(*updateVal)
 		if err != nil {
 			showErrorDialog(w, err)
 			return
@@ -113,10 +113,10 @@ Accepts a path and returns a listable URI for the closest directory
 If no 'close directory' is found, it will return the base directory
 If the base directory is not found, it will return the root directory (i.e. /)
 */
-func (d *Data) getListableURI(path string) (fyne.ListableURI, error) {
+func (e *guiEnv) getListableURI(path string) (fyne.ListableURI, error) {
 
 	var recursionCount int
-	dirPath, err := helpers.GetClosestDir(path, d.Config.BaseDir, &recursionCount)
+	dirPath, err := helpers.GetClosestDir(path, e.Config.BaseDir, &recursionCount)
 	if err != nil {
 		return nil, helpers.GenErrGettingClosestDir(err)
 	}

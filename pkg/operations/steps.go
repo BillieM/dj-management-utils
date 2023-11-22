@@ -1,9 +1,23 @@
 package operations
 
-import "github.com/billiem/seren-management/pkg/helpers"
+import (
+	"github.com/billiem/seren-management/pkg/helpers"
+	"gorm.io/gorm"
+)
+
+// stepHandler should be registered at the start of each operation
+// it handles callbacks & logging for each step
+type stepHandler struct {
+	db       *gorm.DB
+	callback func(StepInfo)
+}
+
+func (s stepHandler) step(stepInfo StepInfo) {
+	s.callback(stepInfo)
+}
 
 /*
-Provides helper functions for building step information
+Helper functions for building StepInfo objects
 */
 
 func processFinishedStepInfo(msg string) StepInfo {

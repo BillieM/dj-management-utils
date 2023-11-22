@@ -14,14 +14,14 @@ getConvertPath gets all of the files in the provided directory which should be c
 
 if recursion is true, will also get files in subdirectories
 */
-func getConvertPaths(cfg helpers.Config, inDirPath string, recursion bool) ([]string, error) {
+func getConvertPaths(inDirPath string, recursion bool, extensionsToConvert []string) ([]string, error) {
 	convertPaths, err := helpers.GetFilesInDir(inDirPath, recursion)
 	if err != nil {
 		return nil, err
 	}
 	var validConvertPaths []string
 	for _, path := range convertPaths {
-		if helpers.IsExtensionInArray(path, cfg.ExtensionsToConvertToMp3) {
+		if helpers.IsExtensionInArray(path, extensionsToConvert) {
 			validConvertPaths = append(validConvertPaths, path)
 		}
 	}

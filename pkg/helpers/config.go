@@ -2,7 +2,11 @@ package helpers
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
+	"path/filepath"
+
+	"github.com/billiem/seren-management/pkg/projectpath"
 )
 
 /*
@@ -11,22 +15,92 @@ Config is the main config struct for the application
 Built from config.json
 */
 type Config struct {
-	TraktorCollectionPath      string   `json:"traktorCollectionPath"`
-	TmpDir                     string   `json:"tmpDir"`
-	BaseDir                    string   `json:"baseDir"`
-	BaseOutputDir              string   `json:"baseOutputDir"`
-	ExtensionsToConvertToMp3   []string `json:"extensionsToConvertToMp3"`
-	ExtensionsToConvertToStems []string `json:"extensionsToConvertToStems"`
+	TraktorCollectionPath       string   `json:"traktorCollectionPath"`
+	TmpDir                      string   `json:"tmpDir"`
+	BaseDir                     string   `json:"baseDir"`
+	BaseOutputDir               string   `json:"baseOutputDir"`
+	ExtensionsToConvertToMp3    []string `json:"extensionsToConvertToMp3"`
+	ExtensionsToSeparateToStems []string `json:"extensionsToSeparateToStems"`
 }
 
-func LoadConfig() (*Config, error) {
-	workingDir, err := os.Getwd()
-
+// buildDefaultConfig builds default config values and saves them to config.json
+// this is called when the application is first run or when the config file is deleted
+func buildDefaultConfig() (*Config, error) {
+	cfg := &Config{
+		TraktorCollectionPath:       "",
+		TmpDir:                      "",
+		BaseDir:                     "",
+		BaseOutputDir:               "",
+		ExtensionsToConvertToMp3:    []string{"wav", "aiff", "flac", "ogg", "m4a"},
+		ExtensionsToSeparateToStems: []string{"mp3", "wav"},
+	}
+	err := cfg.SaveConfig()
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := os.ReadFile(JoinFilepathToSlash(workingDir, "config.json"))
+	return cfg, nil
+}
+
+/*
+LoadCLIConfig loads the config from the given path (if given) or from the default path
+
+No reference to the config is required for the CLI
+*/
+func LoadCLIConfig(configPath string) (Config, error) {
+
+	// load default config if no config path is given
+	if configPath == "" {
+		configPath := JoinFilepathToSlash(projectpath.Root, "config.json")
+		cfg, err := loadConfig(configPath)
+		return *cfg, err
+	}
+
+	if filepath.IsAbs(configPath) {
+		cfg, err := loadConfig(configPath)
+		return *cfg, err
+	}
+
+	// if the config path is not absolute, assume it is relative to the current working directory
+	cwd, err := os.Getwd()
+	if err != nil {
+		return Config{}, err
+	}
+	configPath = JoinFilepathToSlash(cwd, configPath)
+	cfg, err := loadConfig(configPath)
+	return *cfg, err
+}
+
+func LoadGUIConfig() (*Config, error) {
+
+	configPath := JoinFilepathToSlash(projectpath.Root, "config.json")
+
+	_, err := os.Stat(configPath)
+
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			// build config from defaults if it doesn't exist
+			cfg, err := buildDefaultConfig()
+			if err != nil {
+				return nil, err
+			}
+			return cfg, nil
+		}
+		return nil, err
+	}
+
+	return loadConfig(configPath)
+}
+
+func loadConfig(configPath string) (*Config, error) {
+
+	// should never hit this but just in case
+	_, err := os.Stat(configPath)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +120,7 @@ func (c *Config) SaveConfig() error {
 		return err
 	}
 
-	err = os.WriteFile("../config.json", data, 0644)
+	err = os.WriteFile(JoinFilepathToSlash(projectpath.Root, "config.json"), data, 0644)
 	if err != nil {
 		return err
 	}

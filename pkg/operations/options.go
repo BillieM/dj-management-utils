@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"github.com/billiem/seren-management/pkg/collection"
 	"github.com/billiem/seren-management/pkg/helpers"
 )
 
@@ -112,4 +113,10 @@ func (p ConvertFolderMp3Opts) Check() (bool, error) {
 	}
 
 	return true, nil
+}
+
+/*
+ */
+type ReadCollectionOpts interface {
+	Build(helpers.Config) collection.PlatformCollection
 }

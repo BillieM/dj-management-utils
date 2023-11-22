@@ -35,7 +35,7 @@ type StepInfo struct {
 /*
 SeperateSingleStem separates stems from a single file
 */
-func SeparateSingleStem(ctx context.Context, cfg helpers.Config, o OperationProcess, opts SeparateSingleStemOpts) {
+func SeparateSingleStem(ctx context.Context, env OpEnv, o OperationProcess, opts SeparateSingleStemOpts) {
 
 	defer func() {
 		o.StepCallback(progressOnlyStepInfo(1))
@@ -70,7 +70,7 @@ func SeparateSingleStem(ctx context.Context, cfg helpers.Config, o OperationProc
 /*
 SeparateFolderStem separates stems from all files in a folder
 */
-func SeparateFolderStem(ctx context.Context, cfg helpers.Config, o OperationProcess, opts SeparateFolderStemOpts) {
+func SeparateFolderStem(ctx context.Context, env OpEnv, o OperationProcess, opts SeparateFolderStemOpts) {
 
 	defer func() {
 		o.StepCallback(progressOnlyStepInfo(1))
@@ -85,7 +85,7 @@ func SeparateFolderStem(ctx context.Context, cfg helpers.Config, o OperationProc
 	}
 
 	o.StepCallback(stageStepInfo("Finding files to convert"))
-	stemFilePaths, err := getStemPaths(cfg, opts.InDirPath, opts.Recursion)
+	stemFilePaths, err := getStemPaths(opts.InDirPath, opts.Recursion, env.Config.ExtensionsToSeparateToStems)
 	o.StepCallback(stageStepInfo(fmt.Sprintf("Found %v potential files to convert", len(stemFilePaths))))
 
 	if err != nil {
@@ -109,7 +109,7 @@ func SeparateFolderStem(ctx context.Context, cfg helpers.Config, o OperationProc
 /*
 ConvertSingleMp3 converts a single file to mp3
 */
-func ConvertSingleMp3(ctx context.Context, cfg helpers.Config, o OperationProcess, opts ConvertSingleMp3Opts) {
+func ConvertSingleMp3(ctx context.Context, env OpEnv, o OperationProcess, opts ConvertSingleMp3Opts) {
 
 	defer func() {
 		o.StepCallback(progressOnlyStepInfo(1))
@@ -144,7 +144,7 @@ func ConvertSingleMp3(ctx context.Context, cfg helpers.Config, o OperationProces
 /*
 ConvertFolderMp3 converts all files in a folder to mp3
 */
-func ConvertFolderMp3(ctx context.Context, cfg helpers.Config, o OperationProcess, opts ConvertFolderMp3Opts) {
+func ConvertFolderMp3(ctx context.Context, env OpEnv, o OperationProcess, opts ConvertFolderMp3Opts) {
 
 	defer func() {
 		o.StepCallback(progressOnlyStepInfo(1))
@@ -159,7 +159,7 @@ func ConvertFolderMp3(ctx context.Context, cfg helpers.Config, o OperationProces
 	}
 
 	o.StepCallback(stageStepInfo("Finding files to convert"))
-	convertFilePaths, err := getConvertPaths(cfg, opts.InDirPath, opts.Recursion)
+	convertFilePaths, err := getConvertPaths(opts.InDirPath, opts.Recursion, env.Config.ExtensionsToConvertToMp3)
 	o.StepCallback(stageStepInfo(fmt.Sprintf("Found %v potential files to convert", len(convertFilePaths))))
 
 	if err != nil {
@@ -178,4 +178,14 @@ func ConvertFolderMp3(ctx context.Context, cfg helpers.Config, o OperationProces
 	o.StepCallback(stageStepInfo("Converting files to mp3"))
 	parallelProcessConvertTrackArray(ctx, o, convertTrackArray)
 	o.StepCallback(processFinishedStepInfo("Finished"))
+}
+
+/*
+ReadCollection reads a collection for a given platform and stores it in the database
+*/
+func ReadCollection(ctx context.Context, env OpEnv, o OperationProcess, opts ReadCollectionOpts) {
+
+	collection := opts.Build(env.Config)
+
+	collection.ReadCollection()
 }

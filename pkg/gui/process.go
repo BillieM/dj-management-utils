@@ -1,4 +1,4 @@
-package ui
+package gui
 
 import (
 	"context"
@@ -97,20 +97,26 @@ func (i *progressBindingList) RemoveListener(l binding.DataListener) {
 	i.listeners.Delete(l)
 }
 
-func (l *progressBindingList) GetItem(index int) (binding.DataItem, error) {
-	if index < 0 || index >= len(l.Items) {
+func (i *progressBindingList) GetItem(index int) (binding.DataItem, error) {
+	i.Lock()
+	defer i.Unlock()
+	if index < 0 || index >= len(i.Items) {
 		return nil, helpers.ErrIndexOutOfBounds
 	}
 
-	return l.Items[index], nil
+	return i.Items[index], nil
 }
 
-func (l *progressBindingList) Length() int {
-	return len(l.Items)
+func (i *progressBindingList) Length() int {
+	i.Lock()
+	defer i.Unlock()
+	return len(i.Items)
 }
 
-func (l *progressBindingList) Append(message *progressBindingItem) {
-	l.Items = append(l.Items, message)
+func (i *progressBindingList) Append(message *progressBindingItem) {
+	i.Lock()
+	defer i.Unlock()
+	i.Items = append(i.Items, message)
 }
 
 /*

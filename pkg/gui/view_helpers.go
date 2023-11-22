@@ -1,4 +1,4 @@
-package ui
+package gui
 
 import (
 	"fyne.io/fyne/v2"
@@ -14,7 +14,7 @@ Checks the config for any issues for a given set of checks
 
 If there are issues, it will return a fyne.CanvasObject containing the issues
 */
-func (d *Data) checkConfig(checks []func() (bool, string)) (bool, fyne.CanvasObject) {
+func (e *guiEnv) checkConfig(checks []func() (bool, string)) (bool, fyne.CanvasObject) {
 
 	configIssues := []string{}
 

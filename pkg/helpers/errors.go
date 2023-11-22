@@ -52,6 +52,8 @@ var (
 	ErrAddMetadataStep           = errors.New("error running add metadata step")
 	ErrCleanupStep               = errors.New("error running cleanup step")
 	ErrInvalidStemSeparationType = errors.New("invalid stem separation type")
+	ErrInvalidPlatform           = errors.New("platform is invalid")
+	ErrConfigDoesNotExist        = errors.New("config does not exist")
 )
 
 var (
