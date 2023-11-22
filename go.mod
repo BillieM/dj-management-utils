@@ -6,6 +6,7 @@ require (
 	fyne.io/fyne/v2 v2.4.1
 	github.com/deliveryhero/pipeline/v2 v2.1.1
 	github.com/google/go-cmp v0.6.0
+	github.com/urfave/cli/v2 v2.25.7
 )
 
 require (
@@ -25,16 +26,12 @@ require (
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jsummers/gobmp v0.0.0-20151104160322-e2ba15ffa76e // indirect
-	github.com/k0kubun/pp v3.0.1+incompatible // indirect
-	github.com/mattn/go-colorable v0.0.9 // indirect
-	github.com/mattn/go-isatty v0.0.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c // indirect
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/tevino/abool v1.2.0 // indirect
-	github.com/urfave/cli/v2 v2.25.7 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	github.com/yuin/goldmark v1.5.5 // indirect
 	golang.org/x/image v0.11.0 // indirect

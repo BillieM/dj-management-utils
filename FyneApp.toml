@@ -1,0 +1,8 @@
+Website = "patreon.com/serrene"
+
+[Details]
+Icon = "Icon.png"
+Name = "seren DJ utilities"
+ID = "com.seren.djutils"
+Version = "0.0.1"
+Build = 1
