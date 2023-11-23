@@ -117,6 +117,7 @@ type ENTRY struct {
 	MUSICALKEY               []*MUSICALKEY       `xml:"MUSICAL_KEY"`
 	CUEV2                    []*CUEV2            `xml:"CUE_V2"`
 	STEMS                    []*STEMS            `xml:"STEMS"`
+	PRIMARYKEY			     *PRIMARYKEY         `xml:"PRIMARYKEY"`
 }
 
 // COLLECTION ...
@@ -178,9 +179,10 @@ type SETS struct {
 
 // PLAYLIST ...
 type PLAYLIST struct {
-	ENTRIESAttr uint8  `xml:"ENTRIES,attr,omitempty"`
-	TYPEAttr    string `xml:"TYPE,attr,omitempty"`
-	UUIDAttr    string `xml:"UUID,attr,omitempty"`
+	ENTRIESAttr uint16   `xml:"ENTRIES,attr,omitempty"`
+	TYPEAttr    string   `xml:"TYPE,attr,omitempty"`
+	UUIDAttr    string 	 `xml:"UUID,attr,omitempty"`
+	ENTRIES     []*ENTRY `xml:"ENTRY"`
 }
 
 // PRIMARYKEY ...
@@ -206,15 +208,16 @@ type SMARTLIST struct {
 type NODE struct {
 	TYPEAttr string    `xml:"TYPE,attr,omitempty"`
 	NAMEAttr string    `xml:"NAME,attr,omitempty"`
-	
-	PLAYLIST []*PLAYLIST `xml:"PLAYLIST"`
+
+	SUBNODES  *SUBNODES  `xml:"SUBNODES"`
+	PLAYLIST  []*PLAYLIST  `xml:"PLAYLIST"`
 	SMARTLIST []*SMARTLIST `xml:"SMARTLIST"`
 }
 
 // SUBNODES ...
 type SUBNODES struct {
 	COUNTAttr uint8 `xml:"COUNT,attr,omitempty"`
-	NODE      *NODE `xml:"NODE"`
+	NODE      []*NODE `xml:"NODE"`
 }
 
 // PLAYLISTS ...
