@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/billiem/seren-management/pkg/collection"
+	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/urfave/cli/v2"
 )
 
@@ -28,8 +29,19 @@ func readTraktorCollection(c *cli.Context) error {
 		return err
 	}
 
+	collectionInPath, err := helpers.GetAbsOrWdPath(c.String("in"))
+	if err != nil {
+		return err
+	}
+
+	collectionOutPath, err := helpers.GetAbsOrWdPath(c.String("out"))
+	if err != nil {
+		return err
+	}
+
 	traktorCollectionOpts := collection.ReadTraktorOpts{
-		CollectionPath: c.String("path"),
+		CollectionInPath:  collectionInPath,
+		CollectionOutPath: collectionOutPath,
 	}
 
 	opEnv := e.opEnv()

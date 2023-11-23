@@ -189,8 +189,6 @@ func (e *OpEnv) ReadCollection(ctx context.Context, opts ReadCollectionOpts) {
 
 	err := collection.ReadCollection()
 
-	fmt.Println(collection)
-
 	if err != nil {
 		e.step(dangerStepInfo(err))
 		return

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
-	"path/filepath"
 
 	"github.com/billiem/seren-management/pkg/projectpath"
 )
@@ -56,17 +55,12 @@ func LoadCLIConfig(configPath string) (Config, error) {
 		return *cfg, err
 	}
 
-	if filepath.IsAbs(configPath) {
-		cfg, err := loadConfig(configPath)
-		return *cfg, err
-	}
+	configPath, err := GetAbsOrWdPath(configPath)
 
-	// if the config path is not absolute, assume it is relative to the current working directory
-	cwd, err := os.Getwd()
 	if err != nil {
 		return Config{}, err
 	}
-	configPath = JoinFilepathToSlash(cwd, configPath)
+
 	cfg, err := loadConfig(configPath)
 	return *cfg, err
 }

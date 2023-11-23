@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/billiem/seren-management/pkg/helpers"
+	"github.com/billiem/seren-management/pkg/projectpath"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -422,6 +423,133 @@ func TestBuildFullPath(t *testing.T) {
 
 			if fullPath != tt.want {
 				t.Errorf("Expected %s, got %s", tt.want, fullPath)
+			}
+		})
+	}
+}
+
+func TestRemoveFileExtension(t *testing.T) {
+	tests := []struct {
+		name     string
+		filePath string
+		want     string
+	}{
+		{
+			name:     "mp3 with extension",
+			filePath: "H:/Music/processed/funky cool song.mp3",
+			want:     "H:/Music/processed/funky cool song",
+		},
+		{
+			name:     "file without extension",
+			filePath: "H:/Music/processed/funky cool song",
+			want:     "H:/Music/processed/funky cool song",
+		},
+		{
+			name:     "directory path only (trailing /)",
+			filePath: "H:/Music/processed/",
+			want:     "H:/Music/processed/",
+		},
+		{
+			name:     "file name with dot",
+			filePath: "H:/tmp/testdir/01 - funky cool song (feat. coolman).m4a",
+			want:     "H:/tmp/testdir/01 - funky cool song (feat. coolman)",
+		},
+		{
+			name:     "NML file",
+			filePath: "H:/Music/processed/funky cool song.nml",
+			want:     "H:/Music/processed/funky cool song",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := helpers.RemoveFileExtension(tt.filePath)
+
+			if got != tt.want {
+				t.Errorf("RemoveFileExtension() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetAbsOrWdPath(t *testing.T) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name string
+		path string
+		want string
+	}{
+		{
+			name: "absolute path",
+			path: "H:/Music/processed/funky cool song.mp3",
+			want: "H:/Music/processed/funky cool song.mp3",
+		},
+		{
+			name: "relative path",
+			path: "funky cool song.mp3",
+			want: helpers.JoinFilepathToSlash(pwd, "funky cool song.mp3"),
+		},
+		{
+			name: "relative path with base path",
+			path: "funky cool song.mp3",
+			want: helpers.JoinFilepathToSlash(pwd, "funky cool song.mp3"),
+		},
+		{
+			name: "empty string",
+			path: "",
+			want: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			path, _ := helpers.GetAbsOrWdPath(tt.path)
+
+			if path != tt.want {
+				t.Errorf("Expected %s, got %s", tt.want, path)
+			}
+		})
+	}
+}
+
+func TestGetAbsOrProjPath(t *testing.T) {
+
+	tests := []struct {
+		name string
+		path string
+		want string
+	}{
+		{
+			name: "absolute path",
+			path: "H:/Music/processed/funky cool song.mp3",
+			want: "H:/Music/processed/funky cool song.mp3",
+		},
+		{
+			name: "relative path",
+			path: "funky cool song.mp3",
+			want: helpers.JoinFilepathToSlash(projectpath.Root, "funky cool song.mp3"),
+		},
+		{
+			name: "relative path with base path",
+			path: "funky cool song.mp3",
+			want: helpers.JoinFilepathToSlash(projectpath.Root, "funky cool song.mp3"),
+		},
+		{
+			name: "empty string",
+			path: "",
+			want: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			path, _ := helpers.GetAbsOrProjPath(tt.path)
+
+			if path != tt.want {
+				t.Errorf("Expected %s, got %s", tt.want, path)
 			}
 		})
 	}

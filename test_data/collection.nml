@@ -115,9 +115,11 @@
     </NODE>
 </PLAYLISTS>
 <INDEXING>
-    <SORTING_INFO PATH="$COLLECTION"><CRITERIA ATTRIBUTE="33" DIRECTION="1"></CRITERIA>
+    <SORTING_INFO PATH="$COLLECTION">
+        <CRITERIA ATTRIBUTE="33" DIRECTION="1"></CRITERIA>
     </SORTING_INFO>
-    <SORTING_INFO PATH="Electronic (stems)\other\some kinda weird slightly garagey shit ig "><CRITERIA ATTRIBUTE="33" DIRECTION="1"></CRITERIA>
+    <SORTING_INFO PATH="Electronic (stems)\other\some kinda weird slightly garagey shit ig ">
+        <CRITERIA ATTRIBUTE="33" DIRECTION="1"></CRITERIA>
     </SORTING_INFO>
 </INDEXING>
 </NML>

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NML VERSION="19">
+  <HEAD COMPANY="www.native-instruments.com" PROGRAM="Traktor"></HEAD>
+  <COLLECTION ENTRIES="2">
+    <ENTRY MODIFIED_DATE="2023/7/1" MODIFIED_TIME="65788" AUDIO_ID="AUcmQUZSQ0IBJBEREzIiIiI0YhERJ4p5h1aIRDJ5t0IiZoQ0M0eIeZiJl4Z4mYeZeJhneHm7yq2pvcrcqbzr3J37rbmc37zK38rNqszsy83MvdiIV4ZWhWeWnLm8u+/ay6WIhpiHmGiIeamKmIqVeIncy9273KzLrczOu8zKzf///////////////////////////////////////8QzQzRFM1QzRDRDRXaKunZmiahpvK3ch6re7///////7//f/v/v////////7///////////////////////////////////////////////////7//dMQABEiIiIiIiIiERAA==" TITLE="Track 10" ARTIST="Charli XCX">
+      <LOCATION DIR="/:Stems/:processed/:" FILE="10 - Track 10.stem.m4a" VOLUME="H:" VOLUMEID="2f74a485"></LOCATION>
+      <ALBUM OF_TRACKS="10" TRACK="10" TITLE="Pop 2"></ALBUM>
+      <MODIFICATION_INFO AUTHOR_TYPE="user"></MODIFICATION_INFO>
+      <INFO BITRATE="128770" GENRE="Pop; " COMMENT="pre 2022" PLAYTIME="327" PLAYTIME_FLOAT="326.90012" IMPORT_DATE="2023/7/1" RELEASE_DATE="2017/1/1" FLAGS="12" FILESIZE="25994"></INFO>
+      <TEMPO BPM="99.99931" BPM_QUALITY="100"></TEMPO>
+      <LOUDNESS PEAK_DB="-3.675785" PERCEIVED_DB="-0.829117" ANALYZED_DB="-0.829117"></LOUDNESS>
+      <MUSICAL_KEY VALUE="5"></MUSICAL_KEY>
+      <CUE_V2 NAME="AutoGrid" TYPE="4" START="59.95391" REPEATS="-1"></CUE_V2>
+      <STEMS STEMS="{&#34;mastering_dsp&#34;:{&#34;compressor&#34;:{&#34;attack&#34;:0.003000000026077032,&#34;dry_wet&#34;:50,&#34;enabled&#34;:false,&#34;hp_cutoff&#34;:300,&#34;input_gain&#34;:0.5,&#34;output_gain&#34;:0.5,&#34;ratio&#34;:3,&#34;release&#34;:0.300000011920929,&#34;threshold&#34;:0},&#34;limiter&#34;:{&#34;ceiling&#34;:-0.3499999940395355,&#34;enabled&#34;:false,&#34;release&#34;:0.05000000074505806,&#34;threshold&#34;:0}},&#34;stems&#34;:[{&#34;color&#34;:&#34;#009E73&#34;,&#34;name&#34;:&#34;Drums&#34;},{&#34;color&#34;:&#34;#D55E00&#34;,&#34;name&#34;:&#34;Bass&#34;},{&#34;color&#34;:&#34;#CC79A7&#34;,&#34;name&#34;:&#34;Other&#34;},{&#34;color&#34;:&#34;#56B4E9&#34;,&#34;name&#34;:&#34;Vocals&#34;}],&#34;version&#34;:1}"></STEMS>
+    </ENTRY>
+    <ENTRY MODIFIED_DATE="2023/3/18" MODIFIED_TIME="48570" AUDIO_ID="AUc3UUdiREIBNBERJDMiMyM1cxERKKuKmGeaRTKK2EMid6VEREiZirmruJeZqqiqmqp5iYrM27663srtu9387a78v9q9793b79zuu9393d/t3+mpWKdnlnimncrNzP/9/caql6mYunqqi7qcupymiar+3P7M/s7tv+7v3e7s7////////////////////////////////////////+RERDVWRGUzVDVUVpec3Jd4q8l778//qMv////////////////////////////////////////////////////////////////////////////////dMQARIjIjMzIjMiERAA==" TITLE="Track 10" ARTIST="Charli XCX">
+      <LOCATION DIR="/:Music/:processed/:" FILE="10 - Track 10.mp3" VOLUME="H:" VOLUMEID="2f74a485"></LOCATION>
+      <ALBUM OF_TRACKS="10" TRACK="10" TITLE="Pop 2"></ALBUM>
+      <MODIFICATION_INFO AUTHOR_TYPE="user"></MODIFICATION_INFO>
+      <INFO BITRATE="320000" GENRE="Pop; " COMMENT="pre 2022" PLAYTIME="327" PLAYTIME_FLOAT="326.94858" IMPORT_DATE="2022/9/28" RELEASE_DATE="2017/1/1" FLAGS="12" FILESIZE="12867" LABEL="Atlantic UK" COVERARTID="079/POVXI5D32JQHEAJHJ5GVA2JM3RFB" KEY="12d"></INFO>
+      <TEMPO BPM="99.99916" BPM_QUALITY="100"></TEMPO>
+      <LOUDNESS PEAK_DB="-0.664517" PERCEIVED_DB="-2.23391" ANALYZED_DB="-2.23391"></LOUDNESS>
+      <MUSICAL_KEY VALUE="5"></MUSICAL_KEY>
+      <CUE_V2 NAME="AutoGrid" TYPE="4" START="60.996822" REPEATS="-1"></CUE_V2>
+    </ENTRY>
+  </COLLECTION>
+  <SETS ENTRIES="1">
+    <SET TITLE="Studio Outtakes" ARTIST="Marc Houle" QUANT_VAlUE="4" QUANT_STATE="1">
+      <LOCATION DIR="/:Native Instruments/:Traktor Windows/:" FILE="2023y07m25d_00h17m53s410541093482.set" VOLUME="H:" VOLUMEID="2f74a485"></LOCATION>
+      <MODIFICATION_INFO AUTHOR_TYPE="importer"></MODIFICATION_INFO>
+      <INFO GENRE="Minimal" COMMENT="Drums on the left, basses on the right" IMPORT_DATE="2023/7/25" COVERARTID="124/2PJNRJDZYQKLHB4MH2IRC0UZQ4NB"></INFO>
+      <TEMPO BPM="125"></TEMPO>
+      <SLOT KEYLOCK="0" FXENABLE="1" PUNCHMODE="0" ACTIVE_CELL_INDEX="0">
+        <CELL CELLNAME="XBase09 Rhythm 1 Straight" COLOR="15" SYNC="1" MODE="1" SPEED="1" GAIN="0.472967" BPM="123.981" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="XBase09 Rhythm 1 Straight.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="1" CELLNAME="XBase09 Rhythm 2 Straight" COLOR="15" SYNC="1" MODE="1" SPEED="1" GAIN="0.475482" BPM="125" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="XBase09 Rhythm 2 Straight.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="2" CELLNAME="Clock Width 124 Shuffle" COLOR="15" SYNC="1" MODE="1" SPEED="1" GAIN="0.421603" BPM="124" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Clock Width 124 Shuffle.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="3" CELLNAME="Dirty Dirty 124 Straight" COLOR="15" SYNC="1" MODE="1" SPEED="1" GAIN="0.319255" BPM="124" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Dirty Dirty 124 Straight.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="4" CELLNAME="Hammering 120 Shuffle" COLOR="4" SYNC="1" MODE="1" SPEED="1" GAIN="0.547725" BPM="120" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Hammering 120 Shuffle.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="5" CELLNAME="Super Clap 120 Straight" COLOR="4" SYNC="1" MODE="1" SPEED="1" GAIN="0.444209" BPM="124.999" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Super Clap 120 Straight.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="6" CELLNAME="Thirds in Trees 126 Straight" COLOR="4" SYNC="1" MODE="1" SPEED="1" GAIN="0.448031" BPM="126" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Thirds in Trees 126 Straight.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="7" CELLNAME="Seeing in the Dark 119 Straight" COLOR="4" SYNC="1" MODE="1" SPEED="1" GAIN="0.342991" BPM="118.999" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Seeing in the Dark 119 Straight.wav" VOLUME="H:"></CELL>
+      </SLOT>
+      <SLOT KEYLOCK="0" FXENABLE="1" PUNCHMODE="0" ACTIVE_CELL_INDEX="0">
+        <CELL CELLNAME="727 Rhythm 1 Straight" COLOR="15" SYNC="1" MODE="1" SPEED="1" GAIN="0.5" BPM="125" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="727 Rhythm 1 Straight.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="1" CELLNAME="727 Rhythm 2 Straight" COLOR="15" SYNC="1" MODE="1" SPEED="1" GAIN="0.5" BPM="125" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="727 Rhythm 2 Straight.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="2" CELLNAME="marc drumming1 120 Straight" COLOR="15" SYNC="1" MODE="1" SPEED="1" GAIN="0.494886" BPM="120.02" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="marc drumming1 120 Straight.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="3" CELLNAME="marc drumming2 120 Straight" COLOR="15" SYNC="1" MODE="1" SPEED="1" GAIN="0.457157" BPM="119.999" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="marc drumming2 120 Straight.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="4" CELLNAME="marc drumming3 120 Straight" COLOR="4" SYNC="1" MODE="1" SPEED="1" GAIN="0.485194" BPM="120" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="marc drumming3 120 Straight.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="5" CELLNAME="808 Beats2 127 Straight" COLOR="4" SYNC="1" MODE="1" SPEED="1" GAIN="0.39707" BPM="127" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="808 Beats2 127 Straight.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="6" CELLNAME="808 Beats 127 Straight" COLOR="4" SYNC="1" MODE="1" SPEED="1" GAIN="0.391467" BPM="127.006" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="808 Beats 127 Straight.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="7" CELLNAME="505 Rhythm 1 Straight" COLOR="4" SYNC="1" MODE="1" SPEED="1" GAIN="0.382617" BPM="125" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="505 Rhythm 1 Straight.wav" VOLUME="H:"></CELL>
+      </SLOT>
+      <SLOT KEYLOCK="0" FXENABLE="1" PUNCHMODE="0" ACTIVE_CELL_INDEX="0">
+        <CELL CELLNAME="Hearing 121 BPM" COLOR="10" SYNC="1" MODE="1" SPEED="1" GAIN="0.389056" BPM="121" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Hearing 121 BPM.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="1" CELLNAME="Sands 122 BPM" COLOR="10" SYNC="1" MODE="1" SPEED="1" GAIN="0.416302" BPM="122" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Sands 122 BPM.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="2" CELLNAME="Ketchup and Beans 124 BPM" COLOR="12" SYNC="1" MODE="1" SPEED="1" GAIN="0.395172" BPM="124" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Ketchup and Beans 124 BPM.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="3" CELLNAME="Hitcherman 124 BPM" COLOR="12" SYNC="1" MODE="1" SPEED="1" GAIN="0.372093" BPM="124" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Hitcherman 124 BPM.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="4" CELLNAME="Blunderstorm 125 BPM" COLOR="9" SYNC="1" MODE="1" SPEED="1" GAIN="0.425493" BPM="125.005" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Blunderstorm 125 BPM.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="5" CELLNAME="Deathray at You 126 BPM" COLOR="9" SYNC="1" MODE="1" SPEED="1" GAIN="0.437323" BPM="126" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Deathray at You 126 BPM.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="6" CELLNAME="Salamandarin 125 BPM" COLOR="9" SYNC="1" MODE="1" SPEED="1" GAIN="0.447339" BPM="125.011" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Salamandarin 125 BPM.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="7" CELLNAME="Manager 126 BPM" COLOR="9" SYNC="1" MODE="1" SPEED="1" GAIN="0.393742" BPM="126" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Manager 126 BPM.wav" VOLUME="H:"></CELL>
+      </SLOT>
+      <SLOT KEYLOCK="0" FXENABLE="1" PUNCHMODE="0" ACTIVE_CELL_INDEX="0">
+        <CELL CELLNAME="Clock Width 124 BPM" COLOR="10" SYNC="1" MODE="1" SPEED="1" GAIN="0.5" BPM="124" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Clock Width 124 BPM.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="1" CELLNAME="Bay of Figs 123 BPM" COLOR="11" SYNC="1" MODE="1" SPEED="1" GAIN="0.5" BPM="123" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Bay of Figs 123 BPM.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="2" CELLNAME="Inside 124 BPM" COLOR="12" SYNC="1" MODE="1" SPEED="1" GAIN="0.384029" BPM="124" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Inside 124 BPM.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="3" CELLNAME="Yonkers 127 BPM" COLOR="10" SYNC="1" MODE="1" SPEED="1" GAIN="0.364235" BPM="127" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Yonkers 127 BPM.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="4" CELLNAME="Turtle Feet 126" COLOR="9" SYNC="1" MODE="1" SPEED="1" GAIN="0.384223" BPM="126" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Turtle Feet 126.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="5" CELLNAME="Meatier Shower 125 BPM" COLOR="9" SYNC="1" MODE="1" SPEED="1" GAIN="0.383292" BPM="125" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Meatier Shower 125 BPM.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="6" CELLNAME="Selection 12 124 BPM" COLOR="9" SYNC="1" MODE="1" SPEED="1" GAIN="0.375211" BPM="124" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Selection 12 124 BPM.wav" VOLUME="H:"></CELL>
+        <CELL INDEX="7" CELLNAME="Undercover 125 BPM" COLOR="9" SYNC="1" MODE="1" SPEED="1" GAIN="0.38169" BPM="125.021" DIR="/:Native Instruments/:Traktor/:ContentImport/:Studio Outtakes/:" FILE="Undercover 125 BPM.wav" VOLUME="H:"></CELL>
+      </SLOT>
+    </SET>
+  </SETS>
+  <PLAYLISTS>
+    <NODE TYPE="FOLDER" NAME="$ROOT">
+      <SUBNODES COUNT="3">
+        <NODE TYPE="FOLDER" NAME="Electronic (stems)">
+          <SUBNODES COUNT="2">
+            <NODE TYPE="FOLDER" NAME="other">
+              <SUBNODES COUNT="2">
+                <NODE TYPE="FOLDER" NAME="1">
+                  <SUBNODES COUNT="2">
+                    <NODE TYPE="FOLDER" NAME="2">
+                      <SUBNODES COUNT="1">
+                        <NODE TYPE="PLAYLIST" NAME="2">
+                          <PLAYLIST ENTRIES="2" TYPE="LIST" UUID="5459ca147f71449aa34d8dcc55f3fe82">
+                            <ENTRY>
+                              <PRIMARYKEY TYPE="TRACK" KEY="H:/:Music/:processed/:10 - Track 10.mp3"></PRIMARYKEY>
+                            </ENTRY>
+                            <ENTRY>
+                              <PRIMARYKEY TYPE="STEM" KEY="H:/:Stems/:processed/:10 - Track 10.stem.m4a"></PRIMARYKEY>
+                            </ENTRY>
+                          </PLAYLIST>
+                        </NODE>
+                      </SUBNODES>
+                    </NODE>
+                    <NODE TYPE="PLAYLIST" NAME="1">
+                      <PLAYLIST ENTRIES="2" TYPE="LIST" UUID="242b6e750bda43cba80710cab300cd57">
+                        <ENTRY>
+                          <PRIMARYKEY TYPE="TRACK" KEY="H:/:Music/:processed/:10 - Track 10.mp3"></PRIMARYKEY>
+                        </ENTRY>
+                        <ENTRY>
+                          <PRIMARYKEY TYPE="STEM" KEY="H:/:Stems/:processed/:10 - Track 10.stem.m4a"></PRIMARYKEY>
+                        </ENTRY>
+                      </PLAYLIST>
+                    </NODE>
+                  </SUBNODES>
+                </NODE>
+              </SUBNODES>
+            </NODE>
+          </SUBNODES>
+        </NODE>
+        <NODE TYPE="PLAYLIST" NAME="_LOOPS">
+          <PLAYLIST TYPE="LIST" UUID="d77afacdcd4f48d8a86245c42d87e2f7"></PLAYLIST>
+        </NODE>
+        <NODE TYPE="PLAYLIST" NAME="_RECORDINGS">
+          <PLAYLIST TYPE="LIST" UUID="642b9b567f7545ac91741aec40fde39c"></PLAYLIST>
+        </NODE>
+      </SUBNODES>
+    </NODE>
+  </PLAYLISTS>
+  <INDEXING>
+    <SORTING_INFO PATH="$COLLECTION">
+      <CRITERIA ATTRIBUTE="33" DIRECTION="1"></CRITERIA>
+    </SORTING_INFO>
+    <SORTING_INFO PATH="Electronic (stems)\other\some kinda weird slightly garagey shit ig ">
+      <CRITERIA ATTRIBUTE="33" DIRECTION="1"></CRITERIA>
+    </SORTING_INFO>
+  </INDEXING>
+</NML>

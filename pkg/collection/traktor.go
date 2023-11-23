@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/billiem/seren-management/pkg/helpers"
-	"github.com/k0kubun/pp"
 )
 
 /*
@@ -14,24 +13,36 @@ Contains a selection of utilities for managing a Traktor collection
 */
 
 type ReadTraktorOpts struct {
-	CollectionPath string
+	CollectionInPath  string
+	CollectionOutPath string
 }
 
 func (o ReadTraktorOpts) Build(cfg helpers.Config) PlatformCollection {
-	collectionPath := cfg.TraktorCollectionPath
+	var collectionInPath, collectionOutPath string
 
-	if o.CollectionPath != "" {
-		collectionPath = o.CollectionPath
+	if o.CollectionInPath == "" {
+		collectionInPath = cfg.TraktorCollectionPath
+	} else {
+		collectionInPath = o.CollectionInPath
+	}
+
+	if o.CollectionOutPath == "" {
+		collectionOutPath = fmt.Sprintf("%s_new.nml", helpers.RemoveFileExtension(collectionInPath))
+	} else {
+		collectionOutPath = o.CollectionOutPath
 	}
 
 	return &Traktor{
-		CollectionPath: collectionPath,
+		CollectionInPath:  collectionInPath,
+		CollectionOutPath: collectionOutPath,
+		NML:               *new(NML),
 	}
 }
 
 type Traktor struct {
-	CollectionPath string
-	*NML
+	CollectionInPath  string
+	CollectionOutPath string
+	NML               NML
 }
 
 func (c Traktor) String() string {
@@ -39,15 +50,19 @@ func (c Traktor) String() string {
 }
 
 func (t Traktor) ReadCollection() error {
-	fmt.Println("read traktor collection", t.CollectionPath)
-	err := t.loadTraktorCollection()
+	err := t.loadCollection()
+
+	if err != nil {
+		return err
+	}
+
+	err = t.writeCollection()
 
 	if err != nil {
 		return err
 	}
 
 	return nil
-
 }
 
 func (t Traktor) UpdateCollection() error {
@@ -56,26 +71,47 @@ func (t Traktor) UpdateCollection() error {
 	return nil
 }
 
-func (t *Traktor) loadTraktorCollection() error {
+func (t *Traktor) loadCollection() error {
+
+	fmt.Println("load collection", t.CollectionInPath)
 
 	// read xml
-	data, err := os.ReadFile(t.CollectionPath)
+	data, err := os.ReadFile(t.CollectionInPath)
 
 	if err != nil {
 		return err
 	}
 
-	err = xml.Unmarshal(data, t.NML)
+	err = xml.Unmarshal(data, &t.NML)
 
 	if err != nil {
 		return err
 	}
-
-	pp.Print(t.NML.PLAYLISTS.NODE)
 
 	return nil
 }
 
-func (t *Traktor) writeCollection() {
+func (t *Traktor) writeCollection() error {
 
+	fmt.Println("write collection", t.CollectionOutPath)
+
+	collData, err := xml.MarshalIndent(t.NML, "", "  ")
+
+	if err != nil {
+		return err
+	}
+
+	writeData := []byte(traktorXMLHeader() + string(collData))
+
+	err = os.WriteFile(t.CollectionOutPath, writeData, 0644)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func traktorXMLHeader() string {
+	return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
 }

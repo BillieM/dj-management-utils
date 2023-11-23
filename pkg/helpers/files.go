@@ -6,6 +6,8 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+
+	"github.com/billiem/seren-management/pkg/projectpath"
 )
 
 type FileInfo struct {
@@ -191,4 +193,44 @@ func CreateDirIfNotExists(path string) error {
 
 func JoinFilepathToSlash(a ...string) string {
 	return filepath.ToSlash(filepath.Join(a...))
+}
+
+func RemoveFileExtension(s string) string {
+	return s[:len(s)-len(filepath.Ext(s))]
+}
+
+/*
+GetAbsOrWdPath returns the same path if it is absolute, otherwise it will return the path joined to the current working directory
+
+Returns an empty string if the path is empty
+*/
+func GetAbsOrWdPath(path string) (string, error) {
+	if path == "" {
+		return "", nil
+	}
+
+	if filepath.IsAbs(path) {
+		return path, nil
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	return JoinFilepathToSlash(cwd, path), nil
+}
+
+/*
+GetAbsOrProjPath returns the same path if it is absolute, otherwise it will return the path joined to the project root directory
+
+Returns an empty string if the path is empty
+*/
+func GetAbsOrProjPath(path string) (string, error) {
+	if path == "" {
+		return "", nil
+	}
+
+	if filepath.IsAbs(path) {
+		return path, nil
+	}
+	return JoinFilepathToSlash(projectpath.Root, path), nil
 }

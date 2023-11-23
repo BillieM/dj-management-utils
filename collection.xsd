@@ -1,0 +1,483 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Created with Liquid Studio (https://www.liquid-technologies.com) -->
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="NML">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" name="HEAD">
+          <xs:complexType>
+            <xs:attribute name="COMPANY" type="xs:string" use="optional" />
+            <xs:attribute name="PROGRAM" type="xs:string" use="optional" />
+          </xs:complexType>
+        </xs:element>
+        <xs:element minOccurs="0" name="COLLECTION">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element minOccurs="0" maxOccurs="unbounded" name="ENTRY">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:choice maxOccurs="unbounded">
+                      <xs:element minOccurs="0" name="LOCATION">
+                        <xs:complexType>
+                          <xs:attribute name="DIR" type="xs:string" use="optional" />
+                          <xs:attribute name="FILE" type="xs:string" use="optional" />
+                          <xs:attribute name="VOLUME" type="xs:string" use="optional" />
+                          <xs:attribute name="VOLUMEID" type="xs:string" use="optional" />
+                        </xs:complexType>
+                      </xs:element>
+                      <xs:element minOccurs="0" name="ALBUM">
+                        <xs:complexType>
+                          <xs:attribute name="OF_TRACKS" type="xs:unsignedShort" use="optional" />
+                          <xs:attribute name="TRACK" type="xs:unsignedInt" use="optional" />
+                          <xs:attribute name="TITLE" type="xs:string" use="optional" />
+                        </xs:complexType>
+                      </xs:element>
+                      <xs:element minOccurs="0" name="MODIFICATION_INFO">
+                        <xs:complexType>
+                          <xs:attribute name="AUTHOR_TYPE" type="xs:string" use="optional" />
+                        </xs:complexType>
+                      </xs:element>
+                      <xs:element minOccurs="0" name="INFO">
+                        <xs:complexType>
+                          <xs:attribute name="BITRATE" type="xs:unsignedInt" use="optional" />
+                          <xs:attribute name="GENRE" type="xs:string" use="optional" />
+                          <xs:attribute name="LABEL" type="xs:string" use="optional" />
+                          <xs:attribute name="COMMENT" type="xs:string" use="optional" />
+                          <xs:attribute name="KEY" type="xs:string" use="optional" />
+                          <xs:attribute name="PLAYCOUNT" type="xs:unsignedShort" use="optional" />
+                          <xs:attribute name="PLAYTIME" type="xs:unsignedShort" use="optional" />
+                          <xs:attribute name="PLAYTIME_FLOAT" type="xs:decimal" use="optional" />
+                          <xs:attribute name="IMPORT_DATE" type="xs:string" use="optional" />
+                          <xs:attribute name="LAST_PLAYED" type="xs:string" use="optional" />
+                          <xs:attribute name="RELEASE_DATE" type="xs:string" use="optional" />
+                          <xs:attribute name="FLAGS" type="xs:unsignedByte" use="optional" />
+                          <xs:attribute name="FILESIZE" type="xs:unsignedShort" use="optional" />
+                          <xs:attribute name="COLOR" type="xs:unsignedByte" use="optional" />
+                          <xs:attribute name="COVERARTID" type="xs:string" use="optional" />
+                          <xs:attribute name="RANKING" type="xs:unsignedByte" use="optional" />
+                          <xs:attribute name="PRODUCER" type="xs:string" use="optional" />
+                          <xs:attribute name="RATING" type="xs:string" use="optional" />
+                          <xs:attribute name="REMIXER" type="xs:string" use="optional" />
+                          <xs:attribute name="KEY_LYRICS" type="xs:string" use="optional" />
+                        </xs:complexType>
+                      </xs:element>
+                      <xs:element minOccurs="0" name="TEMPO">
+                        <xs:complexType>
+                          <xs:attribute name="BPM" type="xs:decimal" use="optional" />
+                          <xs:attribute name="BPM_QUALITY" type="xs:decimal" use="optional" />
+                        </xs:complexType>
+                      </xs:element>
+                      <xs:element minOccurs="0" name="LOUDNESS">
+                        <xs:complexType>
+                          <xs:attribute name="PEAK_DB" type="xs:decimal" use="optional" />
+                          <xs:attribute name="PERCEIVED_DB" type="xs:decimal" use="optional" />
+                          <xs:attribute name="ANALYZED_DB" type="xs:decimal" use="optional" />
+                        </xs:complexType>
+                      </xs:element>
+                      <xs:element minOccurs="0" name="LOOPINFO">
+                        <xs:complexType>
+                          <xs:attribute name="SAMPLE_TYPE_INFO" type="xs:unsignedByte" use="optional" />
+                        </xs:complexType>
+                      </xs:element>
+                      <xs:element minOccurs="0" name="MUSICAL_KEY">
+                        <xs:complexType>
+                          <xs:attribute name="VALUE" type="xs:unsignedByte" use="optional" />
+                        </xs:complexType>
+                      </xs:element>
+                      <xs:element minOccurs="0" maxOccurs="unbounded" name="CUE_V2">
+                        <xs:complexType>
+                          <xs:attribute name="NAME" type="xs:string" use="optional" />
+                          <xs:attribute name="DISPL_ORDER" type="xs:unsignedByte" use="optional" />
+                          <xs:attribute name="TYPE" type="xs:unsignedByte" use="optional" />
+                          <xs:attribute name="START" type="xs:decimal" use="optional" />
+                          <xs:attribute name="LEN" type="xs:decimal" use="optional" />
+                          <xs:attribute name="REPEATS" type="xs:byte" use="optional" />
+                          <xs:attribute name="HOTCUE" type="xs:byte" use="optional" />
+                        </xs:complexType>
+                      </xs:element>
+                      <xs:element minOccurs="0" name="STEMS">
+                        <xs:complexType>
+                          <xs:attribute name="STEMS" type="xs:string" use="optional" />
+                        </xs:complexType>
+                      </xs:element>
+                    </xs:choice>
+                  </xs:sequence>
+                  <xs:attribute name="MODIFIED_DATE" type="xs:string" use="optional" />
+                  <xs:attribute name="MODIFIED_TIME" type="xs:unsignedInt" use="optional" />
+                  <xs:attribute name="AUDIO_ID" type="xs:string" use="optional" />
+                  <xs:attribute name="TITLE" type="xs:string" use="optional" />
+                  <xs:attribute name="ARTIST" type="xs:string" use="optional" />
+                  <xs:attribute name="LOCK" type="xs:unsignedByte" use="optional" />
+                  <xs:attribute name="LOCK_MODIFICATION_TIME" type="xs:dateTime" use="optional" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute name="ENTRIES" type="xs:unsignedShort" use="optional" />
+          </xs:complexType>
+        </xs:element>
+        <xs:element minOccurs="0" name="SETS">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element minOccurs="0" maxOccurs="unbounded" name="SET">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element minOccurs="0" name="LOCATION">
+                      <xs:complexType>
+                        <xs:attribute name="DIR" type="xs:string" use="optional" />
+                        <xs:attribute name="FILE" type="xs:string" use="optional" />
+                        <xs:attribute name="VOLUME" type="xs:string" use="optional" />
+                        <xs:attribute name="VOLUMEID" type="xs:string" use="optional" />
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element minOccurs="0" name="ALBUM">
+                      <xs:complexType>
+                        <xs:attribute name="TITLE" type="xs:string" use="optional" />
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element minOccurs="0" name="MODIFICATION_INFO">
+                      <xs:complexType>
+                        <xs:attribute name="AUTHOR_TYPE" type="xs:string" use="optional" />
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element minOccurs="0" name="INFO">
+                      <xs:complexType>
+                        <xs:attribute name="GENRE" type="xs:string" use="optional" />
+                        <xs:attribute name="COMMENT" type="xs:string" use="optional" />
+                        <xs:attribute name="COVERARTID" type="xs:string" use="optional" />
+                        <xs:attribute name="IMPORT_DATE" type="xs:string" use="optional" />
+                        <xs:attribute name="LAST_PLAYED" type="xs:string" use="optional" />
+                        <xs:attribute name="KEY" type="xs:string" use="optional" />
+                        <xs:attribute name="RATING" type="xs:string" use="optional" />
+                        <xs:attribute name="LABEL" type="xs:string" use="optional" />
+                        <xs:attribute name="PLAYCOUNT" type="xs:unsignedByte" use="optional" />
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element minOccurs="0" name="TEMPO">
+                      <xs:complexType>
+                        <xs:attribute name="BPM" type="xs:decimal" use="optional" />
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="SLOT">
+                      <xs:complexType>
+                        <xs:sequence minOccurs="0">
+                          <xs:element minOccurs="0" maxOccurs="unbounded" name="CELL">
+                            <xs:complexType>
+                              <xs:attribute name="INDEX" type="xs:unsignedByte" use="optional" />
+                              <xs:attribute name="CELLNAME" type="xs:string" use="optional" />
+                              <xs:attribute name="COLOR" type="xs:unsignedByte" use="optional" />
+                              <xs:attribute name="SYNC" type="xs:unsignedByte" use="optional" />
+                              <xs:attribute name="REVERSE" type="xs:unsignedByte" use="optional" />
+                              <xs:attribute name="MODE" type="xs:unsignedByte" use="optional" />
+                              <xs:attribute name="TYPE" type="xs:unsignedByte" use="optional" />
+                              <xs:attribute name="SPEED" type="xs:decimal" use="optional" />
+                              <xs:attribute name="TRANSPOSE" type="xs:decimal" use="optional" />
+                              <xs:attribute name="OFFSET" type="xs:decimal" use="optional" />
+                              <xs:attribute name="NUDGE" type="xs:decimal" use="optional" />
+                              <xs:attribute name="GAIN" type="xs:decimal" use="optional" />
+                              <xs:attribute name="START_MARKER" type="xs:decimal" use="optional" />
+                              <xs:attribute name="END_MARKER" type="xs:decimal" use="optional" />
+                              <xs:attribute name="BPM" type="xs:decimal" use="optional" />
+                              <xs:attribute name="DIR" type="xs:string" use="optional" />
+                              <xs:attribute name="FILE" type="xs:string" use="optional" />
+                              <xs:attribute name="VOLUME" type="xs:string" use="optional" />
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                        <xs:attribute name="KEYLOCK" type="xs:unsignedByte" use="optional" />
+                        <xs:attribute name="FXENABLE" type="xs:unsignedByte" use="optional" />
+                        <xs:attribute name="PUNCHMODE" type="xs:unsignedByte" use="optional" />
+                        <xs:attribute name="ACTIVE_CELL_INDEX" type="xs:unsignedByte" use="optional" />
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                  <xs:attribute name="TITLE" type="xs:string" use="optional" />
+                  <xs:attribute name="ARTIST" type="xs:string" use="optional" />
+                  <xs:attribute name="QUANT_VAlUE" type="xs:unsignedByte" use="optional" />
+                  <xs:attribute name="QUANT_STATE" type="xs:unsignedByte" use="optional" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute name="ENTRIES" type="xs:unsignedByte" use="optional" />
+          </xs:complexType>
+        </xs:element>
+        <xs:element minOccurs="0" name="PLAYLISTS">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element minOccurs="0" name="NODE">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element minOccurs="0" name="SUBNODES">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element minOccurs="0" maxOccurs="unbounded" name="NODE">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element minOccurs="0" name="PLAYLIST">
+                                  <xs:complexType>
+                                    <xs:attribute name="ENTRIES" type="xs:unsignedByte" use="optional" />
+                                    <xs:attribute name="TYPE" type="xs:string" use="optional" />
+                                    <xs:attribute name="UUID" type="xs:string" use="optional" />
+                                  </xs:complexType>
+                                </xs:element>
+                                <xs:element minOccurs="0" name="SUBNODES">
+                                  <xs:complexType>
+                                    <xs:sequence>
+                                      <xs:element minOccurs="0" maxOccurs="unbounded" name="NODE">
+                                        <xs:complexType>
+                                          <xs:sequence>
+                                            <xs:element minOccurs="0" name="PLAYLIST">
+                                              <xs:complexType>
+                                                <xs:sequence minOccurs="0">
+                                                  <xs:element minOccurs="0" maxOccurs="unbounded" name="ENTRY">
+                                                    <xs:complexType>
+                                                      <xs:sequence>
+                                                        <xs:element minOccurs="0" name="PRIMARYKEY">
+                                                          <xs:complexType>
+                                                            <xs:attribute name="TYPE" type="xs:string" use="optional" />
+                                                            <xs:attribute name="KEY" type="xs:string" use="optional" />
+                                                          </xs:complexType>
+                                                        </xs:element>
+                                                      </xs:sequence>
+                                                    </xs:complexType>
+                                                  </xs:element>
+                                                </xs:sequence>
+                                                <xs:attribute name="ENTRIES" type="xs:unsignedShort" use="optional" />
+                                                <xs:attribute name="TYPE" type="xs:string" use="optional" />
+                                                <xs:attribute name="UUID" type="xs:string" use="optional" />
+                                              </xs:complexType>
+                                            </xs:element>
+                                            <xs:element minOccurs="0" name="SMARTLIST">
+                                              <xs:complexType>
+                                                <xs:sequence>
+                                                  <xs:element minOccurs="0" name="SEARCH_EXPRESSION">
+                                                    <xs:complexType>
+                                                      <xs:attribute name="VERSION" type="xs:unsignedByte" use="optional" />
+                                                      <xs:attribute name="QUERY" type="xs:string" use="optional" />
+                                                    </xs:complexType>
+                                                  </xs:element>
+                                                </xs:sequence>
+                                                <xs:attribute name="UUID" type="xs:string" use="optional" />
+                                              </xs:complexType>
+                                            </xs:element>
+                                            <xs:element minOccurs="0" name="SUBNODES">
+                                              <xs:complexType>
+                                                <xs:sequence>
+                                                  <xs:element minOccurs="0" maxOccurs="unbounded" name="NODE">
+                                                    <xs:complexType>
+                                                      <xs:sequence>
+                                                        <xs:element minOccurs="0" name="SMARTLIST">
+                                                          <xs:complexType>
+                                                            <xs:sequence>
+                                                              <xs:element minOccurs="0" name="SEARCH_EXPRESSION">
+                                                                <xs:complexType>
+                                                                  <xs:attribute name="VERSION" type="xs:unsignedByte" use="optional" />
+                                                                  <xs:attribute name="QUERY" type="xs:string" use="optional" />
+                                                                </xs:complexType>
+                                                              </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="UUID" type="xs:string" use="optional" />
+                                                          </xs:complexType>
+                                                        </xs:element>
+                                                        <xs:element minOccurs="0" name="PLAYLIST">
+                                                          <xs:complexType>
+                                                            <xs:sequence>
+                                                              <xs:element minOccurs="0" maxOccurs="unbounded" name="ENTRY">
+                                                                <xs:complexType>
+                                                                  <xs:sequence>
+                                                                    <xs:element minOccurs="0" name="PRIMARYKEY">
+                                                                      <xs:complexType>
+                                                                        <xs:attribute name="TYPE" type="xs:string" use="optional" />
+                                                                        <xs:attribute name="KEY" type="xs:string" use="optional" />
+                                                                      </xs:complexType>
+                                                                    </xs:element>
+                                                                  </xs:sequence>
+                                                                </xs:complexType>
+                                                              </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="ENTRIES" type="xs:unsignedShort" use="optional" />
+                                                            <xs:attribute name="TYPE" type="xs:string" use="optional" />
+                                                            <xs:attribute name="UUID" type="xs:string" use="optional" />
+                                                          </xs:complexType>
+                                                        </xs:element>
+                                                        <xs:element minOccurs="0" name="SUBNODES">
+                                                          <xs:complexType>
+                                                            <xs:sequence>
+                                                              <xs:element minOccurs="0" maxOccurs="unbounded" name="NODE">
+                                                                <xs:complexType>
+                                                                  <xs:sequence>
+                                                                    <xs:element minOccurs="0" name="PLAYLIST">
+                                                                      <xs:complexType>
+                                                                        <xs:sequence>
+                                                                          <xs:element minOccurs="0" maxOccurs="unbounded" name="ENTRY">
+                                                                            <xs:complexType>
+                                                                              <xs:sequence>
+                                                                                <xs:element minOccurs="0" name="PRIMARYKEY">
+                                                                                  <xs:complexType>
+                                                                                    <xs:attribute name="TYPE" type="xs:string" use="optional" />
+                                                                                    <xs:attribute name="KEY" type="xs:string" use="optional" />
+                                                                                  </xs:complexType>
+                                                                                </xs:element>
+                                                                              </xs:sequence>
+                                                                            </xs:complexType>
+                                                                          </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ENTRIES" type="xs:unsignedByte" use="optional" />
+                                                                        <xs:attribute name="TYPE" type="xs:string" use="optional" />
+                                                                        <xs:attribute name="UUID" type="xs:string" use="optional" />
+                                                                      </xs:complexType>
+                                                                    </xs:element>
+                                                                    <xs:element minOccurs="0" name="SUBNODES">
+                                                                      <xs:complexType>
+                                                                        <xs:sequence>
+                                                                          <xs:element minOccurs="0" name="NODE">
+                                                                            <xs:complexType>
+                                                                              <xs:sequence>
+                                                                                <xs:element minOccurs="0" name="PLAYLIST">
+                                                                                  <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                      <xs:element minOccurs="0" maxOccurs="unbounded" name="ENTRY">
+                                                                                        <xs:complexType>
+                                                                                          <xs:sequence>
+                                                                                            <xs:element minOccurs="0" name="PRIMARYKEY">
+                                                                                              <xs:complexType>
+                                                                                                <xs:attribute name="TYPE" type="xs:string" use="optional" />
+                                                                                                <xs:attribute name="KEY" type="xs:string" use="optional" />
+                                                                                              </xs:complexType>
+                                                                                            </xs:element>
+                                                                                          </xs:sequence>
+                                                                                        </xs:complexType>
+                                                                                      </xs:element>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute name="ENTRIES" type="xs:unsignedByte" use="optional" />
+                                                                                    <xs:attribute name="TYPE" type="xs:string" use="optional" />
+                                                                                    <xs:attribute name="UUID" type="xs:string" use="optional" />
+                                                                                  </xs:complexType>
+                                                                                </xs:element>
+                                                                                <xs:element minOccurs="0" name="SUBNODES">
+                                                                                  <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                      <xs:element minOccurs="0" name="NODE">
+                                                                                        <xs:complexType>
+                                                                                          <xs:sequence>
+                                                                                            <xs:element minOccurs="0" name="SUBNODES">
+                                                                                              <xs:complexType>
+                                                                                                <xs:sequence>
+                                                                                                  <xs:element minOccurs="0" name="NODE">
+                                                                                                    <xs:complexType>
+                                                                                                      <xs:sequence>
+                                                                                                        <xs:element minOccurs="0" name="PLAYLIST">
+                                                                                                          <xs:complexType>
+                                                                                                            <xs:sequence>
+                                                                                                              <xs:element minOccurs="0" maxOccurs="unbounded" name="ENTRY">
+                                                                                                                <xs:complexType>
+                                                                                                                  <xs:sequence>
+                                                                                                                    <xs:element minOccurs="0" name="PRIMARYKEY">
+                                                                                                                      <xs:complexType>
+                                                                                                                        <xs:attribute name="TYPE" type="xs:string" use="optional" />
+                                                                                                                        <xs:attribute name="KEY" type="xs:string" use="optional" />
+                                                                                                                      </xs:complexType>
+                                                                                                                    </xs:element>
+                                                                                                                  </xs:sequence>
+                                                                                                                </xs:complexType>
+                                                                                                              </xs:element>
+                                                                                                            </xs:sequence>
+                                                                                                            <xs:attribute name="ENTRIES" type="xs:unsignedByte" use="optional" />
+                                                                                                            <xs:attribute name="TYPE" type="xs:string" use="optional" />
+                                                                                                            <xs:attribute name="UUID" type="xs:string" use="optional" />
+                                                                                                          </xs:complexType>
+                                                                                                        </xs:element>
+                                                                                                      </xs:sequence>
+                                                                                                      <xs:attribute name="TYPE" type="xs:string" use="optional" />
+                                                                                                      <xs:attribute name="NAME" type="xs:string" use="optional" />
+                                                                                                    </xs:complexType>
+                                                                                                  </xs:element>
+                                                                                                </xs:sequence>
+                                                                                                <xs:attribute name="COUNT" type="xs:unsignedByte" use="optional" />
+                                                                                              </xs:complexType>
+                                                                                            </xs:element>
+                                                                                          </xs:sequence>
+                                                                                          <xs:attribute name="TYPE" type="xs:string" use="optional" />
+                                                                                          <xs:attribute name="NAME" type="xs:unsignedByte" use="optional" />
+                                                                                        </xs:complexType>
+                                                                                      </xs:element>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute name="COUNT" type="xs:unsignedByte" use="optional" />
+                                                                                  </xs:complexType>
+                                                                                </xs:element>
+                                                                              </xs:sequence>
+                                                                              <xs:attribute name="TYPE" type="xs:string" use="optional" />
+                                                                              <xs:attribute name="NAME" type="xs:unsignedByte" use="optional" />
+                                                                            </xs:complexType>
+                                                                          </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="COUNT" type="xs:unsignedByte" use="optional" />
+                                                                      </xs:complexType>
+                                                                    </xs:element>
+                                                                  </xs:sequence>
+                                                                  <xs:attribute name="TYPE" type="xs:string" use="optional" />
+                                                                  <xs:attribute name="NAME" type="xs:unsignedByte" use="optional" />
+                                                                </xs:complexType>
+                                                              </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="COUNT" type="xs:unsignedByte" use="optional" />
+                                                          </xs:complexType>
+                                                        </xs:element>
+                                                      </xs:sequence>
+                                                      <xs:attribute name="TYPE" type="xs:string" use="optional" />
+                                                      <xs:attribute name="NAME" type="xs:string" use="optional" />
+                                                    </xs:complexType>
+                                                  </xs:element>
+                                                </xs:sequence>
+                                                <xs:attribute name="COUNT" type="xs:unsignedByte" use="optional" />
+                                              </xs:complexType>
+                                            </xs:element>
+                                          </xs:sequence>
+                                          <xs:attribute name="TYPE" type="xs:string" use="optional" />
+                                          <xs:attribute name="NAME" type="xs:string" use="optional" />
+                                        </xs:complexType>
+                                      </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute name="COUNT" type="xs:unsignedByte" use="optional" />
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                              <xs:attribute name="TYPE" type="xs:string" use="optional" />
+                              <xs:attribute name="NAME" type="xs:string" use="optional" />
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                        <xs:attribute name="COUNT" type="xs:unsignedByte" use="optional" />
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                  <xs:attribute name="TYPE" type="xs:string" use="optional" />
+                  <xs:attribute name="NAME" type="xs:string" use="optional" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element minOccurs="0" name="INDEXING">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element minOccurs="0" maxOccurs="unbounded" name="SORTING_INFO">
+                <xs:complexType>
+                  <xs:sequence minOccurs="0">
+                    <xs:element minOccurs="0" name="CRITERIA">
+                      <xs:complexType>
+                        <xs:attribute name="ATTRIBUTE" type="xs:unsignedByte" use="optional" />
+                        <xs:attribute name="DIRECTION" type="xs:unsignedByte" use="optional" />
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                  <xs:attribute name="PATH" type="xs:string" use="optional" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute name="VERSION" type="xs:unsignedByte" use="optional" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

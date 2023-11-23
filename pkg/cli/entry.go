@@ -41,9 +41,15 @@ func Entry() {
 						Action:  readTraktorCollection,
 						Flags: []cli.Flag{
 							&cli.StringFlag{
-								Name:     "path",
-								Aliases:  []string{"p"},
+								Name:     "in",
+								Aliases:  []string{"i"},
 								Usage:    "Path to the Traktor collection file, if not given we default to the path stored in application config",
+								Required: false,
+							},
+							&cli.StringFlag{
+								Name:     "out",
+								Aliases:  []string{"o"},
+								Usage:    "Path to store the new traktor collection file, if false we default to {in}_new.nml",
 								Required: false,
 							},
 						},
