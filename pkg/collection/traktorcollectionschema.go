@@ -86,8 +86,8 @@ type CUEV2 struct {
 	XMLName        xml.Name `xml:"CUE_V2"`
 	NAMEAttr       string   `xml:"NAME,attr,omitempty"`
 	DISPLORDERAttr uint8    `xml:"DISPL_ORDER,attr,omitempty"`
-	TYPEAttr       uint8    `xml:"TYPE,attr,omitempty"`
-	STARTAttr      float64  `xml:"START,attr,omitempty"`
+	TYPEAttr       uint8    `xml:"TYPE,attr"`
+	STARTAttr      float64  `xml:"START,attr"`
 	LENAttr        float64  `xml:"LEN,attr,omitempty"`
 	REPEATSAttr    int8     `xml:"REPEATS,attr,omitempty"`
 	HOTCUEAttr     int8     `xml:"HOTCUE,attr,omitempty"`
@@ -218,7 +218,7 @@ type SUBNODES struct {
 
 // PLAYLISTS ...
 type PLAYLISTS struct {
-	NODE *NODE `xml:"NODE"`
+	NODE []*NODE `xml:"NODE"`
 }
 
 // CRITERIA ...
