@@ -29,6 +29,6 @@ dist/
 *.spec
 
 # collection files
-*.nml
-*.xml
-*.xsd
+# *.nml
+# *.xml
+# *.xsd

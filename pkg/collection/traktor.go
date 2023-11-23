@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/billiem/seren-management/pkg/helpers"
+	"github.com/k0kubun/pp"
 )
 
 /*
@@ -23,13 +24,14 @@ func (o ReadTraktorOpts) Build(cfg helpers.Config) PlatformCollection {
 		collectionPath = o.CollectionPath
 	}
 
-	return Traktor{
+	return &Traktor{
 		CollectionPath: collectionPath,
 	}
 }
 
 type Traktor struct {
 	CollectionPath string
+	*NML
 }
 
 func (c Traktor) String() string {
@@ -38,6 +40,23 @@ func (c Traktor) String() string {
 
 func (t Traktor) ReadCollection() error {
 	fmt.Println("read traktor collection", t.CollectionPath)
+	err := t.loadTraktorCollection()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func (t Traktor) UpdateCollection() error {
+	fmt.Println("write traktor collection")
+
+	return nil
+}
+
+func (t *Traktor) loadTraktorCollection() error {
 
 	// read xml
 	data, err := os.ReadFile(t.CollectionPath)
@@ -46,23 +65,17 @@ func (t Traktor) ReadCollection() error {
 		return err
 	}
 
-	coll := &NML{}
-
-	err = xml.Unmarshal(data, coll)
+	err = xml.Unmarshal(data, t.NML)
 
 	if err != nil {
 		return err
 	}
 
-	for _, track := range coll.COLLECTION.ENTRY {
-		fmt.Println(track)
-	}
+	pp.Print(t.NML.PLAYLISTS.NODE)
 
 	return nil
 }
 
-func (t Traktor) WriteCollection() error {
-	fmt.Println("write traktor collection")
+func (t *Traktor) writeCollection() {
 
-	return nil
 }

@@ -6,7 +6,7 @@ import (
 
 type PlatformCollection interface {
 	ReadCollection() error
-	WriteCollection() error
+	UpdateCollection() error
 }
 
 var (
