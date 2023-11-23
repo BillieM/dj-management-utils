@@ -206,6 +206,7 @@ type SMARTLIST struct {
 type NODE struct {
 	TYPEAttr string    `xml:"TYPE,attr,omitempty"`
 	NAMEAttr string    `xml:"NAME,attr,omitempty"`
+	
 	PLAYLIST []*PLAYLIST `xml:"PLAYLIST"`
 	SMARTLIST []*SMARTLIST `xml:"SMARTLIST"`
 }
