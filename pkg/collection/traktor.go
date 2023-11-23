@@ -17,7 +17,7 @@ type ReadTraktorOpts struct {
 	CollectionOutPath string
 }
 
-func (o ReadTraktorOpts) Build(cfg helpers.Config) PlatformCollection {
+func (o ReadTraktorOpts) Build(cfg helpers.Config) CollectionPlatform {
 	var collectionInPath, collectionOutPath string
 
 	if o.CollectionInPath == "" {

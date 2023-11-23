@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-type PlatformCollection interface {
+type CollectionPlatform interface {
 	ReadCollection() error
 	UpdateCollection() error
 }

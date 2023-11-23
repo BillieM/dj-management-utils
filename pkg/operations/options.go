@@ -118,5 +118,5 @@ func (p ConvertFolderMp3Opts) Check() (bool, error) {
 /*
  */
 type ReadCollectionOpts interface {
-	Build(helpers.Config) collection.PlatformCollection
+	Build(helpers.Config) collection.CollectionPlatform
 }

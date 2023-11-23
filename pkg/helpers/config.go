@@ -3,9 +3,11 @@ package helpers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/billiem/seren-management/pkg/projectpath"
+	"github.com/k0kubun/pp"
 )
 
 /*
@@ -20,6 +22,9 @@ type Config struct {
 	BaseOutputDir               string   `json:"baseOutputDir"`
 	ExtensionsToConvertToMp3    []string `json:"extensionsToConvertToMp3"`
 	ExtensionsToSeparateToStems []string `json:"extensionsToSeparateToStems"`
+
+	// these are not stored in config.json
+	SoundCloudClientID string `json:"-"`
 }
 
 // buildDefaultConfig builds default config values and saves them to config.json
@@ -33,6 +38,9 @@ func buildDefaultConfig() (*Config, error) {
 		ExtensionsToConvertToMp3:    []string{"wav", "aiff", "flac", "ogg", "m4a"},
 		ExtensionsToSeparateToStems: []string{"mp3", "wav"},
 	}
+
+	cfg.loadEnvConfig()
+
 	err := cfg.SaveConfig()
 	if err != nil {
 		return nil, err
@@ -105,6 +113,8 @@ func loadConfig(configPath string) (*Config, error) {
 		return nil, err
 	}
 
+	config.loadEnvConfig()
+
 	return &config, nil
 }
 
@@ -114,12 +124,24 @@ func (c *Config) SaveConfig() error {
 		return err
 	}
 
+	fmt.Println("saving config")
+	pp.Print(c)
+
 	err = os.WriteFile(JoinFilepathToSlash(projectpath.Root, "config.json"), data, 0644)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+/*
+loadEnvConfig loads config values stored in environment variables
+
+Such as API keys/secrets
+*/
+func (c *Config) loadEnvConfig() {
+	c.SoundCloudClientID = os.Getenv("SOUNDCLOUD_CLIENT_ID")
 }
 
 /*

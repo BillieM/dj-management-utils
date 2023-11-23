@@ -51,3 +51,29 @@ func readTraktorCollection(c *cli.Context) error {
 
 	return nil
 }
+
+func getSoundcloudPlaylists(c *cli.Context) error {
+
+	e, err := buildCliEnv(c.String("config"))
+
+	if err != nil {
+		return err
+	}
+
+	_ = e
+
+	return nil
+}
+
+func getSpotifyPlaylists(c *cli.Context) error {
+
+	e, err := buildCliEnv(c.String("config"))
+
+	if err != nil {
+		return err
+	}
+
+	_ = e
+
+	return nil
+}
