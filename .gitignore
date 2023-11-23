@@ -31,3 +31,4 @@ dist/
 # collection files
 *.nml
 *.xml
+*.xsd

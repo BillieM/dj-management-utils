@@ -1,6 +1,7 @@
 package collection
 
 import (
+	"encoding/xml"
 	"fmt"
 	"os"
 
@@ -45,7 +46,17 @@ func (t Traktor) ReadCollection() error {
 		return err
 	}
 
-	fmt.Println(string(data))
+	coll := &NML{}
+
+	err = xml.Unmarshal(data, coll)
+
+	if err != nil {
+		return err
+	}
+
+	for _, track := range coll.COLLECTION.ENTRY {
+		fmt.Println(track)
+	}
 
 	return nil
 }
@@ -54,7 +65,4 @@ func (t Traktor) WriteCollection() error {
 	fmt.Println("write traktor collection")
 
 	return nil
-}
-
-type TraktorCollectionXML struct {
 }
