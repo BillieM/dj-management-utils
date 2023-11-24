@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/billiem/seren-management/pkg/collection"
 	"github.com/billiem/seren-management/pkg/helpers"
+	"github.com/billiem/seren-management/pkg/streaming"
 )
 
 /*
@@ -183,11 +185,27 @@ func (e *OpEnv) ConvertFolderMp3(ctx context.Context, opts ConvertFolderMp3Opts)
 /*
 ReadCollection reads a collection for a given platform and stores it in the database
 */
-func (e *OpEnv) ReadCollection(ctx context.Context, opts ReadCollectionOpts) {
+func (e *OpEnv) ReadCollection(ctx context.Context, opts collection.ReadCollectionOpts) {
 
 	collection := opts.Build(e.Config)
 
 	err := collection.ReadCollection()
+
+	if err != nil {
+		e.step(dangerStepInfo(err))
+		return
+	}
+}
+
+/*
+GetPlaylist gets a playlist for a given platform and stores it in the database
+*/
+
+func (e *OpEnv) GetPlaylist(ctx context.Context, opts streaming.GetPlaylistOpts) {
+
+	platform := opts.Build(e.Config)
+
+	err := platform.GetPlaylist()
 
 	if err != nil {
 		e.step(dangerStepInfo(err))

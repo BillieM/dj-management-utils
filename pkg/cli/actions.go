@@ -6,6 +6,7 @@ import (
 
 	"github.com/billiem/seren-management/pkg/collection"
 	"github.com/billiem/seren-management/pkg/helpers"
+	"github.com/billiem/seren-management/pkg/streaming"
 	"github.com/urfave/cli/v2"
 )
 
@@ -52,7 +53,7 @@ func readTraktorCollection(c *cli.Context) error {
 	return nil
 }
 
-func getSoundcloudPlaylists(c *cli.Context) error {
+func getSoundcloudPlaylist(c *cli.Context) error {
 
 	e, err := buildCliEnv(c.String("config"))
 
@@ -60,12 +61,19 @@ func getSoundcloudPlaylists(c *cli.Context) error {
 		return err
 	}
 
-	_ = e
+	soundcloudOpts := streaming.GetSoundCloudPlaylistOpts{
+		playlistUrl: c.String("url"),
+	}
+
+	opEnv := e.opEnv()
+	opEnv.RegisterStepHandler(stepHandler{})
+
+	opEnv.GetPlaylist(c.Context, soundcloudOpts)
 
 	return nil
 }
 
-func getSpotifyPlaylists(c *cli.Context) error {
+func getSpotifyPlaylist(c *cli.Context) error {
 
 	e, err := buildCliEnv(c.String("config"))
 

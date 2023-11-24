@@ -3,9 +3,114 @@ package gui
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/widget"
 	"github.com/billiem/seren-management/pkg/operations"
 )
+
+/*
+guiView is a struct that contains the name of the view and the function that returns the view
+
+Views define the content for the main content area of the application
+*/
+type guiView struct {
+	name   string
+	render func(w fyne.Window) fyne.CanvasObject
+}
+
+func (e *guiEnv) getViewList() map[string]guiView {
+
+	return map[string]guiView{
+		"home": {
+			name:   "Home",
+			render: e.homeView,
+		},
+		"stems": {
+			name:   "Stems",
+			render: e.stemsView,
+		},
+		"separateTrack": {
+			name:   "Separate Track",
+			render: e.separateSingleStemView,
+		},
+		"separateFolder": {
+			name:   "Separate Folder",
+			render: e.separateFolderStemView,
+		},
+		"separateCollection": {
+			name:   "Separate Collection",
+			render: e.separateCollectionStemView,
+		},
+		"mp3s": {
+			name:   "Convert MP3s",
+			render: e.convertMp3sView,
+		},
+		"convertSingleMp3": {
+			name:   "Convert Single",
+			render: e.convertSingleMp3View,
+		},
+		"convertFolderMp3": {
+			name:   "Convert Folder",
+			render: e.convertFolderMp3View,
+		},
+		"convertCollectionMp3": {
+			name:   "Convert Collection",
+			render: e.convertCollectionMp3View,
+		},
+		"tags": {
+			name:   "Process Tags",
+			render: e.tagsView,
+		},
+		"rereadTags": {
+			name:   "Reread Tags",
+			render: e.rereadTagsView,
+		},
+		"cleanTags": {
+			name:   "Clean Tags",
+			render: e.cleanTagsView,
+		},
+		"conversion": {
+			name:   "Conversion",
+			render: e.conversionView,
+		},
+		"sync": {
+			name:   "Playlist Matching",
+			render: e.syncView,
+		},
+		"syncSoundCloud": {
+			name:   "SoundCloud",
+			render: e.syncSoundCloudView,
+		},
+		"syncSpotify": {
+			name:   "Spotify",
+			render: e.syncSpotifyView,
+		},
+	}
+}
+
+func (e *guiEnv) getViewIndex() map[string][]string {
+	return map[string][]string{
+		"": {"home", "stems", "mp3s", "tags", "conversion", "sync"},
+		"stems": {
+			"separateTrack",
+			"separateFolder",
+			"separateCollection",
+		},
+		"mp3s": {
+			"convertSingleMp3",
+			"convertFolderMp3",
+			"convertCollectionMp3",
+		},
+		"tags": {
+			"rereadTags",
+			"cleanTags",
+		},
+		"sync": {
+			"syncSoundCloud",
+			"syncSpotify",
+		},
+	}
+}
 
 /*
 setMainContent sets the main content of the window to the provided content
@@ -208,6 +313,45 @@ func (e *guiEnv) conversionView(w fyne.Window) fyne.CanvasObject {
 	return widget.NewLabel("conversionView")
 }
 
-func (e *guiEnv) playlistMatchingView(w fyne.Window) fyne.CanvasObject {
-	return widget.NewLabel("playlistMatchingView")
+func (e *guiEnv) syncView(w fyne.Window) fyne.CanvasObject {
+	return widget.NewLabel("syncView")
+}
+
+func (e *guiEnv) syncSoundCloudView(w fyne.Window) fyne.CanvasObject {
+
+	playlistBindVals := playlistBindingList{
+		Items: []*playlistBindingItem{
+			{
+				name: "name1",
+			},
+		},
+	}
+
+	playlistsList := widget.NewListWithData(
+		&playlistBindVals,
+		func() fyne.CanvasObject {
+			return newPlaylistWidget("nameTemplate")
+		},
+		func(i binding.DataItem, o fyne.CanvasObject) {
+			playlistBindingItem := i.(*playlistBindingItem)
+			nameBinding := playlistBindingItem.name
+
+			playlistWidget := o.(*playlistWidget)
+			nameLabel := playlistWidget.name
+
+			nameLabel.Bind(binding.BindString(&nameBinding))
+		},
+	)
+
+	addPlaylistCanvas := newAddPlaylistWidget(&playlistBindVals, func() {
+		playlistsList.Refresh()
+	})
+
+	return container.NewBorder(
+		nil, addPlaylistCanvas, nil, nil, playlistsList,
+	)
+}
+
+func (e *guiEnv) syncSpotifyView(w fyne.Window) fyne.CanvasObject {
+	return widget.NewLabel("syncView")
 }

@@ -2,7 +2,6 @@ package gui
 
 import (
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"github.com/billiem/seren-management/pkg/helpers"
 )
@@ -50,7 +49,5 @@ func (e *guiEnv) makeNavMenu(w fyne.Window, contentStack *fyne.Container) fyne.C
 
 	tree.OpenAllBranches()
 
-	navContainer := container.NewBorder(widget.NewLabel("menu <3"), nil, nil, nil, tree)
-
-	return navContainer
+	return tree
 }

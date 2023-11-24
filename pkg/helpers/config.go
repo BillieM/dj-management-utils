@@ -24,7 +24,8 @@ type Config struct {
 	ExtensionsToSeparateToStems []string `json:"extensionsToSeparateToStems"`
 
 	// these are not stored in config.json
-	SoundCloudClientID string `json:"-"`
+	SoundCloudClientID    string `json:"-"`
+	SoundCloudSecretToken string `json:"-"`
 }
 
 // buildDefaultConfig builds default config values and saves them to config.json
@@ -142,6 +143,7 @@ Such as API keys/secrets
 */
 func (c *Config) loadEnvConfig() {
 	c.SoundCloudClientID = os.Getenv("SOUNDCLOUD_CLIENT_ID")
+	c.SoundCloudSecretToken = os.Getenv("SOUNDCLOUD_SECRET_TOKEN")
 }
 
 /*

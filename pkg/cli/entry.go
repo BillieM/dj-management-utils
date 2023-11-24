@@ -57,21 +57,21 @@ func Entry() {
 				},
 			},
 			{
-				Name:    "get-playlists",
+				Name:    "get-playlist",
 				Aliases: []string{"gp"},
-				Usage:   "Get playlists from a streaming platform and store them in the applications database",
+				Usage:   "Gets a playlist from a given streaming platform and stores it in the applications database",
 				Subcommands: []*cli.Command{
 					{
 						Name:    "spotify",
 						Aliases: []string{"sp"},
 						Usage:   "Get playlists from Spotify and store them in the applications database",
-						Action:  getSpotifyPlaylists,
+						Action:  getSpotifyPlaylist,
 					},
 					{
 						Name:    "soundcloud",
 						Aliases: []string{"sc"},
 						Usage:   "Get playlists from Soundcloud and store them in the applications database",
-						Action:  getSoundcloudPlaylists,
+						Action:  getSoundcloudPlaylist,
 					},
 				},
 			},
