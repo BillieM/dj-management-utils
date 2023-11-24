@@ -1,9 +1,15 @@
 package streaming
 
 import (
-	"errors"
+	"context"
+	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
+	"time"
+
+	"github.com/billiem/seren-management/pkg/helpers"
+	"github.com/deliveryhero/pipeline/v2"
 )
 
 /*
@@ -23,7 +29,7 @@ type SoundCloud struct {
 	ClientID string
 }
 
-func (s SoundCloud) GetSoundCloudPlaylist(playlistUrl string) (SoundCloudPlaylist, error) {
+func (s SoundCloud) GetSoundCloudPlaylist(ctx context.Context, playlistUrl string) (SoundCloudPlaylist, error) {
 
 	url := "https://soundcloud.com/serrene/sets/not-chill-but-u-know/s-HfjKTSg2san?si=d0884248a6024ab7a5567e86a732fb0f"
 
@@ -54,7 +60,15 @@ func (s SoundCloud) GetSoundCloudPlaylist(playlistUrl string) (SoundCloudPlaylis
 		return SoundCloudPlaylist{}, err
 	}
 
-	err = h.Playlist.CompleteTracks()
+	err = s.completeTracks(ctx, &h.Playlist)
+
+	if err != nil {
+		return SoundCloudPlaylist{}, err
+	}
+
+	for _, track := range h.Playlist.Tracks {
+		fmt.Println(track)
+	}
 
 	return SoundCloudPlaylist{}, nil
 }
@@ -64,21 +78,117 @@ completePlaylistTracks adds missing data to tracks in a SoundCloudPlaylist struc
 
 This is needed as soundcloud only returns IDs for any tracks beyond the first 5
 */
-func (playlist *SoundCloudPlaylist) completePlaylistTracks() error {
+func (s SoundCloud) completeTracks(ctx context.Context, p *SoundCloudPlaylist) error {
 
-	for _, track := range playlist.Tracks {
+	okayTracks := []TrackElement{}
+	trackIdsToRequest := []int64{}
 
+	for _, track := range p.Tracks {
+		ok, err := track.check()
+
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			trackIdsToRequest = append(trackIdsToRequest, track.ID)
+			continue
+		}
+
+		okayTracks = append(okayTracks, track)
+	}
+
+	remainingTracks, err := s.getRemainingTracks(ctx, trackIdsToRequest)
+
+	if err != nil {
+		return err
+	}
+
+	p.Tracks = append(okayTracks, remainingTracks...)
 
 	return nil
 }
 
 func (track TrackElement) check() (bool, error) {
-	if track.ID == "" {
-		return false, helpers.ErrTrackMissingID	
+	if track.ID == 0 {
+		return false, helpers.ErrTrackMissingID
 	}
+
+	// Track is missing title, so we need to request it
+	if track.Title == nil {
+		return false, nil
+	}
+
+	return true, nil
 }
 
-func getTracks(ids []string) ([]TrackElement, error) {
+func (s SoundCloud) getRemainingTracks(ctx context.Context, ids []int64) ([]TrackElement, error) {
+
+	trackIDChan := pipeline.Emit(ids...)
+
+	// TODO: figure out how big this array can be
+	tracksOut := pipeline.ProcessBatchConcurrently(ctx, 2, 50, time.Second*15, pipeline.NewProcessor(func(ctx context.Context, ids []int64) ([]TrackElement, error) {
+		trackArr, err := s.makeSoundCloudTracksRequest(ids)
+		if err != nil {
+			return nil, err
+		}
+		return trackArr, nil
+	}, func(ids []int64, err error) {
+		if err != nil {
+			// TODO: make this not just panic...
+			panic(err)
+		}
+	}), trackIDChan)
+
+	outTracks := []TrackElement{}
+
+	for track := range tracksOut {
+		outTracks = append(outTracks, track)
+	}
 
 	return nil, nil
+}
+
+func (s SoundCloud) makeSoundCloudTracksRequest(ids []int64) ([]TrackElement, error) {
+
+	req, err := http.NewRequest("GET", "https://api-v2.soundcloud.com/tracks", nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	q := req.URL.Query()
+
+	q.Add("client_id", s.ClientID)
+	q.Add("app_locale", "en")
+	q.Add("ids", helpers.Int64ArrayToJoinedString(ids))
+	q.Add("app_version", "1700828706")
+
+	req.URL.RawQuery = q.Encode()
+
+	fmt.Println(req.URL.String())
+
+	resp, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var tracks []TrackElement
+	err = json.Unmarshal(body, &tracks)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, track := range tracks {
+		fmt.Println(track)
+	}
+
+	return tracks, nil
 }

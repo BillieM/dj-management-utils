@@ -1,5 +1,10 @@
 package helpers
 
+import (
+	"strconv"
+	"strings"
+)
+
 func ContainsNonEmptyString(s []string) bool {
 	for _, v := range s {
 		if v != "" {
@@ -21,4 +26,12 @@ func countRune(s string, r rune) int {
 		}
 	}
 	return count
+}
+
+func Int64ArrayToJoinedString(a []int64) string {
+	sArr := []string{}
+	for _, v := range a {
+		sArr = append(sArr, strconv.FormatInt(v, 10))
+	}
+	return strings.Join(sArr, ",")
 }

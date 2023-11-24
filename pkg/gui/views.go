@@ -344,6 +344,7 @@ func (e *guiEnv) syncSoundCloudView(w fyne.Window) fyne.CanvasObject {
 	)
 
 	addPlaylistCanvas := newAddPlaylistWidget(&playlistBindVals, func() {
+
 		playlistsList.Refresh()
 	})
 

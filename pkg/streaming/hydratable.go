@@ -2,6 +2,7 @@ package streaming
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/billiem/seren-management/pkg/helpers"
 )
@@ -206,6 +207,10 @@ type TrackElement struct {
 	MonetizationModel  MonetizationModel  `json:"monetization_model"`
 	Policy             Policy             `json:"policy"`
 	User               *TrackUser         `json:"user,omitempty"`
+}
+
+func (t TrackElement) String() string {
+	return fmt.Sprintf("%v: %s", t.ID, *t.Title, *t.PermalinkURL)
 }
 
 type Media struct {

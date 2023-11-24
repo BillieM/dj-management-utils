@@ -203,8 +203,12 @@ GetPlaylist gets a playlist for a given platform and stores it in the database
 
 func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPlaylistOpts) {
 
+	s := streaming.SoundCloud{
+		ClientID: e.Config.SoundCloudClientID,
+	}
+
 	// get playlist object from SoundCloud
-	playlist, err := streaming.GetSoundCloudPlaylist(opts.PlaylistURL)
+	playlist, err := s.GetSoundCloudPlaylist(ctx, opts.PlaylistURL)
 
 	if err != nil {
 		e.step(dangerStepInfo(err))
