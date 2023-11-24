@@ -210,7 +210,7 @@ type TrackElement struct {
 }
 
 func (t TrackElement) String() string {
-	return fmt.Sprintf("%v: %s", t.ID, *t.Title, *t.PermalinkURL)
+	return fmt.Sprintf("%v: %s - %s", t.ID, *t.Title, *t.PermalinkURL)
 }
 
 type Media struct {

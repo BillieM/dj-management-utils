@@ -1,6 +1,8 @@
 package gui
 
 import (
+	"net/url"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
@@ -320,11 +322,7 @@ func (e *guiEnv) syncView(w fyne.Window) fyne.CanvasObject {
 func (e *guiEnv) syncSoundCloudView(w fyne.Window) fyne.CanvasObject {
 
 	playlistBindVals := playlistBindingList{
-		Items: []*playlistBindingItem{
-			{
-				name: "name1",
-			},
-		},
+		Items: []*playlistBindingItem{},
 	}
 
 	playlistsList := widget.NewListWithData(
@@ -334,17 +332,29 @@ func (e *guiEnv) syncSoundCloudView(w fyne.Window) fyne.CanvasObject {
 		},
 		func(i binding.DataItem, o fyne.CanvasObject) {
 			playlistBindingItem := i.(*playlistBindingItem)
-			nameBinding := playlistBindingItem.name
+			nameStr := playlistBindingItem.name
+			urlStr := playlistBindingItem.url
 
 			playlistWidget := o.(*playlistWidget)
-			nameLabel := playlistWidget.name
+			nameWidget := playlistWidget.name
+			urlWidget := playlistWidget.url
 
-			nameLabel.Bind(binding.BindString(&nameBinding))
+			nameWidget.SetText(nameStr)
+
+			// Display the url without the query strings
+			if u, err := url.Parse(urlStr); err == nil {
+				uNoQuery := u.Host + u.Path
+
+				err = urlWidget.SetURLFromString(uNoQuery)
+				if err != nil {
+					showErrorDialog(w, err)
+				}
+				urlWidget.SetText(uNoQuery)
+			}
 		},
 	)
 
 	addPlaylistCanvas := newAddPlaylistWidget(&playlistBindVals, func() {
-
 		playlistsList.Refresh()
 	})
 

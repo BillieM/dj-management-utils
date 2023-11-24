@@ -9,14 +9,14 @@ import (
 	"github.com/billiem/seren-management/pkg/operations"
 )
 
-func (e *guiEnv) sharedStartBuild(w fyne.Window, processContainerOuter *fyne.Container) (context.Context, stepHandler, error) {
+func (e *guiEnv) sharedStartBuild(w fyne.Window, processContainerOuter *fyne.Container) (context.Context, convertStepHandler, error) {
 
 	processContainerOuter.Objects = nil
 
 	ctx := context.Background()
 
 	if e.guiState.processing {
-		return ctx, stepHandler{}, helpers.ErrPleaseWaitForProcess
+		return ctx, convertStepHandler{}, helpers.ErrPleaseWaitForProcess
 	}
 
 	e.guiState.processing = true
@@ -45,7 +45,7 @@ func (e *guiEnv) sharedStartBuild(w fyne.Window, processContainerOuter *fyne.Con
 
 	processContainerOuter.Add(processContainer.container)
 
-	return ctx, stepHandler{
+	return ctx, convertStepHandler{
 		ctxClose:             cancelCauseFunc,
 		bindVals:             &listBinding,
 		progressBarBindValue: progressBarBinding,
