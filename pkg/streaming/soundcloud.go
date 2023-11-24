@@ -1,12 +1,9 @@
 package streaming
 
 import (
-	"fmt"
+	"errors"
 	"io"
 	"net/http"
-	"net/url"
-
-	"github.com/billiem/seren-management/pkg/helpers"
 )
 
 /*
@@ -23,69 +20,17 @@ https://api-v2.soundcloud.com/tracks?ids=1032527881%2C1164496324%2C1380759907%2C
 */
 
 type SoundCloud struct {
-	playlistUrl string
+	ClientID string
 }
 
-type GetSoundCloudPlaylistOpts struct {
-	playlistUrl string
-}
-
-type soundcloudRequestParams struct {
-	resource string
-	params   url.Values
-}
-
-type soundcloudResponse struct {
-}
-
-func (o GetSoundCloudPlaylistOpts) Build(cfg helpers.Config) StreamingPlatform {
-	return &SoundCloud{
-		requestUrl: o.requestUrl,
-	}
-}
-
-func (s SoundCloud) makeRequest(p soundcloudRequestParams) error {
-	baseURL := "https://api-v2.soundcloud.com"
-
-	u, _ := url.ParseRequestURI(baseURL)
-	u.Path = p.resource
-	u.RawQuery = p.params.Encode()
-	urlStr := fmt.Sprintf("%v", u) // "http://example.com/path?param1=value1&param2=value2"
-
-	fmt.Println(urlStr)
-
-	resp, err := http.Get(urlStr)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(body))
-
-	// var data YourStruct // Replace YourStruct with the appropriate struct type for unmarshaling
-	// err = json.Unmarshal(body, &data)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// Process the unmarshaled data
-
-	return nil
-}
-
-func (s SoundCloud) GetPlaylist() error {
+func (s SoundCloud) GetSoundCloudPlaylist(playlistUrl string) (SoundCloudPlaylist, error) {
 
 	url := "https://soundcloud.com/serrene/sets/not-chill-but-u-know/s-HfjKTSg2san?si=d0884248a6024ab7a5567e86a732fb0f"
 
 	resp, err := http.Get(url)
 
 	if err != nil {
-		return err
+		return SoundCloudPlaylist{}, err
 	}
 
 	defer resp.Body.Close()
@@ -93,25 +38,47 @@ func (s SoundCloud) GetPlaylist() error {
 	body, err := io.ReadAll(resp.Body)
 
 	if err != nil {
-		return err
+		return SoundCloudPlaylist{}, err
 	}
 
-	fmt.Println(string(body))
+	hydratableStr, err := extractSCHydrationString(string(body))
+
+	if err != nil {
+		return SoundCloudPlaylist{}, err
+	}
+
+	h := Hydratable{}
+	err = h.UnmarshalJSON([]byte(hydratableStr))
+
+	if err != nil {
+		return SoundCloudPlaylist{}, err
+	}
+
+	err = h.Playlist.CompleteTracks()
+
+	return SoundCloudPlaylist{}, nil
+}
+
+/*
+completePlaylistTracks adds missing data to tracks in a SoundCloudPlaylist struct
+
+This is needed as soundcloud only returns IDs for any tracks beyond the first 5
+*/
+func (playlist *SoundCloudPlaylist) completePlaylistTracks() error {
+
+	for _, track := range playlist.Tracks {
+
 
 	return nil
 }
 
-/*
-SoundCloudPlaylist implements the StreamingPlaylist interface for SoundCloud
-
-It holds the data for a SoundCloud playlist
-*/
-type SoundCloudPlaylist struct {
-	playlistName string
-	tracks       []SoundCloudTrack
+func (track TrackElement) check() (bool, error) {
+	if track.ID == "" {
+		return false, helpers.ErrTrackMissingID	
+	}
 }
 
-type SoundCloudTrack struct {
-	TrackID   int
-	TrackName string
+func getTracks(ids []string) ([]TrackElement, error) {
+
+	return nil, nil
 }

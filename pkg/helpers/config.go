@@ -3,11 +3,9 @@ package helpers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 
 	"github.com/billiem/seren-management/pkg/projectpath"
-	"github.com/k0kubun/pp"
 )
 
 /*
@@ -124,9 +122,6 @@ func (c *Config) SaveConfig() error {
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("saving config")
-	pp.Print(c)
 
 	err = os.WriteFile(JoinFilepathToSlash(projectpath.Root, "config.json"), data, 0644)
 	if err != nil {

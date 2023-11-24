@@ -33,7 +33,7 @@ Uses regex to check if a string contains any of the given extensions
 */
 func IsExtensionInArray(s string, a []string) bool {
 	for _, v := range a {
-		if regexContains(s, `(?i)\.`+v+`$`) {
+		if RegexContains(s, `(?i)\.`+v+`$`) {
 			return true
 		}
 	}
@@ -42,7 +42,7 @@ func IsExtensionInArray(s string, a []string) bool {
 
 func ReplaceTrackExtension(s string, r string, a []string) string {
 	for _, v := range a {
-		s = regexReplace(s, `(?i)\.`+v+`$`, r)
+		s = RegexReplace(s, `(?i)\.`+v+`$`, r)
 	}
 	return s
 }

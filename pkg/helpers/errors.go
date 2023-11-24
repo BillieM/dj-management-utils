@@ -54,6 +54,10 @@ var (
 	ErrInvalidStemSeparationType = errors.New("invalid stem separation type")
 	ErrInvalidPlatform           = errors.New("platform is invalid")
 	ErrConfigDoesNotExist        = errors.New("config does not exist")
+	ErrMissingPlaylistURL        = errors.New("missing playlist URL")
+	ErrExtractingHydrationString = errors.New("error extracting hydration string")
+	ErrHydratableKeyNotFound     = errors.New("hydratable key not found")
+	ErrTrackMissingID            = errors.New("track missing ID")
 )
 
 var (

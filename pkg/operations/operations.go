@@ -201,14 +201,15 @@ func (e *OpEnv) ReadCollection(ctx context.Context, opts collection.ReadCollecti
 GetPlaylist gets a playlist for a given platform and stores it in the database
 */
 
-func (e *OpEnv) GetPlaylist(ctx context.Context, opts streaming.GetPlaylistOpts) {
+func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPlaylistOpts) {
 
-	platform := opts.Build(e.Config)
-
-	err := platform.GetPlaylist()
+	// get playlist object from SoundCloud
+	playlist, err := streaming.GetSoundCloudPlaylist(opts.PlaylistURL)
 
 	if err != nil {
 		e.step(dangerStepInfo(err))
 		return
 	}
+
+	_ = playlist
 }

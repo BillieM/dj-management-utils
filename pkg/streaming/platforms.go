@@ -9,12 +9,3 @@ type StreamingPlatform interface {
 type GetPlaylistOpts interface {
 	Build(helpers.Config) StreamingPlatform
 }
-
-type Playlist interface {
-	NumTracks() int
-}
-
-type Track interface {
-	Name() string
-	SetName(string)
-}
