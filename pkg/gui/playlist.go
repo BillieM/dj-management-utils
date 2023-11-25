@@ -2,6 +2,7 @@ package gui
 
 import (
 	"fmt"
+	"net/url"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -9,6 +10,7 @@ import (
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/widget"
 	"github.com/billiem/seren-management/pkg/helpers"
+	"github.com/billiem/seren-management/pkg/operations"
 )
 
 /*
@@ -64,6 +66,8 @@ It is used to display a playlist as a playlistWidget in the UI
 type playlistBindingItem struct {
 	bindBase
 
+	// may want a context in here ?? later problem...
+
 	downloading bool
 	failed      bool
 
@@ -91,6 +95,8 @@ type playlistWidget struct {
 	name *widget.Label
 	url  *widget.Hyperlink
 
+	ctxCancel func() // used to cancel a downloading context
+
 	downloading bool
 	failed      bool
 }
@@ -117,7 +123,12 @@ func (i *playlistWidget) CreateRenderer() fyne.WidgetRenderer {
 			widget.NewLabel("download failed, click to retry"),
 		)
 	} else if i.downloading {
-		content = container.NewHBox(
+		cancelBtn := widget.NewButton("cancel", func() {
+			i.ctxCancel()
+		})
+
+		content = container.NewBorder(
+			nil, nil, nil, cancelBtn,
 			widget.NewProgressBarInfinite(),
 		)
 	} else {
@@ -137,55 +148,114 @@ addPlaylistWidget displays a section used for adding a playlist to the ui
 type addPlaylistWidget struct {
 	widget.BaseWidget
 
-	submitButton *widget.Button
-	urlEntry     *widget.Entry
+	urlEntry        *widget.Entry
+	submitButton    *widget.Button
+	validationLabel *widget.Label
 }
 
 /*
 newAddPlaylistWidget returns a new instance of addPlaylistWidget
 */
-func newAddPlaylistWidget(p *playlistBindingList, onSubmit func()) *addPlaylistWidget {
+func newAddPlaylistWidget(p *playlistBindingList, onSubmit func(*playlistBindingItem)) *addPlaylistWidget {
 
 	urlEntry := widget.NewEntry()
-	submitBtn := widget.NewButton("add playlist", func() {
-		err := urlEntry.Validate()
-		fmt.Println(err)
-		p.addPlaylist(urlEntry.Text, onSubmit)
-	})
-
-	urlEntry.SetPlaceHolder("SoundCloud playlist url")
+	urlEntry.SetPlaceHolder("SoundCloud Playlist URL")
 	urlEntry.Validator = validation.NewRegexp(`soundcloud\.com\/.*\/sets`, "not a valid SoundCloud playlist url")
 
-	urlEntry.OnSubmitted = func(s string) { p.addPlaylist(s, onSubmit) }
+	urlEntry.OnSubmitted = func(s string) {
+
+		var err error
+
+		if err = urlEntry.Validate(); err == nil {
+			err = p.addPlaylist(s, onSubmit)
+		}
+
+		if err != nil {
+			urlEntry.SetValidationError(err)
+			urlEntry.Refresh()
+		}
+	}
+
+	submitBtn := widget.NewButton("Add Playlist", func() {
+		var err error
+
+		if err = urlEntry.Validate(); err == nil {
+			err = p.addPlaylist(urlEntry.Text, onSubmit)
+		}
+
+		if err != nil {
+			urlEntry.SetValidationError(err)
+			urlEntry.Refresh()
+		}
+	})
+
+	validationLabel := widget.NewLabel("")
+
+	urlEntry.SetOnValidationChanged(func(err error) {
+		if err != nil {
+			validationLabel.SetText(err.Error())
+		} else {
+			validationLabel.SetText("")
+		}
+	})
 
 	i := &addPlaylistWidget{
-		submitButton: submitBtn,
-		urlEntry:     urlEntry,
+		submitButton:    submitBtn,
+		urlEntry:        urlEntry,
+		validationLabel: validationLabel,
 	}
+
+	widget.NewForm()
 
 	i.ExtendBaseWidget(i)
 
 	return i
 }
 
-func (item *addPlaylistWidget) CreateRenderer() fyne.WidgetRenderer {
+func (i *addPlaylistWidget) CreateRenderer() fyne.WidgetRenderer {
 	c := container.NewBorder(
 		widget.NewLabel("Add playlist"),
 		nil, nil, nil,
 		container.NewBorder(
-			nil, nil, nil, item.submitButton, item.urlEntry,
+			nil, i.validationLabel, nil, i.submitButton, i.urlEntry,
 		),
 	)
 	return widget.NewSimpleRenderer(c)
 }
 
-func (p *playlistBindingList) addPlaylist(url string, callback func()) {
+func (p *playlistBindingList) addPlaylist(urlStr string, callback func(*playlistBindingItem)) error {
 
-	fmt.Println("addPlaylist", url)
-	p.Append(&playlistBindingItem{
-		url:         url,
+	u, err := url.Parse(urlStr)
+
+	if err != nil {
+		return err
+	}
+
+	u.RawQuery = ""
+
+	i := &playlistBindingItem{
+		url:         fmt.Sprint(u),
 		downloading: true,
 		failed:      false,
-	})
-	callback()
+	}
+
+	p.Append(i)
+	callback(i)
+
+	return nil
+}
+
+type streamingStepHandler struct {
+	stepFunc     func()
+	finishedFunc func()
+}
+
+func (s streamingStepHandler) StepCallback(step operations.StepInfo) {
+	fmt.Println(step)
+	s.stepFunc()
+}
+
+func (s streamingStepHandler) ExitCallback() {
+	fmt.Println("finished")
+	s.finishedFunc()
 }

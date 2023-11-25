@@ -7,6 +7,7 @@ import (
 	"github.com/billiem/seren-management/pkg/collection"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/billiem/seren-management/pkg/operations"
+	"github.com/billiem/seren-management/pkg/streaming"
 	"github.com/urfave/cli/v2"
 )
 
@@ -68,7 +69,7 @@ func getSoundcloudPlaylist(c *cli.Context) error {
 	opEnv := e.opEnv()
 	opEnv.RegisterStepHandler(stepHandler{})
 
-	opEnv.GetSoundCloudPlaylist(c.Context, soundcloudOpts)
+	opEnv.GetSoundCloudPlaylist(c.Context, soundcloudOpts, func(p streaming.SoundCloudPlaylist) {})
 
 	return nil
 }

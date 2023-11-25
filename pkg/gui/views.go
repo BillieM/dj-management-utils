@@ -1,13 +1,14 @@
 package gui
 
 import (
-	"net/url"
+	"context"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/widget"
 	"github.com/billiem/seren-management/pkg/operations"
+	"github.com/billiem/seren-management/pkg/streaming"
 )
 
 /*
@@ -341,21 +342,31 @@ func (e *guiEnv) syncSoundCloudView(w fyne.Window) fyne.CanvasObject {
 
 			nameWidget.SetText(nameStr)
 
-			// Display the url without the query strings
-			if u, err := url.Parse(urlStr); err == nil {
-				uNoQuery := u.Host + u.Path
-
-				err = urlWidget.SetURLFromString(uNoQuery)
-				if err != nil {
-					showErrorDialog(w, err)
-				}
-				urlWidget.SetText(uNoQuery)
-			}
+			urlWidget.SetURLFromString(urlStr)
+			urlWidget.SetText(urlStr)
 		},
 	)
 
-	addPlaylistCanvas := newAddPlaylistWidget(&playlistBindVals, func() {
+	ctx := context.Background()
+	ctx, ctxClose := context.WithCancel(ctx)
+	opEnv := e.opEnv()
+	opEnv.RegisterStepHandler(streamingStepHandler{
+		stepFunc:     func() {},
+		finishedFunc: func() { ctxClose() },
+	})
+
+	addPlaylistCanvas := newAddPlaylistWidget(&playlistBindVals, func(pbi *playlistBindingItem) {
 		playlistsList.Refresh()
+		opts := operations.GetSoundCloudPlaylistOpts{
+			PlaylistURL: pbi.url,
+		}
+		go opEnv.GetSoundCloudPlaylist(ctx, opts, func(p streaming.SoundCloudPlaylist) {
+			pbi.name = p.Title
+			pbi.downloading = false
+			pbi.failed = false
+			playlistsList.Refresh()
+		})
+
 	})
 
 	return container.NewBorder(

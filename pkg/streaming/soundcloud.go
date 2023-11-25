@@ -31,9 +31,7 @@ type SoundCloud struct {
 
 func (s SoundCloud) GetSoundCloudPlaylist(ctx context.Context, playlistUrl string) (SoundCloudPlaylist, error) {
 
-	url := "https://soundcloud.com/serrene/sets/not-chill-but-u-know/s-HfjKTSg2san?si=d0884248a6024ab7a5567e86a732fb0f"
-
-	resp, err := http.Get(url)
+	resp, err := http.Get(playlistUrl)
 
 	if err != nil {
 		return SoundCloudPlaylist{}, err
@@ -70,7 +68,7 @@ func (s SoundCloud) GetSoundCloudPlaylist(ctx context.Context, playlistUrl strin
 		fmt.Println(track)
 	}
 
-	return SoundCloudPlaylist{}, nil
+	return h.Playlist, nil
 }
 
 /*
@@ -191,4 +189,9 @@ func (s SoundCloud) makeSoundCloudTracksRequest(ids []int64) ([]TrackElement, er
 	}
 
 	return tracks, nil
+}
+
+func CheckSoundCloudPlaylistUrl(url string) error {
+
+	return nil
 }

@@ -201,7 +201,7 @@ func (e *OpEnv) ReadCollection(ctx context.Context, opts collection.ReadCollecti
 GetPlaylist gets a playlist for a given platform and stores it in the database
 */
 
-func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPlaylistOpts) {
+func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPlaylistOpts, p func(streaming.SoundCloudPlaylist)) {
 
 	s := streaming.SoundCloud{
 		ClientID: e.Config.SoundCloudClientID,
@@ -215,5 +215,5 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 		return
 	}
 
-	_ = playlist
+	p(playlist)
 }
