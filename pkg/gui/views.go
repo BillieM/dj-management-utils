@@ -2,13 +2,15 @@ package gui
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/widget"
+	"github.com/billiem/seren-management/pkg/database"
 	"github.com/billiem/seren-management/pkg/operations"
-	"github.com/billiem/seren-management/pkg/streaming"
 )
 
 /*
@@ -18,7 +20,7 @@ Views define the content for the main content area of the application
 */
 type guiView struct {
 	name   string
-	render func(w fyne.Window) fyne.CanvasObject
+	render func() fyne.CanvasObject
 }
 
 func (e *guiEnv) getViewList() map[string]guiView {
@@ -120,27 +122,27 @@ setMainContent sets the main content of the window to the provided content
 
 Called on tab change on the main menu
 */
-func (e *guiEnv) setMainContent(w fyne.Window, contentStack *fyne.Container, view guiView) {
+func (e *guiEnv) setMainContent(contentStack *fyne.Container, view guiView) {
 
 	labelContainer := container.NewVBox(widget.NewLabel(view.name), widget.NewSeparator())
 
-	contentContainer := container.NewBorder(labelContainer, nil, nil, nil, view.render(w))
+	contentContainer := container.NewBorder(labelContainer, nil, nil, nil, view.render())
 
 	contentStack.Objects = []fyne.CanvasObject{contentContainer}
 	contentStack.Refresh()
 }
 
-func (e *guiEnv) homeView(w fyne.Window) fyne.CanvasObject {
+func (e *guiEnv) homeView() fyne.CanvasObject {
 	return widget.NewLabel("Welcome to Seren Library Management!")
 }
 
-func (e *guiEnv) stemsView(w fyne.Window) fyne.CanvasObject {
+func (e *guiEnv) stemsView() fyne.CanvasObject {
 	content := widget.NewLabel("Contains a selection of utilities for separating stems from audio files.")
 
 	return container.NewVBox(content)
 }
 
-func (e *guiEnv) separateSingleStemView(w fyne.Window) fyne.CanvasObject {
+func (e *guiEnv) separateSingleStemView() fyne.CanvasObject {
 	ok, canvas := e.checkConfig([]func() (bool, string){e.Config.CheckTmpDir})
 
 	if !ok {
@@ -152,13 +154,13 @@ func (e *guiEnv) separateSingleStemView(w fyne.Window) fyne.CanvasObject {
 	opts := operations.SeparateSingleStemOpts{}
 
 	startFunc := func() {
-		e.startSeparateSingleStem(w, processContainerOuter, opts)
+		e.startSeparateSingleStem(processContainerOuter, opts)
 	}
 
 	startButton := widget.NewButton("Separate stem", startFunc)
 	startButton.Disable()
 
-	trackPathCanvas := e.openFileCanvas(w, "Track Path", &opts.InFilePath, []string{".wav", ".mp3"}, func() { enableBtnIfOptsOkay(opts, startButton) })
+	trackPathCanvas := e.openFileCanvas("Track Path", &opts.InFilePath, []string{".wav", ".mp3"}, func() { enableBtnIfOptsOkay(opts, startButton) })
 	stemTypeSelect := buildStemTypeSelect(&opts.Type, func() { enableBtnIfOptsOkay(opts, startButton) })
 
 	return container.NewBorder(
@@ -173,7 +175,7 @@ func (e *guiEnv) separateSingleStemView(w fyne.Window) fyne.CanvasObject {
 	)
 }
 
-func (e *guiEnv) separateFolderStemView(w fyne.Window) fyne.CanvasObject {
+func (e *guiEnv) separateFolderStemView() fyne.CanvasObject {
 	ok, canvas := e.checkConfig([]func() (bool, string){e.Config.CheckTmpDir})
 
 	if !ok {
@@ -185,13 +187,13 @@ func (e *guiEnv) separateFolderStemView(w fyne.Window) fyne.CanvasObject {
 	opts := operations.SeparateFolderStemOpts{}
 
 	startFunc := func() {
-		e.startSeparateFolderStem(w, processContainerOuter, opts)
+		e.startSeparateFolderStem(processContainerOuter, opts)
 	}
 
 	startButton := widget.NewButton("Separate folder", startFunc)
 	startButton.Disable()
 
-	trackPathCanvas := e.openDirCanvas(w, "Folder Path", &opts.InDirPath, func() { enableBtnIfOptsOkay(opts, startButton) })
+	trackPathCanvas := e.openDirCanvas("Folder Path", &opts.InDirPath, func() { enableBtnIfOptsOkay(opts, startButton) })
 	stemTypeSelect := buildStemTypeSelect(&opts.Type, func() { enableBtnIfOptsOkay(opts, startButton) })
 
 	return container.NewBorder(
@@ -206,7 +208,7 @@ func (e *guiEnv) separateFolderStemView(w fyne.Window) fyne.CanvasObject {
 	)
 }
 
-func (e *guiEnv) separateCollectionStemView(w fyne.Window) fyne.CanvasObject {
+func (e *guiEnv) separateCollectionStemView() fyne.CanvasObject {
 	return widget.NewLabel("separateCollectionView")
 }
 
@@ -215,12 +217,12 @@ Convert Mp3s Section
 */
 
 // convertMp3sView returns the view for the convert mp3s info section
-func (e *guiEnv) convertMp3sView(w fyne.Window) fyne.CanvasObject {
+func (e *guiEnv) convertMp3sView() fyne.CanvasObject {
 	return widget.NewLabel("convertMp3sView")
 }
 
 // convertSingleMp3View returns the view for the convert single mp3 operation
-func (e *guiEnv) convertSingleMp3View(w fyne.Window) fyne.CanvasObject {
+func (e *guiEnv) convertSingleMp3View() fyne.CanvasObject {
 	ok, canvas := e.checkConfig([]func() (bool, string){e.Config.CheckTmpDir})
 
 	if !ok {
@@ -232,13 +234,13 @@ func (e *guiEnv) convertSingleMp3View(w fyne.Window) fyne.CanvasObject {
 	opts := operations.ConvertSingleMp3Opts{}
 
 	startFunc := func() {
-		e.startConvertSingleMp3(w, processContainerOuter, opts)
+		e.startConvertSingleMp3(processContainerOuter, opts)
 	}
 
 	startButton := widget.NewButton("Convert to mp3", startFunc)
 	startButton.Disable()
 
-	trackPathCanvas := e.openFileCanvas(w, "Track Path", &opts.InFilePath, []string{".wav", ".flac"}, func() { startButton.Enable() })
+	trackPathCanvas := e.openFileCanvas("Track Path", &opts.InFilePath, []string{".wav", ".flac"}, func() { startButton.Enable() })
 
 	return container.NewBorder(
 		container.NewVBox(
@@ -252,7 +254,7 @@ func (e *guiEnv) convertSingleMp3View(w fyne.Window) fyne.CanvasObject {
 }
 
 // convertFolderMp3View returns the view for the convert folder mp3 operation
-func (e *guiEnv) convertFolderMp3View(w fyne.Window) fyne.CanvasObject {
+func (e *guiEnv) convertFolderMp3View() fyne.CanvasObject {
 	ok, canvas := e.checkConfig([]func() (bool, string){e.Config.CheckTmpDir})
 
 	if !ok {
@@ -264,13 +266,13 @@ func (e *guiEnv) convertFolderMp3View(w fyne.Window) fyne.CanvasObject {
 	opts := operations.ConvertFolderMp3Opts{}
 
 	startFunc := func() {
-		e.startConvertFolderMp3(w, processContainerOuter, opts)
+		e.startConvertFolderMp3(processContainerOuter, opts)
 	}
 
 	startButton := widget.NewButton("Convert folder to mp3", startFunc)
 	startButton.Disable()
 
-	trackPathCanvas := e.openDirCanvas(w, "Folder Path", &opts.InDirPath, func() { startButton.Enable() })
+	trackPathCanvas := e.openDirCanvas("Folder Path", &opts.InDirPath, func() { startButton.Enable() })
 
 	return container.NewBorder(
 		container.NewVBox(
@@ -284,7 +286,7 @@ func (e *guiEnv) convertFolderMp3View(w fyne.Window) fyne.CanvasObject {
 }
 
 // convertCollectionMp3View returns the view for the convert collection mp3 operation
-func (e *guiEnv) convertCollectionMp3View(w fyne.Window) fyne.CanvasObject {
+func (e *guiEnv) convertCollectionMp3View() fyne.CanvasObject {
 
 	path := widget.NewLabel("collection path: " + e.Config.TraktorCollectionPath)
 	btn := widget.NewButton("do collection things :D", func() {
@@ -300,27 +302,27 @@ func (e *guiEnv) convertCollectionMp3View(w fyne.Window) fyne.CanvasObject {
 	)
 }
 
-func (e *guiEnv) tagsView(w fyne.Window) fyne.CanvasObject {
+func (e *guiEnv) tagsView() fyne.CanvasObject {
 	return widget.NewLabel("tagsView")
 }
 
-func (e *guiEnv) rereadTagsView(w fyne.Window) fyne.CanvasObject {
+func (e *guiEnv) rereadTagsView() fyne.CanvasObject {
 	return widget.NewLabel("rereadTagsView")
 }
 
-func (e *guiEnv) cleanTagsView(w fyne.Window) fyne.CanvasObject {
+func (e *guiEnv) cleanTagsView() fyne.CanvasObject {
 	return widget.NewLabel("cleanTagsView")
 }
 
-func (e *guiEnv) conversionView(w fyne.Window) fyne.CanvasObject {
+func (e *guiEnv) conversionView() fyne.CanvasObject {
 	return widget.NewLabel("conversionView")
 }
 
-func (e *guiEnv) syncView(w fyne.Window) fyne.CanvasObject {
+func (e *guiEnv) syncView() fyne.CanvasObject {
 	return widget.NewLabel("syncView")
 }
 
-func (e *guiEnv) syncSoundCloudView(w fyne.Window) fyne.CanvasObject {
+func (e *guiEnv) syncSoundCloudView() fyne.CanvasObject {
 
 	playlistBindVals := playlistBindingList{
 		Items: []*playlistBindingItem{},
@@ -329,23 +331,46 @@ func (e *guiEnv) syncSoundCloudView(w fyne.Window) fyne.CanvasObject {
 	playlistsList := widget.NewListWithData(
 		&playlistBindVals,
 		func() fyne.CanvasObject {
-			return newPlaylistWidget("nameTemplate")
+			return newPlaylistWidget()
 		},
 		func(i binding.DataItem, o fyne.CanvasObject) {
-			playlistBindingItem := i.(*playlistBindingItem)
-			nameStr := playlistBindingItem.name
-			urlStr := playlistBindingItem.url
 
 			playlistWidget := o.(*playlistWidget)
-			nameWidget := playlistWidget.name
-			urlWidget := playlistWidget.url
+			playlistBindingItem := i.(*playlistBindingItem)
 
-			nameWidget.SetText(nameStr)
+			playlistWidget.searchUrl.SetText(playlistBindingItem.playlist.SearchUrl)
+			playlistWidget.searchUrl.SetURLFromString(playlistBindingItem.playlist.SearchUrl)
 
-			urlWidget.SetURLFromString(urlStr)
-			urlWidget.SetText(urlStr)
+			fyne.CurrentApp().Storage()
+
+			switch playlistBindingItem.state {
+			case Finding:
+				playlistWidget.findingContent.Show()
+				playlistWidget.foundContent.Hide()
+				playlistWidget.failedContent.Hide()
+			case Failed:
+				playlistWidget.findingContent.Hide()
+				playlistWidget.foundContent.Hide()
+				playlistWidget.failedContent.Show()
+				playlistWidget.err.SetText(playlistBindingItem.err.Error())
+			case Found:
+				playlistWidget.findingContent.Hide()
+				playlistWidget.foundContent.Show()
+				playlistWidget.failedContent.Hide()
+				playlistWidget.name.SetText(playlistBindingItem.playlist.Name)
+			}
+
+			o.Refresh()
 		},
 	)
+
+	loading := newViewLoading("Loading SoundCloud playlists...")
+
+	go func() {
+		playlistBindVals.load(e.SerenDB)
+		playlistsList.Refresh()
+		loading.Hide()
+	}()
 
 	ctx := context.Background()
 	ctx, ctxClose := context.WithCancel(ctx)
@@ -355,25 +380,57 @@ func (e *guiEnv) syncSoundCloudView(w fyne.Window) fyne.CanvasObject {
 		finishedFunc: func() { ctxClose() },
 	})
 
-	addPlaylistCanvas := newAddPlaylistWidget(&playlistBindVals, func(pbi *playlistBindingItem) {
-		playlistsList.Refresh()
-		opts := operations.GetSoundCloudPlaylistOpts{
-			PlaylistURL: pbi.url,
+	addPlaylistCanvas := newAddPlaylistWidget(func(urlRaw string) {
+
+		pbi := &playlistBindingItem{
+			err:   nil,
+			state: Finding,
 		}
-		go opEnv.GetSoundCloudPlaylist(ctx, opts, func(p streaming.SoundCloudPlaylist) {
-			pbi.name = p.Title
-			pbi.downloading = false
-			pbi.failed = false
+
+		netUrl, err := url.Parse(urlRaw)
+
+		if err != nil {
+			pbi.state = Failed
+			pbi.err = err
+			pbi.playlist = database.SoundCloudPlaylist{SearchUrl: urlRaw}
+			playlistBindVals.Append(pbi)
+			playlistsList.Refresh()
+			return
+		}
+
+		netUrl.RawQuery = ""
+
+		pbi.playlist = database.SoundCloudPlaylist{
+			SearchUrl: netUrl.String(),
+		}
+
+		playlistBindVals.Append(pbi)
+		playlistsList.Refresh()
+
+		go opEnv.GetSoundCloudPlaylist(ctx, operations.GetSoundCloudPlaylistOpts{
+			PlaylistURL: netUrl.String(),
+		}, func(p database.SoundCloudPlaylist, err error) {
+			fmt.Println(p.SearchUrl, p.Name, err)
+			if err != nil {
+				pbi.state = Failed
+				pbi.err = err
+			} else {
+				pbi.playlist = p
+				pbi.state = Found
+				pbi.err = nil
+			}
 			playlistsList.Refresh()
 		})
-
 	})
 
-	return container.NewBorder(
-		nil, addPlaylistCanvas, nil, nil, playlistsList,
+	return container.NewStack(
+		container.NewBorder(
+			nil, addPlaylistCanvas, nil, nil, playlistsList,
+		),
+		loading,
 	)
 }
 
-func (e *guiEnv) syncSpotifyView(w fyne.Window) fyne.CanvasObject {
+func (e *guiEnv) syncSpotifyView() fyne.CanvasObject {
 	return widget.NewLabel("syncView")
 }

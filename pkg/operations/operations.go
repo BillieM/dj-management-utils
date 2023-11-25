@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/billiem/seren-management/pkg/collection"
+	"github.com/billiem/seren-management/pkg/database"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/billiem/seren-management/pkg/streaming"
 )
@@ -201,19 +202,49 @@ func (e *OpEnv) ReadCollection(ctx context.Context, opts collection.ReadCollecti
 GetPlaylist gets a playlist for a given platform and stores it in the database
 */
 
-func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPlaylistOpts, p func(streaming.SoundCloudPlaylist)) {
+func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPlaylistOpts, p func(database.SoundCloudPlaylist, error)) {
+
+	// check if playlist with same url already exists in database
+	playlist, err := e.SerenDB.GetSoundCloudPlaylistByURL(opts.PlaylistURL)
+
+	fmt.Println(playlist, err)
+
+	if err != nil {
+		e.step(dangerStepInfo(err))
+		p(database.SoundCloudPlaylist{}, err)
+		return
+	}
+
+	fmt.Println(playlist, err)
+
+	if playlist.ID == 0 {
+		p(playlist, helpers.ErrPlaylistAlreadyExists)
+		return
+	}
 
 	s := streaming.SoundCloud{
 		ClientID: e.Config.SoundCloudClientID,
 	}
 
-	// get playlist object from SoundCloud
-	playlist, err := s.GetSoundCloudPlaylist(ctx, opts.PlaylistURL)
+	// get playlist from SoundCloud
+	playlist, err = s.GetSoundCloudPlaylist(ctx, opts.PlaylistURL)
 
 	if err != nil {
 		e.step(dangerStepInfo(err))
+		p(database.SoundCloudPlaylist{}, err)
 		return
 	}
 
-	p(playlist)
+	playlist.SearchUrl = opts.PlaylistURL
+
+	// save playlist to database
+	err = e.SerenDB.CreateSoundCloudPlaylist(playlist)
+
+	if err != nil {
+		e.step(dangerStepInfo(err))
+		p(database.SoundCloudPlaylist{}, err)
+		return
+	}
+
+	p(playlist, nil)
 }

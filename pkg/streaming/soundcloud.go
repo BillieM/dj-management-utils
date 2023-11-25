@@ -3,11 +3,11 @@ package streaming
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"time"
 
+	"github.com/billiem/seren-management/pkg/database"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/deliveryhero/pipeline/v2"
 )
@@ -29,12 +29,12 @@ type SoundCloud struct {
 	ClientID string
 }
 
-func (s SoundCloud) GetSoundCloudPlaylist(ctx context.Context, playlistUrl string) (SoundCloudPlaylist, error) {
+func (s SoundCloud) GetSoundCloudPlaylist(ctx context.Context, playlistUrl string) (database.SoundCloudPlaylist, error) {
 
 	resp, err := http.Get(playlistUrl)
 
 	if err != nil {
-		return SoundCloudPlaylist{}, err
+		return database.SoundCloudPlaylist{}, err
 	}
 
 	defer resp.Body.Close()
@@ -42,33 +42,29 @@ func (s SoundCloud) GetSoundCloudPlaylist(ctx context.Context, playlistUrl strin
 	body, err := io.ReadAll(resp.Body)
 
 	if err != nil {
-		return SoundCloudPlaylist{}, err
+		return database.SoundCloudPlaylist{}, err
 	}
 
 	hydratableStr, err := extractSCHydrationString(string(body))
 
 	if err != nil {
-		return SoundCloudPlaylist{}, err
+		return database.SoundCloudPlaylist{}, err
 	}
 
 	h := Hydratable{}
 	err = h.UnmarshalJSON([]byte(hydratableStr))
 
 	if err != nil {
-		return SoundCloudPlaylist{}, err
+		return database.SoundCloudPlaylist{}, err
 	}
 
 	err = s.completeTracks(ctx, &h.Playlist)
 
 	if err != nil {
-		return SoundCloudPlaylist{}, err
+		return database.SoundCloudPlaylist{}, err
 	}
 
-	for _, track := range h.Playlist.Tracks {
-		fmt.Println(track)
-	}
-
-	return h.Playlist, nil
+	return *h.Playlist.ToDB(), nil
 }
 
 /*
@@ -144,7 +140,7 @@ func (s SoundCloud) getRemainingTracks(ctx context.Context, ids []int64) ([]Trac
 		outTracks = append(outTracks, track)
 	}
 
-	return nil, nil
+	return outTracks, nil
 }
 
 func (s SoundCloud) makeSoundCloudTracksRequest(ids []int64) ([]TrackElement, error) {
@@ -164,8 +160,6 @@ func (s SoundCloud) makeSoundCloudTracksRequest(ids []int64) ([]TrackElement, er
 
 	req.URL.RawQuery = q.Encode()
 
-	fmt.Println(req.URL.String())
-
 	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {
@@ -184,14 +178,5 @@ func (s SoundCloud) makeSoundCloudTracksRequest(ids []int64) ([]TrackElement, er
 		return nil, err
 	}
 
-	for _, track := range tracks {
-		fmt.Println(track)
-	}
-
 	return tracks, nil
-}
-
-func CheckSoundCloudPlaylistUrl(url string) error {
-
-	return nil
 }

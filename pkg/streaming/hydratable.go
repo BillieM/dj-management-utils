@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/billiem/seren-management/pkg/database"
 	"github.com/billiem/seren-management/pkg/helpers"
 )
 
@@ -158,6 +159,22 @@ type SoundCloudPlaylist struct {
 	URL            string                 `json:"url"`
 }
 
+func (p SoundCloudPlaylist) ToDB() *database.SoundCloudPlaylist {
+
+	tracks := []*database.SoundCloudTrack{}
+
+	for _, track := range p.Tracks {
+		tracks = append(tracks, track.ToDB())
+	}
+
+	return &database.SoundCloudPlaylist{
+		Name:       p.Title,
+		ExternalID: p.ID,
+		Permalink:  p.PermalinkURL,
+		Tracks:     tracks,
+	}
+}
+
 type TrackElement struct {
 	ArtworkURL         *string            `json:"artwork_url,omitempty"`
 	Caption            interface{}        `json:"caption"`
@@ -211,6 +228,14 @@ type TrackElement struct {
 
 func (t TrackElement) String() string {
 	return fmt.Sprintf("%v: %s - %s", t.ID, *t.Title, *t.PermalinkURL)
+}
+
+func (t TrackElement) ToDB() *database.SoundCloudTrack {
+	return &database.SoundCloudTrack{
+		Name:       *t.Title,
+		ExternalID: t.ID,
+		Permalink:  *t.PermalinkURL,
+	}
 }
 
 type Media struct {

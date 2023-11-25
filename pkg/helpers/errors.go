@@ -58,6 +58,7 @@ var (
 	ErrExtractingHydrationString = errors.New("error extracting hydration string")
 	ErrHydratableKeyNotFound     = errors.New("hydratable key not found")
 	ErrTrackMissingID            = errors.New("track missing ID")
+	ErrPlaylistAlreadyExists     = errors.New("playlist already exists")
 )
 
 var (

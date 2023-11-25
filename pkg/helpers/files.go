@@ -157,7 +157,7 @@ If no base directory is found, it will return the root directory (i.e. /)
 func GetClosestDir(path string, baseDirPath string, rCnt *int) (string, error) {
 	*rCnt++
 	fi, err := os.Stat(path)
-	// fmt.Println(*rCnt, path)
+
 	if err != nil {
 		if *rCnt <= 4 {
 			return GetClosestDir(JoinFilepathToSlash(path, ".."), baseDirPath, rCnt)

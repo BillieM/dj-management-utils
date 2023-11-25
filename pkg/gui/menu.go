@@ -12,7 +12,7 @@ makeNavMenu builds the navigation menu on the left side of the application
 the navigation menu is a tree object and is dynamically built from the operations list inside data.go
 */
 
-func (e *guiEnv) makeNavMenu(w fyne.Window, contentStack *fyne.Container) fyne.CanvasObject {
+func (e *guiEnv) makeNavMenu(contentStack *fyne.Container) fyne.CanvasObject {
 
 	tree := &widget.Tree{
 		ChildUIDs: func(uid string) []string {
@@ -39,11 +39,11 @@ func (e *guiEnv) makeNavMenu(w fyne.Window, contentStack *fyne.Container) fyne.C
 				helpers.HandleFatalError(helpers.ErrOperationNotFound)
 				return
 			}
-			if e.processing {
-				showErrorDialog(w, helpers.ErrPleaseWaitForProcess)
+			if e.busy {
+				e.showErrorDialog(helpers.ErrPleaseWaitForProcess)
 				return
 			}
-			e.setMainContent(w, contentStack, op)
+			e.setMainContent(contentStack, op)
 		},
 	}
 

@@ -2,16 +2,44 @@ package gui
 
 import (
 	"fmt"
-	"net/url"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/widget"
+	"github.com/billiem/seren-management/pkg/database"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/billiem/seren-management/pkg/operations"
 )
+
+/*
+
+ */
+
+type playlistState int
+
+const (
+	NotSet playlistState = iota
+	Found
+	Finding
+	Failed
+)
+
+func (p playlistState) String() string {
+	switch p {
+	case NotSet:
+		return "NotSet"
+	case Found:
+		return "Found"
+	case Finding:
+		return "Downloading"
+	case Failed:
+		return "Failed"
+	default:
+		return "Unknown"
+	}
+}
 
 /*
 playlistBindingList stores a list of playlistBindingItem structs
@@ -59,6 +87,22 @@ func (i *playlistBindingList) Append(p *playlistBindingItem) {
 }
 
 /*
+load loads all playlists from the database into the playlistBindingList
+*/
+func (i *playlistBindingList) load(s *database.SerenDB) {
+
+	// TODO err handling...
+	playlists, _ := s.GetSoundCloudPlaylists()
+
+	for _, playlist := range playlists {
+		i.Append(&playlistBindingItem{
+			playlist: playlist,
+			state:    Found,
+		})
+	}
+}
+
+/*
 playlistBindingItem is a struct that contains the data for a playlist
 
 It is used to display a playlist as a playlistWidget in the UI
@@ -67,12 +111,9 @@ type playlistBindingItem struct {
 	bindBase
 
 	// may want a context in here ?? later problem...
-
-	downloading bool
-	failed      bool
-
-	name string
-	url  string
+	playlist database.SoundCloudPlaylist
+	state    playlistState
+	err      error
 }
 
 func (i *playlistBindingItem) AddListener(l binding.DataListener) {
@@ -92,23 +133,25 @@ playlistWidget displays a playlist in the ui
 */
 type playlistWidget struct {
 	widget.BaseWidget
-	name *widget.Label
-	url  *widget.Hyperlink
+
+	findingContent fyne.CanvasObject
+	foundContent   fyne.CanvasObject
+	failedContent  fyne.CanvasObject
+
+	searchUrl *widget.Hyperlink
+	name      *widget.Label
+	err       *widget.Label
+	progress  *widget.ProgressBarInfinite
 
 	ctxCancel func() // used to cancel a downloading context
-
-	downloading bool
-	failed      bool
 }
 
 /*
 newPlaylistWidget returns a new instance of playlistWidget
 */
-func newPlaylistWidget(name string) *playlistWidget {
-	i := &playlistWidget{
-		name: widget.NewLabel(name),
-		url:  widget.NewHyperlink("playlist url", nil),
-	}
+func newPlaylistWidget() *playlistWidget {
+	i := &playlistWidget{}
+
 	i.ExtendBaseWidget(i)
 
 	return i
@@ -116,28 +159,32 @@ func newPlaylistWidget(name string) *playlistWidget {
 
 func (i *playlistWidget) CreateRenderer() fyne.WidgetRenderer {
 
-	var content *fyne.Container
+	i.searchUrl = widget.NewHyperlink("", nil)
 
-	if i.failed {
-		content = container.NewHBox(
-			widget.NewLabel("download failed, click to retry"),
-		)
-	} else if i.downloading {
-		cancelBtn := widget.NewButton("cancel", func() {
-			i.ctxCancel()
-		})
+	i.name = widget.NewLabel("")
 
-		content = container.NewBorder(
-			nil, nil, nil, cancelBtn,
-			widget.NewProgressBarInfinite(),
-		)
-	} else {
-		content = container.NewHBox(
-			i.name,
-		)
-	}
+	i.err = widget.NewLabel("")
+	i.err.Importance = widget.WarningImportance
 
-	c := container.NewBorder(i.url, nil, nil, nil, content)
+	i.progress = widget.NewProgressBarInfinite()
+
+	i.findingContent = i.progress
+	i.failedContent = i.err
+	i.foundContent = container.NewBorder(
+		i.name,
+		nil,
+		nil,
+		nil,
+	)
+
+	c := container.NewBorder(
+		i.searchUrl, nil, nil, nil,
+		container.NewStack(
+			i.findingContent,
+			i.foundContent,
+			i.failedContent,
+		),
+	)
 
 	return widget.NewSimpleRenderer(c)
 }
@@ -156,37 +203,39 @@ type addPlaylistWidget struct {
 /*
 newAddPlaylistWidget returns a new instance of addPlaylistWidget
 */
-func newAddPlaylistWidget(p *playlistBindingList, onSubmit func(*playlistBindingItem)) *addPlaylistWidget {
+func newAddPlaylistWidget(addPlaylist func(string)) *addPlaylistWidget {
 
 	urlEntry := widget.NewEntry()
 	urlEntry.SetPlaceHolder("SoundCloud Playlist URL")
 	urlEntry.Validator = validation.NewRegexp(`soundcloud\.com\/.*\/sets`, "not a valid SoundCloud playlist url")
 
 	urlEntry.OnSubmitted = func(s string) {
-
-		var err error
-
-		if err = urlEntry.Validate(); err == nil {
-			err = p.addPlaylist(s, onSubmit)
+		if s == "" {
+			return
 		}
-
+		err := urlEntry.Validate()
 		if err != nil {
 			urlEntry.SetValidationError(err)
-			urlEntry.Refresh()
+		} else {
+			urlEntry.SetText("")
+			addPlaylist(s)
 		}
+		urlEntry.Refresh()
 	}
 
 	submitBtn := widget.NewButton("Add Playlist", func() {
-		var err error
-
-		if err = urlEntry.Validate(); err == nil {
-			err = p.addPlaylist(urlEntry.Text, onSubmit)
+		s := urlEntry.Text
+		if s == "" {
+			return
 		}
-
+		err := urlEntry.Validate()
 		if err != nil {
 			urlEntry.SetValidationError(err)
-			urlEntry.Refresh()
+		} else {
+			urlEntry.SetText("")
+			addPlaylist(s)
 		}
+		urlEntry.Refresh()
 	})
 
 	validationLabel := widget.NewLabel("")
@@ -221,28 +270,6 @@ func (i *addPlaylistWidget) CreateRenderer() fyne.WidgetRenderer {
 		),
 	)
 	return widget.NewSimpleRenderer(c)
-}
-
-func (p *playlistBindingList) addPlaylist(urlStr string, callback func(*playlistBindingItem)) error {
-
-	u, err := url.Parse(urlStr)
-
-	if err != nil {
-		return err
-	}
-
-	u.RawQuery = ""
-
-	i := &playlistBindingItem{
-		url:         fmt.Sprint(u),
-		downloading: true,
-		failed:      false,
-	}
-
-	p.Append(i)
-	callback(i)
-
-	return nil
 }
 
 type streamingStepHandler struct {

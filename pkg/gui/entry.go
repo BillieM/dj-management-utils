@@ -8,15 +8,14 @@ import (
 )
 
 func Entry() {
+	a := app.New()
+	w := a.NewWindow("Library Utilities")
 
-	e, err := buildGuiEnv()
+	e, err := buildGuiEnv(w)
 
 	if err != nil {
 		helpers.HandleFatalError(err)
 	}
-
-	a := app.New()
-	w := a.NewWindow("Library Utilities")
 
 	// Seems strange this method is called SetMainMenu as it really defines the top bar of the application, but hey :)
 	w.SetMainMenu(e.makeNavBar(a, w))
@@ -24,9 +23,9 @@ func Entry() {
 	w.Resize(fyne.NewSize(960, 720))
 
 	contentStack := container.NewStack()
-	e.setMainContent(w, contentStack, e.getViewList()["home"])
+	e.setMainContent(contentStack, e.getViewList()["home"])
 
-	split := container.NewHSplit(e.makeNavMenu(w, contentStack), contentStack)
+	split := container.NewHSplit(e.makeNavMenu(contentStack), contentStack)
 	split.Offset = 0.25
 
 	w.SetContent(split)

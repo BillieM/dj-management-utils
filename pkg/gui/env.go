@@ -1,6 +1,7 @@
 package gui
 
 import (
+	"fyne.io/fyne/v2"
 	"github.com/billiem/seren-management/pkg/database"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/billiem/seren-management/pkg/operations"
@@ -16,6 +17,7 @@ type guiEnv struct {
 	tmpConfig   *helpers.Config
 	views       map[string]guiView
 	viewIndices map[string][]string
+	mainWindow  fyne.Window
 }
 
 func (e *guiEnv) opEnv() *operations.OpEnv {
@@ -28,7 +30,7 @@ func (e *guiEnv) opEnv() *operations.OpEnv {
 /*
 buildGuiEnv builds the *guiEnv struct
 */
-func buildGuiEnv() (*guiEnv, error) {
+func buildGuiEnv(w fyne.Window) (*guiEnv, error) {
 
 	cfg, err := helpers.LoadGUIConfig()
 
@@ -42,7 +44,7 @@ func buildGuiEnv() (*guiEnv, error) {
 		return nil, err
 	}
 
-	e := &guiEnv{cfg, db, nil, nil, nil, nil}
+	e := &guiEnv{cfg, db, nil, nil, nil, nil, w}
 
 	s := &guiState{}
 	operations := e.getViewList()
@@ -57,5 +59,5 @@ func buildGuiEnv() (*guiEnv, error) {
 
 type guiState struct {
 	settingsAlreadyOpen bool
-	processing          bool
+	busy                bool
 }
