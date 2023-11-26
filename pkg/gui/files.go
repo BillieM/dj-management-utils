@@ -18,7 +18,7 @@ func (e *guiEnv) openFileCanvas(title string, updateVal *string, fileFilter []st
 
 	buttonWidget := widget.NewButtonWithIcon("Open", theme.FolderOpenIcon(), func() {
 		if e.guiState.busy {
-			e.showErrorDialog(helpers.ErrPleaseWaitForProcess)
+			e.showErrorDialog(helpers.ErrBusyPleaseFinishFirst)
 			return
 		}
 
@@ -57,7 +57,7 @@ func (e *guiEnv) openDirCanvas(title string, updateVal *string, callbackFn func(
 	buttonWidget := widget.NewButtonWithIcon("Open", theme.FolderOpenIcon(), func() {
 
 		if e.guiState.busy {
-			e.showErrorDialog(helpers.ErrPleaseWaitForProcess)
+			e.showErrorDialog(helpers.ErrBusyPleaseFinishFirst)
 			return
 		}
 

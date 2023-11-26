@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"mime"
 	"os"
 	"path/filepath"
 
@@ -233,4 +234,38 @@ func GetAbsOrProjPath(path string) (string, error) {
 		return path, nil
 	}
 	return JoinFilepathToSlash(projectpath.Root, path), nil
+}
+
+/*
+GetFileExtensionFromContentType returns the file extension from a given content type
+*/
+func GetFileExtensionFromContentType(contentType string) (string, error) {
+	exts, err := mime.ExtensionsByType(contentType)
+
+	if err != nil {
+		return "", err
+	}
+
+	if len(exts) == 0 {
+		return "", ErrNoFileExtension
+	}
+
+	return exts[0], nil
+}
+
+/*
+GetFileExtensionFromContentDisposition returns the filename (with extension) from a given content disposition
+*/
+func GetFileNameFromContentDisposition(contentDisposition string) (string, error) {
+	_, params, err := mime.ParseMediaType(contentDisposition)
+
+	if err != nil {
+		return "", err
+	}
+
+	if params["filename"] == "" {
+		return "", ErrNoFileExtension
+	}
+
+	return params["filename"], nil
 }

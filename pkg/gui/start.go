@@ -16,7 +16,7 @@ func (e *guiEnv) sharedStartBuild(processContainerOuter *fyne.Container) (contex
 	ctx := context.Background()
 
 	if e.guiState.busy {
-		return ctx, convertStepHandler{}, helpers.ErrPleaseWaitForProcess
+		return ctx, convertStepHandler{}, helpers.ErrBusyPleaseFinishFirst
 	}
 
 	e.guiState.busy = true

@@ -42,7 +42,7 @@ var (
 	ErrNoMatchesFound            = errors.New("no matches found")
 	ErrOperationFinished         = errors.New("operation finished")
 	ErrOperationNotFound         = errors.New("operation not found")
-	ErrPleaseWaitForProcess      = errors.New("please wait for the current process to finish")
+	ErrBusyPleaseFinishFirst     = errors.New("please finish what you're doing first")
 	ErrUserStoppedProcess        = errors.New("user stopped process")
 	ErrBuildingStemTrack         = errors.New("error building stem track")
 	ErrStemOutputExists          = errors.New("stem extraction output already exists")
@@ -59,6 +59,8 @@ var (
 	ErrHydratableKeyNotFound     = errors.New("hydratable key not found")
 	ErrTrackMissingID            = errors.New("track missing ID")
 	ErrPlaylistAlreadyExists     = errors.New("playlist already exists")
+	ErrMissingRedirectURI        = errors.New("missing redirect URI")
+	ErrRequestingPlaylist        = errors.New("error requesting playlist")
 )
 
 var (

@@ -159,15 +159,15 @@ type SoundCloudPlaylist struct {
 	URL            string                 `json:"url"`
 }
 
-func (p SoundCloudPlaylist) ToDB() *database.SoundCloudPlaylist {
+func (p SoundCloudPlaylist) ToDB() database.SoundCloudPlaylist {
 
-	tracks := []*database.SoundCloudTrack{}
+	tracks := []database.SoundCloudTrack{}
 
 	for _, track := range p.Tracks {
 		tracks = append(tracks, track.ToDB())
 	}
 
-	return &database.SoundCloudPlaylist{
+	return database.SoundCloudPlaylist{
 		Name:       p.Title,
 		ExternalID: p.ID,
 		Permalink:  p.PermalinkURL,
@@ -176,65 +176,77 @@ func (p SoundCloudPlaylist) ToDB() *database.SoundCloudPlaylist {
 }
 
 type TrackElement struct {
-	ArtworkURL         *string            `json:"artwork_url,omitempty"`
-	Caption            interface{}        `json:"caption"`
-	Commentable        *bool              `json:"commentable,omitempty"`
-	CommentCount       *int64             `json:"comment_count,omitempty"`
-	CreatedAt          *string            `json:"created_at,omitempty"`
-	Description        *string            `json:"description"`
-	Downloadable       *bool              `json:"downloadable,omitempty"`
-	DownloadCount      *int64             `json:"download_count,omitempty"`
-	Duration           *int64             `json:"duration,omitempty"`
-	FullDuration       *int64             `json:"full_duration,omitempty"`
-	EmbeddableBy       *string            `json:"embeddable_by,omitempty"`
-	Genre              *string            `json:"genre,omitempty"`
-	HasDownloadsLeft   *bool              `json:"has_downloads_left,omitempty"`
-	ID                 int64              `json:"id"`
-	Kind               Kind               `json:"kind"`
-	LabelName          *string            `json:"label_name"`
-	LastModified       *string            `json:"last_modified,omitempty"`
-	License            *string            `json:"license,omitempty"`
-	LikesCount         *int64             `json:"likes_count,omitempty"`
-	Permalink          *string            `json:"permalink,omitempty"`
-	PermalinkURL       *string            `json:"permalink_url,omitempty"`
-	PlaybackCount      *int64             `json:"playback_count,omitempty"`
-	Public             *bool              `json:"public,omitempty"`
-	PublisherMetadata  *PublisherMetadata `json:"publisher_metadata,omitempty"`
-	PurchaseTitle      *string            `json:"purchase_title"`
-	PurchaseURL        *string            `json:"purchase_url"`
-	ReleaseDate        *string            `json:"release_date"`
-	RepostsCount       *int64             `json:"reposts_count,omitempty"`
-	SecretToken        interface{}        `json:"secret_token"`
-	Sharing            *string            `json:"sharing,omitempty"`
-	State              *string            `json:"state,omitempty"`
-	Streamable         *bool              `json:"streamable,omitempty"`
-	TagList            *string            `json:"tag_list,omitempty"`
-	Title              *string            `json:"title,omitempty"`
-	TrackFormat        *string            `json:"track_format,omitempty"`
-	URI                *string            `json:"uri,omitempty"`
-	Urn                *string            `json:"urn,omitempty"`
-	UserID             *int64             `json:"user_id,omitempty"`
-	Visuals            interface{}        `json:"visuals"`
-	WaveformURL        *string            `json:"waveform_url,omitempty"`
-	DisplayDate        *string            `json:"display_date,omitempty"`
-	Media              *Media             `json:"media,omitempty"`
-	StationUrn         *string            `json:"station_urn,omitempty"`
-	StationPermalink   *string            `json:"station_permalink,omitempty"`
-	TrackAuthorization *string            `json:"track_authorization,omitempty"`
-	MonetizationModel  MonetizationModel  `json:"monetization_model"`
-	Policy             Policy             `json:"policy"`
-	User               *TrackUser         `json:"user,omitempty"`
+	ArtworkURL         string            `json:"artwork_url,omitempty"`
+	Caption            interface{}       `json:"caption"`
+	Commentable        bool              `json:"commentable,omitempty"`
+	CommentCount       int64             `json:"comment_count,omitempty"`
+	CreatedAt          string            `json:"created_at,omitempty"`
+	Description        string            `json:"description"`
+	Downloadable       bool              `json:"downloadable,omitempty"`
+	DownloadCount      int64             `json:"download_count,omitempty"`
+	Duration           int64             `json:"duration,omitempty"`
+	FullDuration       int64             `json:"full_duration,omitempty"`
+	EmbeddableBy       string            `json:"embeddable_by,omitempty"`
+	Genre              string            `json:"genre,omitempty"`
+	HasDownloadsLeft   bool              `json:"has_downloads_left,omitempty"`
+	ID                 int64             `json:"id"`
+	Kind               Kind              `json:"kind"`
+	LabelName          string            `json:"label_name"`
+	LastModified       string            `json:"last_modified,omitempty"`
+	License            string            `json:"license,omitempty"`
+	LikesCount         int64             `json:"likes_count,omitempty"`
+	Permalink          string            `json:"permalink,omitempty"`
+	PermalinkURL       string            `json:"permalink_url,omitempty"`
+	PlaybackCount      int64             `json:"playback_count,omitempty"`
+	Public             bool              `json:"public,omitempty"`
+	PublisherMetadata  PublisherMetadata `json:"publisher_metadata,omitempty"`
+	PurchaseTitle      string            `json:"purchase_title"`
+	PurchaseURL        string            `json:"purchase_url"`
+	ReleaseDate        string            `json:"release_date"`
+	RepostsCount       int64             `json:"reposts_count,omitempty"`
+	SecretToken        interface{}       `json:"secret_token"`
+	Sharing            string            `json:"sharing,omitempty"`
+	State              string            `json:"state,omitempty"`
+	Streamable         bool              `json:"streamable,omitempty"`
+	TagList            string            `json:"tag_list,omitempty"`
+	Title              string            `json:"title,omitempty"`
+	TrackFormat        string            `json:"track_format,omitempty"`
+	URI                string            `json:"uri,omitempty"`
+	Urn                string            `json:"urn,omitempty"`
+	UserID             int64             `json:"user_id,omitempty"`
+	Visuals            interface{}       `json:"visuals"`
+	WaveformURL        string            `json:"waveform_url,omitempty"`
+	DisplayDate        string            `json:"display_date,omitempty"`
+	Media              Media             `json:"media,omitempty"`
+	StationUrn         string            `json:"station_urn,omitempty"`
+	StationPermalink   string            `json:"station_permalink,omitempty"`
+	TrackAuthorization string            `json:"track_authorization,omitempty"`
+	MonetizationModel  MonetizationModel `json:"monetization_model"`
+	Policy             Policy            `json:"policy"`
+	User               TrackUser         `json:"user,omitempty"`
 }
 
 func (t TrackElement) String() string {
-	return fmt.Sprintf("%v: %s - %s", t.ID, *t.Title, *t.PermalinkURL)
+	return fmt.Sprintf("%v: %s - %s", t.ID, t.Title, t.PermalinkURL)
 }
 
-func (t TrackElement) ToDB() *database.SoundCloudTrack {
-	return &database.SoundCloudTrack{
-		Name:       *t.Title,
-		ExternalID: t.ID,
-		Permalink:  *t.PermalinkURL,
+func (t TrackElement) ToDB() database.SoundCloudTrack {
+
+	user := t.User
+	publisher := t.PublisherMetadata
+
+	return database.SoundCloudTrack{
+		Name:             t.Title,
+		ExternalID:       t.ID,
+		Permalink:        t.PermalinkURL,
+		PurchaseTitle:    t.PurchaseTitle,
+		PurchaseURL:      t.PurchaseURL,
+		ArtworkURL:       t.ArtworkURL,
+		HasDownloadsLeft: t.HasDownloadsLeft,
+		Genre:            t.Genre,
+		TagList:          t.TagList,
+		PublisherArtist:  publisher.Artist,
+		SoundCloudUser:   user.Username,
 	}
 }
 

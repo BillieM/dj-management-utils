@@ -18,6 +18,7 @@ type Config struct {
 	TmpDir                      string   `json:"tmpDir"`
 	BaseDir                     string   `json:"baseDir"`
 	BaseOutputDir               string   `json:"baseOutputDir"`
+	DownloadDir                 string   `json:"downloadDir"`
 	ExtensionsToConvertToMp3    []string `json:"extensionsToConvertToMp3"`
 	ExtensionsToSeparateToStems []string `json:"extensionsToSeparateToStems"`
 
@@ -34,6 +35,7 @@ func buildDefaultConfig() (*Config, error) {
 		TmpDir:                      "",
 		BaseDir:                     "",
 		BaseOutputDir:               "",
+		DownloadDir:                 "",
 		ExtensionsToConvertToMp3:    []string{"wav", "aiff", "flac", "ogg", "m4a"},
 		ExtensionsToSeparateToStems: []string{"mp3", "wav"},
 	}

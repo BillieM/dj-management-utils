@@ -70,7 +70,7 @@ and then saves the Config struct to the config file
 func (e *guiEnv) saveButton(w fyne.Window) *widget.Button {
 	btn := widget.NewButton("Save", func() {
 		if e.guiState.busy {
-			e.showErrorDialog(helpers.ErrPleaseWaitForProcess)
+			e.showErrorDialog(helpers.ErrBusyPleaseFinishFirst)
 			return
 		}
 

@@ -205,9 +205,7 @@ GetPlaylist gets a playlist for a given platform and stores it in the database
 func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPlaylistOpts, p func(database.SoundCloudPlaylist, error)) {
 
 	// check if playlist with same url already exists in database
-	playlist, err := e.SerenDB.GetSoundCloudPlaylistByURL(opts.PlaylistURL)
-
-	fmt.Println(playlist, err)
+	playlistByUrlCheck, err := e.SerenDB.GetSoundCloudPlaylistByURL(opts.PlaylistURL)
 
 	if err != nil {
 		e.step(dangerStepInfo(err))
@@ -215,10 +213,8 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 		return
 	}
 
-	fmt.Println(playlist, err)
-
-	if playlist.ID == 0 {
-		p(playlist, helpers.ErrPlaylistAlreadyExists)
+	if playlistByUrlCheck.ID != 0 {
+		p(playlistByUrlCheck, helpers.ErrPlaylistAlreadyExists)
 		return
 	}
 
@@ -227,7 +223,7 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 	}
 
 	// get playlist from SoundCloud
-	playlist, err = s.GetSoundCloudPlaylist(ctx, opts.PlaylistURL)
+	downloadedPlaylist, err := s.GetSoundCloudPlaylist(ctx, opts.PlaylistURL)
 
 	if err != nil {
 		e.step(dangerStepInfo(err))
@@ -235,10 +231,24 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 		return
 	}
 
-	playlist.SearchUrl = opts.PlaylistURL
+	// check if playlist with same external id already exists in database
+	playlistByExternalIDCheck, err := e.SerenDB.GetSoundCloudPlaylistByExternalID(downloadedPlaylist.ExternalID)
+
+	if err != nil {
+		e.step(dangerStepInfo(err))
+		p(database.SoundCloudPlaylist{}, err)
+		return
+	}
+
+	if playlistByExternalIDCheck.ID != 0 {
+		p(playlistByExternalIDCheck, helpers.ErrPlaylistAlreadyExists)
+		return
+	}
+
+	downloadedPlaylist.SearchUrl = opts.PlaylistURL
 
 	// save playlist to database
-	err = e.SerenDB.CreateSoundCloudPlaylist(playlist)
+	err = e.SerenDB.CreateSoundCloudPlaylist(downloadedPlaylist)
 
 	if err != nil {
 		e.step(dangerStepInfo(err))
@@ -246,5 +256,52 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 		return
 	}
 
-	p(playlist, nil)
+	p(downloadedPlaylist, nil)
+}
+
+/*
+DownloadSoundCloudFile downloads a file straight from SoundCloud
+
+# This only works for files with download enabled
+
+playlistName is optional and is used to create a folder for the playlist within the download directory
+*/
+func (e *OpEnv) DownloadSoundCloudFile(track database.SoundCloudTrack, playlistName string) {
+
+	downloadDir := e.Config.DownloadDir
+
+	if playlistName != "" {
+		downloadDir = helpers.JoinFilepathToSlash(downloadDir, playlistName)
+	}
+
+	fmt.Println("downloading id: ", track.ExternalID)
+
+	s := streaming.SoundCloud{
+		ClientID: e.Config.SoundCloudClientID,
+	}
+
+	err := s.DownloadFile(
+		downloadDir,
+		track.ExternalID,
+	)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	/*
+		https://api-v2.soundcloud.com/tracks/1367921728/download
+			?client_id=1ZRkRXa5klyxfeCePlMbkWl1xNzz1Bu3&app_version=1700828706&app_locale=en
+	*/
+}
+
+func (e *OpEnv) OpenSoundCloudPurchase(track database.SoundCloudTrack) {
+	fmt.Printf("opening purchase for id: %v, URL: %s\n", track.ExternalID, track.PurchaseURL)
+
+	// this is based on OS
+	// gonna have to explore this at some point
+
+	helpers.CmdExec("cmd", "/C", "start", "chrome.exe", track.PurchaseURL)
+
 }

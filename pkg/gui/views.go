@@ -1,15 +1,10 @@
 package gui
 
 import (
-	"context"
-	"fmt"
-	"net/url"
-
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/widget"
-	"github.com/billiem/seren-management/pkg/database"
 	"github.com/billiem/seren-management/pkg/operations"
 )
 
@@ -338,29 +333,7 @@ func (e *guiEnv) syncSoundCloudView() fyne.CanvasObject {
 			playlistWidget := o.(*playlistWidget)
 			playlistBindingItem := i.(*playlistBindingItem)
 
-			playlistWidget.searchUrl.SetText(playlistBindingItem.playlist.SearchUrl)
-			playlistWidget.searchUrl.SetURLFromString(playlistBindingItem.playlist.SearchUrl)
-
-			fyne.CurrentApp().Storage()
-
-			switch playlistBindingItem.state {
-			case Finding:
-				playlistWidget.findingContent.Show()
-				playlistWidget.foundContent.Hide()
-				playlistWidget.failedContent.Hide()
-			case Failed:
-				playlistWidget.findingContent.Hide()
-				playlistWidget.foundContent.Hide()
-				playlistWidget.failedContent.Show()
-				playlistWidget.err.SetText(playlistBindingItem.err.Error())
-			case Found:
-				playlistWidget.findingContent.Hide()
-				playlistWidget.foundContent.Show()
-				playlistWidget.failedContent.Hide()
-				playlistWidget.name.SetText(playlistBindingItem.playlist.Name)
-			}
-
-			o.Refresh()
+			e.updatePlaylistsList(playlistWidget, playlistBindingItem)
 		},
 	)
 
@@ -372,56 +345,12 @@ func (e *guiEnv) syncSoundCloudView() fyne.CanvasObject {
 		loading.Hide()
 	}()
 
-	ctx := context.Background()
-	ctx, ctxClose := context.WithCancel(ctx)
-	opEnv := e.opEnv()
-	opEnv.RegisterStepHandler(streamingStepHandler{
-		stepFunc:     func() {},
-		finishedFunc: func() { ctxClose() },
-	})
-
-	addPlaylistCanvas := newAddPlaylistWidget(func(urlRaw string) {
-
-		pbi := &playlistBindingItem{
-			err:   nil,
-			state: Finding,
-		}
-
-		netUrl, err := url.Parse(urlRaw)
-
-		if err != nil {
-			pbi.state = Failed
-			pbi.err = err
-			pbi.playlist = database.SoundCloudPlaylist{SearchUrl: urlRaw}
-			playlistBindVals.Append(pbi)
+	addPlaylistCanvas := newAddPlaylistWidget(e.getAddPlaylistCallback(
+		&playlistBindVals, func() {
 			playlistsList.Refresh()
-			return
-		}
-
-		netUrl.RawQuery = ""
-
-		pbi.playlist = database.SoundCloudPlaylist{
-			SearchUrl: netUrl.String(),
-		}
-
-		playlistBindVals.Append(pbi)
-		playlistsList.Refresh()
-
-		go opEnv.GetSoundCloudPlaylist(ctx, operations.GetSoundCloudPlaylistOpts{
-			PlaylistURL: netUrl.String(),
-		}, func(p database.SoundCloudPlaylist, err error) {
-			fmt.Println(p.SearchUrl, p.Name, err)
-			if err != nil {
-				pbi.state = Failed
-				pbi.err = err
-			} else {
-				pbi.playlist = p
-				pbi.state = Found
-				pbi.err = nil
-			}
-			playlistsList.Refresh()
-		})
-	})
+			playlistsList.ScrollToBottom()
+		},
+	))
 
 	return container.NewStack(
 		container.NewBorder(

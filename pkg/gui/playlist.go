@@ -1,7 +1,9 @@
 package gui
 
 import (
+	"context"
 	"fmt"
+	"net/url"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -139,9 +141,13 @@ type playlistWidget struct {
 	failedContent  fyne.CanvasObject
 
 	searchUrl *widget.Hyperlink
-	name      *widget.Label
-	err       *widget.Label
-	progress  *widget.ProgressBarInfinite
+
+	err *widget.Label
+
+	progress *widget.ProgressBarInfinite
+
+	name            *widget.Label
+	openPlaylistBtn *widget.Button
 
 	ctxCancel func() // used to cancel a downloading context
 }
@@ -150,23 +156,13 @@ type playlistWidget struct {
 newPlaylistWidget returns a new instance of playlistWidget
 */
 func newPlaylistWidget() *playlistWidget {
-	i := &playlistWidget{}
-
-	i.ExtendBaseWidget(i)
-
-	return i
-}
-
-func (i *playlistWidget) CreateRenderer() fyne.WidgetRenderer {
-
-	i.searchUrl = widget.NewHyperlink("", nil)
-
-	i.name = widget.NewLabel("")
-
-	i.err = widget.NewLabel("")
-	i.err.Importance = widget.WarningImportance
-
-	i.progress = widget.NewProgressBarInfinite()
+	i := &playlistWidget{
+		name:            widget.NewLabel(""),
+		openPlaylistBtn: widget.NewButton("Open Playlist", func() {}),
+		searchUrl:       widget.NewHyperlink("", nil),
+		err:             widget.NewLabel(""),
+		progress:        widget.NewProgressBarInfinite(),
+	}
 
 	i.findingContent = i.progress
 	i.failedContent = i.err
@@ -175,7 +171,21 @@ func (i *playlistWidget) CreateRenderer() fyne.WidgetRenderer {
 		nil,
 		nil,
 		nil,
+		i.openPlaylistBtn,
 	)
+
+	i.err.Importance = widget.WarningImportance
+
+	// i.findingContent.Hide()
+	// i.failedContent.Hide()
+	// i.foundContent.Hide()
+
+	i.ExtendBaseWidget(i)
+
+	return i
+}
+
+func (i *playlistWidget) CreateRenderer() fyne.WidgetRenderer {
 
 	c := container.NewBorder(
 		i.searchUrl, nil, nil, nil,
@@ -270,6 +280,144 @@ func (i *addPlaylistWidget) CreateRenderer() fyne.WidgetRenderer {
 		),
 	)
 	return widget.NewSimpleRenderer(c)
+}
+
+func (e *guiEnv) getAddPlaylistCallback(playlistBindVals *playlistBindingList, refreshFunc func()) func(string) {
+	ctx := context.Background()
+	ctx, ctxClose := context.WithCancel(ctx)
+	opEnv := e.opEnv()
+	opEnv.RegisterStepHandler(streamingStepHandler{
+		stepFunc:     func() {},
+		finishedFunc: func() { ctxClose() },
+	})
+
+	return func(urlRaw string) {
+
+		pbi := &playlistBindingItem{
+			err:   nil,
+			state: Finding,
+		}
+
+		netUrl, err := url.Parse(urlRaw)
+
+		if err != nil {
+			pbi.state = Failed
+			pbi.err = err
+			pbi.playlist = database.SoundCloudPlaylist{SearchUrl: urlRaw}
+			playlistBindVals.Append(pbi)
+			refreshFunc()
+			return
+		}
+
+		netUrl.RawQuery = ""
+
+		pbi.playlist = database.SoundCloudPlaylist{
+			SearchUrl: netUrl.String(),
+		}
+
+		playlistBindVals.Append(pbi)
+		refreshFunc()
+
+		go opEnv.GetSoundCloudPlaylist(ctx, operations.GetSoundCloudPlaylistOpts{
+			PlaylistURL: netUrl.String(),
+		}, func(p database.SoundCloudPlaylist, err error) {
+			if err != nil {
+				pbi.state = Failed
+				pbi.err = err
+			} else {
+				pbi.playlist = p
+				pbi.state = Found
+				pbi.err = nil
+			}
+			refreshFunc()
+		})
+	}
+}
+
+func (e *guiEnv) updatePlaylistsList(playlistWidget *playlistWidget, playlistBindingItem *playlistBindingItem) {
+
+	playlist := playlistBindingItem.playlist
+
+	playlistWidget.searchUrl.SetText(playlist.SearchUrl)
+	playlistWidget.searchUrl.SetURLFromString(playlist.SearchUrl)
+
+	switch playlistBindingItem.state {
+	case Finding:
+		playlistWidget.findingContent.Show()
+		playlistWidget.foundContent.Hide()
+		playlistWidget.failedContent.Hide()
+	case Failed:
+		playlistWidget.findingContent.Hide()
+		playlistWidget.foundContent.Hide()
+		playlistWidget.failedContent.Show()
+		playlistWidget.err.SetText(playlistBindingItem.err.Error())
+	case Found:
+		playlistWidget.findingContent.Hide()
+		playlistWidget.foundContent.Show()
+		playlistWidget.failedContent.Hide()
+		playlistWidget.name.SetText(playlist.Name)
+		playlistWidget.openPlaylistBtn.OnTapped = func() {
+			if e.guiState.busy {
+				e.showErrorDialog(helpers.ErrBusyPleaseFinishFirst)
+				return
+			}
+			e.openPlaylistWindow(playlist)
+		}
+	}
+
+	playlistWidget.Refresh()
+}
+
+func (e *guiEnv) openPlaylistWindow(playlist database.SoundCloudPlaylist) {
+
+	loading := newViewLoading(fmt.Sprintf("Loading tracks for %s...", playlist.Name))
+
+	w := e.app.NewWindow("Playlist - " + playlist.Name)
+	e.guiState.busy = true
+
+	w.Resize(fyne.NewSize(800, 600))
+	w.RequestFocus()
+
+	w.SetOnClosed(func() {
+		e.guiState.busy = false
+	})
+
+	trackBindVals := trackBindingList{
+		Items: []*trackBindingItem{},
+	}
+
+	trackList := widget.NewListWithData(
+		&trackBindVals,
+		func() fyne.CanvasObject {
+			return newTrackWidget()
+		},
+		func(i binding.DataItem, o fyne.CanvasObject) {
+
+			trackWidget := o.(*trackWidget)
+			trackBindingItem := i.(*trackBindingItem)
+
+			e.updateTracksList(trackWidget, trackBindingItem, playlist.Name)
+		},
+	)
+
+	go func() {
+		trackBindVals.load(e.SerenDB, playlist.ExternalID)
+		trackList.Refresh()
+		loading.Hide()
+	}()
+
+	content := container.NewStack(
+		trackList,
+		loading,
+	)
+
+	w.SetContent(
+		container.NewBorder(
+			widget.NewLabel(playlist.Name), nil, nil, nil,
+			content,
+		),
+	)
+	w.Show()
 }
 
 type streamingStepHandler struct {

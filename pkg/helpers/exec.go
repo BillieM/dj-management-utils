@@ -16,6 +16,8 @@ func CmdExec(args ...string) (string, error) {
 	out, err := cmd.CombinedOutput()
 	outStr := string(out)
 
+	fmt.Println(outStr, err, cmd.String())
+
 	if err != nil {
 		var errDetail error
 		if execExitError, ok := err.(*exec.ExitError); ok {

@@ -11,7 +11,7 @@ func Entry() {
 	a := app.New()
 	w := a.NewWindow("Library Utilities")
 
-	e, err := buildGuiEnv(w)
+	e, err := buildGuiEnv(a, w)
 
 	if err != nil {
 		helpers.HandleFatalError(err)

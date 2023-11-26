@@ -40,7 +40,7 @@ func (e *guiEnv) makeNavMenu(contentStack *fyne.Container) fyne.CanvasObject {
 				return
 			}
 			if e.busy {
-				e.showErrorDialog(helpers.ErrPleaseWaitForProcess)
+				e.showErrorDialog(helpers.ErrBusyPleaseFinishFirst)
 				return
 			}
 			e.setMainContent(contentStack, op)

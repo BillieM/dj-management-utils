@@ -18,6 +18,7 @@ type guiEnv struct {
 	views       map[string]guiView
 	viewIndices map[string][]string
 	mainWindow  fyne.Window
+	app         fyne.App
 }
 
 func (e *guiEnv) opEnv() *operations.OpEnv {
@@ -30,7 +31,7 @@ func (e *guiEnv) opEnv() *operations.OpEnv {
 /*
 buildGuiEnv builds the *guiEnv struct
 */
-func buildGuiEnv(w fyne.Window) (*guiEnv, error) {
+func buildGuiEnv(a fyne.App, w fyne.Window) (*guiEnv, error) {
 
 	cfg, err := helpers.LoadGUIConfig()
 
@@ -44,7 +45,7 @@ func buildGuiEnv(w fyne.Window) (*guiEnv, error) {
 		return nil, err
 	}
 
-	e := &guiEnv{cfg, db, nil, nil, nil, nil, w}
+	e := &guiEnv{cfg, db, nil, nil, nil, nil, w, a}
 
 	s := &guiState{}
 	operations := e.getViewList()

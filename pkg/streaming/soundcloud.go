@@ -3,8 +3,10 @@ package streaming
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/billiem/seren-management/pkg/database"
@@ -58,13 +60,17 @@ func (s SoundCloud) GetSoundCloudPlaylist(ctx context.Context, playlistUrl strin
 		return database.SoundCloudPlaylist{}, err
 	}
 
+	if h.Playlist.ID == 0 {
+		return database.SoundCloudPlaylist{}, helpers.ErrRequestingPlaylist
+	}
+
 	err = s.completeTracks(ctx, &h.Playlist)
 
 	if err != nil {
 		return database.SoundCloudPlaylist{}, err
 	}
 
-	return *h.Playlist.ToDB(), nil
+	return h.Playlist.ToDB(), nil
 }
 
 /*
@@ -109,7 +115,7 @@ func (track TrackElement) check() (bool, error) {
 	}
 
 	// Track is missing title, so we need to request it
-	if track.Title == nil {
+	if track.Title == "" {
 		return false, nil
 	}
 
@@ -179,4 +185,89 @@ func (s SoundCloud) makeSoundCloudTracksRequest(ids []int64) ([]TrackElement, er
 	}
 
 	return tracks, nil
+}
+
+func (s SoundCloud) DownloadFile(dirPath string, id int64) error {
+
+	req, err := http.NewRequest(
+		"GET",
+		fmt.Sprintf("https://api-v2.soundcloud.com/tracks/%d/download", id),
+		nil,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	q := req.URL.Query()
+
+	q.Add("client_id", s.ClientID)
+	q.Add("app_locale", "en")
+	q.Add("app_version", "1700828706")
+
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	var uriMap map[string]string
+
+	err = json.Unmarshal(body, &uriMap)
+
+	if err != nil {
+		return err
+	}
+
+	val, ok := uriMap["redirectUri"]
+
+	if !ok {
+		return helpers.ErrMissingRedirectURI
+	}
+
+	resp, err = http.Get(val)
+
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	contentDisposition := resp.Header.Get("Content-Disposition")
+
+	filename, err := helpers.GetFileNameFromContentDisposition(contentDisposition)
+
+	if err != nil {
+		return err
+	}
+
+	err = helpers.CreateDirIfNotExists(dirPath)
+
+	if err != nil {
+		return err
+	}
+
+	f, err := os.Create(helpers.JoinFilepathToSlash(dirPath, filename))
+
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	_, err = io.Copy(f, resp.Body)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
