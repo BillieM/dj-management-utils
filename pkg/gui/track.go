@@ -30,6 +30,28 @@ type trackWidget struct {
 
 func newTrackWidget() *trackWidget {
 
+	// just build a widget constructor or smtn for these
+
+	nameLabel := widget.NewLabel("")
+	nameLabel.TextStyle.Bold = true
+	nameLabel.Importance = widget.HighImportance
+
+	genreLabel := widget.NewLabel("")
+	genreLabel.TextStyle.Bold = true
+	genreLabel.Importance = widget.HighImportance
+
+	tagListLabel := widget.NewLabel("")
+	tagListLabel.TextStyle.Bold = true
+	tagListLabel.Importance = widget.HighImportance
+
+	publisherArtistLabel := widget.NewLabel("")
+	publisherArtistLabel.TextStyle.Bold = true
+	publisherArtistLabel.Importance = widget.HighImportance
+
+	soundCloudUserLabel := widget.NewLabel("")
+	soundCloudUserLabel.TextStyle.Bold = true
+	soundCloudUserLabel.Importance = widget.HighImportance
+
 	downloadFileBtn := widget.NewButton("Download File", func() {})
 	purchaseBtn := widget.NewButton("", func() {})
 	downloadingFile := widget.NewProgressBarInfinite()
@@ -37,15 +59,15 @@ func newTrackWidget() *trackWidget {
 	downloadingFile.Hide()
 
 	i := &trackWidget{
-		name:            widget.NewLabel(""),
+		name:            nameLabel,
 		url:             widget.NewHyperlink("", nil),
 		purchaseBtn:     purchaseBtn,
 		downloadFileBtn: downloadFileBtn,
 		downloadingFile: downloadingFile,
-		genre:           widget.NewLabel(""),
-		tagList:         widget.NewLabel(""),
-		publisherArtist: widget.NewLabel(""),
-		soundCloudUser:  widget.NewLabel(""),
+		genre:           genreLabel,
+		tagList:         tagListLabel,
+		publisherArtist: publisherArtistLabel,
+		soundCloudUser:  soundCloudUserLabel,
 	}
 
 	i.ExtendBaseWidget(i)
@@ -64,11 +86,24 @@ func (t *trackWidget) CreateRenderer() fyne.WidgetRenderer {
 		nil,
 		nil,
 		container.NewVBox(
-			container.NewHBox(widget.NewLabel("Genre: "), t.genre),
-			container.NewHBox(widget.NewLabel("Tags: "), t.tagList),
-			container.NewHBox(widget.NewLabel("Publisher: "), t.publisherArtist),
-			container.NewHBox(widget.NewLabel("SoundCloud User: "), t.soundCloudUser),
-			container.NewHBox(t.downloadFileBtn, t.purchaseBtn, t.downloadingFile),
+			container.NewGridWithColumns(
+				4,
+				container.NewHBox(widget.NewLabel("Genre: "), t.genre),
+				container.NewHBox(widget.NewLabel("Tags: "), t.tagList),
+				container.NewHBox(widget.NewLabel("Publisher: "), t.publisherArtist),
+				container.NewHBox(widget.NewLabel("SoundCloud User: "), t.soundCloudUser),
+			),
+			container.NewGridWithColumns(
+				2,
+				container.NewHBox(t.downloadFileBtn, t.downloadingFile),
+				t.purchaseBtn,
+			),
+
+			// container.NewHBox(widget.NewLabel("Genre: "), t.genre),
+			// container.NewHBox(widget.NewLabel("Tags: "), t.tagList),
+			// container.NewHBox(widget.NewLabel("Publisher: "), t.publisherArtist),
+			// container.NewHBox(widget.NewLabel("SoundCloud User: "), t.soundCloudUser),
+			// container.NewHBox(t.downloadFileBtn, t.purchaseBtn, t.downloadingFile),
 		),
 	)
 

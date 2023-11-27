@@ -132,7 +132,7 @@ func (e *guiEnv) startConvertFolderMp3(processContainerOuter *fyne.Container, op
 	opEnv := e.opEnv()
 	opEnv.RegisterStepHandler(sh)
 
-	go e.opEnv().ConvertFolderMp3(
+	go opEnv.ConvertFolderMp3(
 		ctx,
 		opts,
 	)

@@ -57,6 +57,11 @@ func GetDirPathFromFilePath(s string) (string, error) {
 	return dir, nil
 }
 
+/*
+GetFileNameFromFilePath returns the file name from a given file path (without the extension)
+
+TODO: add an argument to include the extension
+*/
 func GetFileNameFromFilePath(s string) (string, error) {
 	_, file := filepath.Split(s)
 	if file == "" {

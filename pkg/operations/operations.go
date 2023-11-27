@@ -3,6 +3,7 @@ package operations
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/billiem/seren-management/pkg/collection"
 	"github.com/billiem/seren-management/pkg/database"
@@ -303,5 +304,51 @@ func (e *OpEnv) OpenSoundCloudPurchase(track database.SoundCloudTrack) {
 	// gonna have to explore this at some point
 
 	helpers.CmdExec("cmd", "/C", "start", "chrome.exe", track.PurchaseURL)
+
+}
+
+/*
+Flatten directory iteraves through a directory recursively and moves all files to the root of the directory
+*/
+func (e *OpEnv) FlattenDirectory(dirPath string) {
+	// Get the list of files in the specified directory
+	filePaths, err := helpers.GetFilesInDir(dirPath, true)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Iterate through each file and move it to the root of the directory
+	// TODO: move move file to path to a helper func
+	for _, filePath := range filePaths {
+
+		fileName, err := helpers.GetFileNameFromFilePath(filePath)
+
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		fileExt, err := helpers.GetFileExtensionFromFilePath(filePath)
+
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		newPath := helpers.JoinFilepathToSlash(dirPath, fileName+fileExt)
+
+		if filePath != newPath {
+			err = os.Rename(filePath, newPath)
+
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		}
+	}
+
+	// TODO: remove directories in the specified directory...
 
 }

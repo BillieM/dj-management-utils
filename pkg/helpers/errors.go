@@ -61,6 +61,7 @@ var (
 	ErrPlaylistAlreadyExists     = errors.New("playlist already exists")
 	ErrMissingRedirectURI        = errors.New("missing redirect URI")
 	ErrRequestingPlaylist        = errors.New("error requesting playlist")
+	ErrUserCancelled             = errors.New("user cancelled operation")
 )
 
 var (
