@@ -98,12 +98,6 @@ func (t *trackWidget) CreateRenderer() fyne.WidgetRenderer {
 				container.NewHBox(t.downloadFileBtn, t.downloadingFile),
 				t.purchaseBtn,
 			),
-
-			// container.NewHBox(widget.NewLabel("Genre: "), t.genre),
-			// container.NewHBox(widget.NewLabel("Tags: "), t.tagList),
-			// container.NewHBox(widget.NewLabel("Publisher: "), t.publisherArtist),
-			// container.NewHBox(widget.NewLabel("SoundCloud User: "), t.soundCloudUser),
-			// container.NewHBox(t.downloadFileBtn, t.purchaseBtn, t.downloadingFile),
 		),
 	)
 
