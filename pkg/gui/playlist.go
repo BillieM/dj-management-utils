@@ -386,7 +386,7 @@ func (e *guiEnv) openPlaylistWindow(playlist database.SoundCloudPlaylist) {
 		Items: []*trackBindingItem{},
 	}
 
-	trackList := widget.NewListWithData(
+	trackGridWrap := widget.NewGridWrapWithData(
 		&trackBindVals,
 		func() fyne.CanvasObject {
 			return newTrackWidget()
@@ -402,12 +402,12 @@ func (e *guiEnv) openPlaylistWindow(playlist database.SoundCloudPlaylist) {
 
 	go func() {
 		trackBindVals.load(e.SerenDB, playlist.ExternalID)
-		trackList.Refresh()
+		trackGridWrap.Refresh()
 		loading.Hide()
 	}()
 
 	content := container.NewStack(
-		trackList,
+		trackGridWrap,
 		loading,
 	)
 
