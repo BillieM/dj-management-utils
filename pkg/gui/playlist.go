@@ -12,6 +12,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"github.com/billiem/seren-management/pkg/database"
 	"github.com/billiem/seren-management/pkg/helpers"
+	"github.com/billiem/seren-management/pkg/iwidget"
 	"github.com/billiem/seren-management/pkg/operations"
 )
 
@@ -382,29 +383,43 @@ func (e *guiEnv) openPlaylistWindow(playlist database.SoundCloudPlaylist) {
 		e.guiState.busy = false
 	})
 
-	trackBindVals := trackBindingList{
-		Items: []*trackBindingItem{},
+	tracks, err := e.SerenDB.GetSoundCloudTracks(playlist.ExternalID)
+
+	if err != nil {
+		w.Close()
+		e.showErrorDialog(err)
+		return
 	}
 
-	trackGridWrap := widget.NewGridWrapWithData(
-		&trackBindVals,
-		func() fyne.CanvasObject {
-			return newTrackWidget()
+	loading.Hide()
+
+	trackGridWrap := widget.NewGridWrap(
+		func() int {
+			return len(tracks)
 		},
-		func(i binding.DataItem, o fyne.CanvasObject) {
+		func() fyne.CanvasObject {
+			return iwidget.NewTrack(
+				database.SoundCloudTrack{
+					ExternalID:      12904812490,
+					Name:            "ReallyReallyLongTrackNameTemplateIncaseThere'sAReallyReallyLongTrackName",
+					Genre:           "HouseyElectroDrumAndTechnoBreaksDubstepCore",
+					TagList:         "House, Electro, Drum and Bass, Techno, Breaks, Dubstep, Core",
+					PublisherArtist: "SurelyAPublisherNameCan'tBeLongerThanThis",
+					SoundCloudUser:  "SurelyAUserNameCan'tBeLongerThanThis",
+					PurchaseTitle:   "Buy this track",
+				},
+			)
+		},
+		func(i int, o fyne.CanvasObject) {
 
-			trackWidget := o.(*trackWidget)
-			trackBindingItem := i.(*trackBindingItem)
+			trackWidget := o.(*iwidget.Track)
+			track := tracks[i]
 
-			e.updateTracksList(trackWidget, trackBindingItem, playlist.Name)
+			trackWidget.TrackInfo.TrackNameLink.SetText(track.Name)
+
+			// e.updateTracksList(trackWidget, track, playlist.Name)
 		},
 	)
-
-	go func() {
-		trackBindVals.load(e.SerenDB, playlist.ExternalID)
-		trackGridWrap.Refresh()
-		loading.Hide()
-	}()
 
 	content := container.NewStack(
 		trackGridWrap,

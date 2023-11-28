@@ -13,6 +13,7 @@ require (
 
 require (
 	fyne.io/systray v1.10.1-0.20231115130155-104f5ef7839e // indirect
+	fyne.io/x/fyne v0.0.0-20231020065621-89b4a4aea27d // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/deliveryhero/pipeline v1.0.0 // indirect
