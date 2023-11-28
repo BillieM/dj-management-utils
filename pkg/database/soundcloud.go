@@ -1,6 +1,8 @@
 package database
 
 import (
+	"fmt"
+
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -11,7 +13,10 @@ type SoundCloudPlaylist struct {
 	Name       string
 	SearchUrl  string
 	Permalink  string
-	Tracks     []SoundCloudTrack `gorm:"many2many:playlist_tracks;"`
+
+	Tracks []SoundCloudTrack `gorm:"many2many:playlist_tracks;"`
+
+	NumTracks int `gorm:"-"` // not stored in db, calculated on select
 }
 
 type SoundCloudTrack struct {
@@ -27,7 +32,11 @@ type SoundCloudTrack struct {
 	TagList          string
 	PublisherArtist  string // users/ artists use relationships
 	SoundCloudUser   string
-	Playlists        []SoundCloudPlaylist `gorm:"many2many:playlist_tracks;"`
+	LocalPath        string
+
+	Playlists []SoundCloudPlaylist `gorm:"many2many:playlist_tracks;"`
+
+	LocalPathBroken bool `gorm:"-"`
 }
 
 func (p *SoundCloudPlaylist) BeforeCreate(tx *gorm.DB) (err error) {
@@ -92,13 +101,17 @@ func (s *SerenDB) GetSoundCloudPlaylistByExternalID(externalId int64) (SoundClou
 
 }
 
-func (s *SerenDB) GetSoundCloudTracks(playlistId int64) ([]SoundCloudTrack, error) {
+func (s *SerenDB) GetSoundCloudTracks(playlistId int64) ([]*SoundCloudTrack, error) {
 
 	var playlist SoundCloudPlaylist
-	var tracks []SoundCloudTrack
+	var tracks []*SoundCloudTrack
 
 	err := s.Where("external_id = ?", playlistId).Preload("Tracks").Find(&playlist).Error
-	tracks = playlist.Tracks
+	for _, t := range playlist.Tracks {
+		fmt.Println(t.Name)
+		v := t
+		tracks = append(tracks, &v)
+	}
 
 	if err != nil {
 		return tracks, err

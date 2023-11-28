@@ -43,3 +43,10 @@ func (t *Track) CreateRenderer() fyne.WidgetRenderer {
 
 	return widget.NewSimpleRenderer(c)
 }
+
+func (t *Track) Bind(b *TrackBinding) {
+
+	// t.TrackInfo.Bind()
+	// t.GetTrack.Bind()
+	// t.LinkTrack.Bind()
+}

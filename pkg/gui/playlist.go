@@ -376,53 +376,44 @@ func (e *guiEnv) openPlaylistWindow(playlist database.SoundCloudPlaylist) {
 	w := e.app.NewWindow("Playlist - " + playlist.Name)
 	e.guiState.busy = true
 
-	w.Resize(fyne.NewSize(800, 600))
+	w.Resize(fyne.NewSize(1024, 768))
 	w.RequestFocus()
 
 	w.SetOnClosed(func() {
 		e.guiState.busy = false
 	})
 
-	tracks, err := e.SerenDB.GetSoundCloudTracks(playlist.ExternalID)
+	var trackListBinding iwidget.TrackListBinding
+	var selectedTrack iwidget.TrackBinding
 
-	if err != nil {
-		w.Close()
-		e.showErrorDialog(err)
-		return
-	}
-
-	loading.Hide()
-
-	trackGridWrap := widget.NewGridWrap(
-		func() int {
-			return len(tracks)
-		},
-		func() fyne.CanvasObject {
-			return iwidget.NewTrack(
-				database.SoundCloudTrack{
-					ExternalID:      12904812490,
-					Name:            "ReallyReallyLongTrackNameTemplateIncaseThere'sAReallyReallyLongTrackName",
-					Genre:           "HouseyElectroDrumAndTechnoBreaksDubstepCore",
-					TagList:         "House, Electro, Drum and Bass, Techno, Breaks, Dubstep, Core",
-					PublisherArtist: "SurelyAPublisherNameCan'tBeLongerThanThis",
-					SoundCloudUser:  "SurelyAUserNameCan'tBeLongerThanThis",
-					PurchaseTitle:   "Buy this track",
-				},
-			)
-		},
-		func(i int, o fyne.CanvasObject) {
-
-			trackWidget := o.(*iwidget.Track)
-			track := tracks[i]
-
-			trackWidget.TrackInfo.TrackNameLink.SetText(track.Name)
-
-			// e.updateTracksList(trackWidget, track, playlist.Name)
-		},
+	trackListContainer := iwidget.NewTrackListSection(&trackListBinding, &selectedTrack)
+	trackInfoContainer := iwidget.NewTrack(
+		database.SoundCloudTrack{},
 	)
+	trackInfoContainer.Bind(&selectedTrack)
+
+	go func(tlb *iwidget.TrackListBinding) {
+		t, err := e.SerenDB.GetSoundCloudTracks(playlist.ExternalID)
+		if err != nil {
+			w.Close()
+			e.showErrorDialog(err)
+			return
+		}
+		fmt.Println(t)
+		tlb.Set(t)
+		tlb.ApplyFilterSort()
+		trackListContainer.Refresh()
+		loading.Hide()
+	}(&trackListBinding)
+
+	splitContainer := container.NewHSplit(
+		trackListContainer,
+		trackInfoContainer,
+	)
+	splitContainer.Offset = 0.2
 
 	content := container.NewStack(
-		trackGridWrap,
+		splitContainer,
 		loading,
 	)
 
@@ -449,3 +440,29 @@ func (s streamingStepHandler) ExitCallback() {
 	fmt.Println("finished")
 	s.finishedFunc()
 }
+
+// trackGridWrap := widget.NewGridWrap(
+// 	func() int {
+// 		return len(tracks)
+// 	},
+// 	func() fyne.CanvasObject {
+// 		return iwidget.NewTrack(
+// 			database.SoundCloudTrack{
+// 				ExternalID:      12904812490,
+// 				Name:            "ReallyReallyLongTrackNameTemplateIncaseThere'sAReallyReallyLongTrackName",
+// 				Genre:           "HouseyElectroDrumAndTechnoBreaksDubstepCore",
+// 				TagList:         "House, Electro, Drum and Bass, Techno, Breaks, Dubstep, Core",
+// 				PublisherArtist: "SurelyAPublisherNameCan'tBeLongerThanThis",
+// 				SoundCloudUser:  "SurelyAUserNameCan'tBeLongerThanThis",
+// 				PurchaseTitle:   "Buy this track",
+// 			},
+// 		)
+// 	},
+// 	func(i int, o fyne.CanvasObject) {
+
+// 		trackWidget := o.(*iwidget.Track)
+// 		track := tracks[i]
+
+// 		// e.updateTracksList(trackWidget, track, playlist.Name)
+// 	},
+// )
