@@ -11,8 +11,8 @@ import (
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/widget"
 	"github.com/billiem/seren-management/pkg/database"
+	"github.com/billiem/seren-management/pkg/gui/iwidget"
 	"github.com/billiem/seren-management/pkg/helpers"
-	"github.com/billiem/seren-management/pkg/iwidget"
 	"github.com/billiem/seren-management/pkg/operations"
 )
 
@@ -417,7 +417,11 @@ func (e *guiEnv) openPlaylistWindow(playlist database.SoundCloudPlaylist) {
 
 	w.SetContent(
 		container.NewBorder(
-			widget.NewLabel(playlist.Name), nil, nil, nil,
+			container.NewVBox(
+				widget.NewLabel(playlist.Name),
+				widget.NewSeparator(),
+			),
+			nil, nil, nil,
 			content,
 		),
 	)

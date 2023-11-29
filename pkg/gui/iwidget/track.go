@@ -43,10 +43,14 @@ func NewTrack(t database.SoundCloudTrack) *Track {
 
 func (t *Track) CreateRenderer() fyne.WidgetRenderer {
 
-	c := container.NewVBox(
-		t.TrackInfo,
-		t.GetTrack,
-		t.LinkTrack,
+	c := container.NewVScroll(
+		container.NewVBox(
+			t.TrackInfo,
+			widget.NewSeparator(),
+			t.GetTrack,
+			widget.NewSeparator(),
+			t.LinkTrack,
+		),
 	)
 
 	return widget.NewSimpleRenderer(c)
@@ -107,7 +111,7 @@ type TrackInfo struct {
 func NewTrackInfo(t database.SoundCloudTrack) *TrackInfo {
 
 	trackNameLink := widget.NewHyperlink(t.Name, nil)
-	trackLinkButton := NewOpenInBrowserButton("Link", "")
+	trackLinkButton := NewOpenInBrowserButton("Open in browser", "")
 
 	if trackLinkButton.URL != nil {
 		err := fyne.CurrentApp().OpenURL(trackLinkButton.URL)
@@ -136,7 +140,10 @@ func NewTrackInfo(t database.SoundCloudTrack) *TrackInfo {
 func (i *TrackInfo) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(
 		container.NewVBox(
-			i.TrackNameLink,
+			container.NewBorder(
+				nil, nil, i.TrackNameLink, i.TrackLinkButton,
+			),
+			widget.NewSeparator(),
 			i.TrackProperties,
 		),
 	)
@@ -159,30 +166,32 @@ func NewOpenInBrowserButton(text string, urlString string) *OpenInBrowserButton 
 
 	openInBrowserBtn := &OpenInBrowserButton{}
 
+	btn := widget.NewButton(text, func() {})
+
 	if urlString != "" {
 		openInBrowserBtn.SetURLFromString(urlString)
 	}
-
-	btn := widget.NewButton(text, func() {
-		if openInBrowserBtn.URL != nil {
-			err := fyne.CurrentApp().OpenURL(openInBrowserBtn.URL)
-			if err != nil {
-				// handle this
-			}
-		}
-	})
-
 	openInBrowserBtn.Button = btn
 
 	return openInBrowserBtn
 }
 
+func (i *OpenInBrowserButton) setOpenFunc() {
+	i.OnTapped = func() {
+		err := fyne.CurrentApp().OpenURL(i.URL)
+		if err != nil {
+			fyne.LogError("Failed to open url", err)
+		}
+	}
+}
+
 func (i *OpenInBrowserButton) SetURLFromString(urlStr string) {
 	u, err := url.Parse(urlStr)
 	if err != nil {
-		// handle this
+		fyne.LogError("Failed to parse url", err)
 	}
 	i.URL = u
+	i.setOpenFunc()
 }
 
 type TrackProperties struct {
@@ -322,13 +331,16 @@ handled by 'TrackPurchase'
 type TrackDownload struct {
 	widget.BaseWidget
 
-	TrackDownloadButton   *TrackDownloadButton
+	TrackDownloadButton   *widget.Button
 	TrackDownloadProgress *widget.ProgressBarInfinite
 }
 
 func NewTrackDownload() *TrackDownload {
+
+	trackDownloadButton := widget.NewButton("Download Track", func() {})
+
 	i := &TrackDownload{
-		TrackDownloadButton:   NewTrackDownloadButton(),
+		TrackDownloadButton:   trackDownloadButton,
 		TrackDownloadProgress: widget.NewProgressBarInfinite(),
 	}
 
@@ -346,21 +358,8 @@ func (i *TrackDownload) CreateRenderer() fyne.WidgetRenderer {
 	)
 }
 
-type TrackDownloadButton struct {
-	widget.Button
+func (i *TrackDownload) Update() {
 
-	HasDownloadsLeft bool
-	onTapped         func()
-}
-
-func NewTrackDownloadButton() *TrackDownloadButton {
-	i := &TrackDownloadButton{
-		Button: *widget.NewButton("Download Track", func() {}),
-	}
-
-	i.ExtendBaseWidget(i)
-
-	return i
 }
 
 /*
