@@ -399,10 +399,8 @@ func (e *guiEnv) openPlaylistWindow(playlist database.SoundCloudPlaylist) {
 			e.showErrorDialog(err)
 			return
 		}
-		fmt.Println(t)
 		tlb.Set(t)
 		tlb.ApplyFilterSort()
-		trackListContainer.Refresh()
 		loading.Hide()
 	}(&trackListBinding)
 
@@ -410,7 +408,7 @@ func (e *guiEnv) openPlaylistWindow(playlist database.SoundCloudPlaylist) {
 		trackListContainer,
 		trackInfoContainer,
 	)
-	splitContainer.Offset = 0.2
+	splitContainer.SetOffset(0)
 
 	content := container.NewStack(
 		splitContainer,

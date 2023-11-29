@@ -1,6 +1,7 @@
 package iwidget
 
 import (
+	"fmt"
 	"sync"
 
 	"fyne.io/fyne/v2"
@@ -20,9 +21,9 @@ controls to export the tracks to a playlist
 type TrackListSection struct {
 	widget.BaseWidget
 
-	*TrackList
-	*TrackListControls
-	*TrackListExportControls
+	List                    *widget.List
+	TrackListControls       *TrackListControls
+	TrackListExportControls *TrackListExportControls
 }
 
 func NewTrackListSection(tlb *TrackListBinding, selectedTrack *TrackBinding) *TrackListSection {
@@ -30,7 +31,7 @@ func NewTrackListSection(tlb *TrackListBinding, selectedTrack *TrackBinding) *Tr
 	tlb.FilterSortInfo = &FilterSortInfo{}
 
 	trackListSection := &TrackListSection{
-		TrackList:               NewTrackList(tlb, selectedTrack),
+		List:                    NewTrackList(tlb, selectedTrack),
 		TrackListControls:       NewTrackListControls(tlb),
 		TrackListExportControls: NewTrackListExportControls(),
 	}
@@ -47,7 +48,7 @@ func (t *TrackListSection) CreateRenderer() fyne.WidgetRenderer {
 			t.TrackListControls,
 			t.TrackListExportControls,
 			nil, nil,
-			t.TrackList,
+			t.List,
 		),
 	)
 }
@@ -87,7 +88,8 @@ func NewTrackListControls(tlb *TrackListBinding) *TrackListControls {
 
 func (i *TrackListControls) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(
-		container.NewHBox(
+		container.NewGridWithColumns(
+			2,
 			container.NewVBox(
 				widget.NewLabel("Sort"),
 				widget.NewSeparator(),
@@ -179,15 +181,7 @@ func (i *TrackListExportControls) CreateRenderer() fyne.WidgetRenderer {
 	)
 }
 
-/*
-TrackList widget contains a list of tracks, selecting a track will display the
-tracks info in a Track widget to the side
-*/
-type TrackList struct {
-	*widget.List
-}
-
-func NewTrackList(tlb *TrackListBinding, selectedTrack *TrackBinding) *TrackList {
+func NewTrackList(tlb *TrackListBinding, selectedTrack *TrackBinding) *widget.List {
 
 	trackList := widget.NewListWithData(
 		tlb,
@@ -195,7 +189,6 @@ func NewTrackList(tlb *TrackListBinding, selectedTrack *TrackBinding) *TrackList
 			return NewTrackListItem("FairlyLongTrackNameTemplateIncase")
 		},
 		func(i binding.DataItem, o fyne.CanvasObject) {
-			// TODO
 			trackListItem := o.(*TrackListItem)
 			trackBinding := i.(*TrackBinding)
 
@@ -203,20 +196,28 @@ func NewTrackList(tlb *TrackListBinding, selectedTrack *TrackBinding) *TrackList
 			if trackBinding.track.LocalPath != "" && !trackBinding.track.LocalPathBroken {
 				trackListItem.Linked.SetResource(theme.ConfirmIcon())
 			} else {
-				trackListItem.Linked.SetResource(theme.CancelIcon())
+				trackListItem.Linked.SetResource(theme.ContentRemoveIcon())
 			}
 		},
 	)
 
-	return &TrackList{
-		trackList,
+	trackList.OnSelected = func(id widget.ListItemID) {
+		fmt.Println("previously selected track", selectedTrack.track)
+		tli, err := tlb.GetItem(id)
+		if err != nil {
+			fmt.Println("error getting track from list", err)
+			return
+		}
+		selectedTrack = tli.(*TrackBinding)
+		selectedTrack.track = tli.(*TrackBinding).track
+		fmt.Println("selected track", selectedTrack.track)
 	}
+
+	return trackList
 }
 
 type TrackListItem struct {
 	widget.BaseWidget
-
-	OnSelected func()
 
 	TrackName *widget.Label
 	Linked    *widget.Icon
@@ -225,7 +226,7 @@ type TrackListItem struct {
 func NewTrackListItem(name string) *TrackListItem {
 	tli := &TrackListItem{
 		TrackName: widget.NewLabel(name),
-		Linked:    widget.NewIcon(theme.CancelIcon()),
+		Linked:    widget.NewIcon(theme.ContentRemoveIcon()),
 	}
 
 	tli.ExtendBaseWidget(tli)
@@ -235,8 +236,10 @@ func NewTrackListItem(name string) *TrackListItem {
 
 func (i *TrackListItem) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(
-		container.NewHBox(
+		container.NewBorder(
+			nil, nil,
 			i.Linked,
+			nil,
 			i.TrackName,
 		),
 	)

@@ -26,7 +26,7 @@ func Entry() {
 	e.setMainContent(contentStack, e.getViewList()["home"])
 
 	split := container.NewHSplit(e.makeNavMenu(contentStack), contentStack)
-	split.Offset = 0.25
+	split.SetOffset(0)
 
 	w.SetContent(split)
 	w.ShowAndRun()

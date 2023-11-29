@@ -37,6 +37,12 @@ func (i *TrackInfo) CreateRenderer() fyne.WidgetRenderer {
 	)
 }
 
+func (i *TrackInfo) Update(t database.SoundCloudTrack) {
+	i.TrackNameLink.SetURLFromString(t.Permalink)
+	i.TrackNameLink.SetText(t.Name)
+
+}
+
 type TrackProperties struct {
 	widget.BaseWidget
 
@@ -47,8 +53,6 @@ type TrackProperties struct {
 }
 
 func NewTrackProperties(t database.SoundCloudTrack) *TrackProperties {
-
-	fmt.Println(t.Genre)
 
 	genrePropertyLabel := NewTrackProperty("Genre", t.Genre)
 	tagListPropertyLabel := NewTrackProperty("Tags", t.TagList)
@@ -76,6 +80,13 @@ func (i *TrackProperties) CreateRenderer() fyne.WidgetRenderer {
 			i.SoundCloudUserPropertyLabel,
 		),
 	)
+}
+
+func (i *TrackProperties) Update(t database.SoundCloudTrack) {
+	i.GenrePropertyLabel.Update(t.Genre)
+	i.TagListPropertyLabel.Update(t.TagList)
+	i.PublisherPropertyLabel.Update(t.PublisherArtist)
+	i.SoundCloudUserPropertyLabel.Update(t.SoundCloudUser)
 }
 
 type TrackProperty struct {
@@ -107,9 +118,8 @@ func (i *TrackProperty) CreateRenderer() fyne.WidgetRenderer {
 	)
 }
 
-func (l *TrackProperty) SetText(text string) {
-	l.PropertyLabel.Text = text
-	l.PropertyLabel.Refresh()
+func (l *TrackProperty) Update(text string) {
+	l.PropertyLabel.SetText(text)
 }
 
 type TrackNameLink struct {

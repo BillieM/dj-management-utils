@@ -1,8 +1,6 @@
 package database
 
 import (
-	"fmt"
-
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -108,7 +106,6 @@ func (s *SerenDB) GetSoundCloudTracks(playlistId int64) ([]*SoundCloudTrack, err
 
 	err := s.Where("external_id = ?", playlistId).Preload("Tracks").Find(&playlist).Error
 	for _, t := range playlist.Tracks {
-		fmt.Println(t.Name)
 		v := t
 		tracks = append(tracks, &v)
 	}

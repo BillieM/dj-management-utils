@@ -1,8 +1,11 @@
 package iwidget
 
 import (
+	"fmt"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/widget"
 	"github.com/billiem/seren-management/pkg/database"
 )
@@ -11,13 +14,15 @@ type Track struct {
 	widget.BaseWidget
 
 	// track info
-	*TrackInfo
+	TrackInfo *TrackInfo
 
 	// get track
-	*GetTrack
+	GetTrack *GetTrack
 
 	// link track
-	*LinkTrack
+	LinkTrack *LinkTrack
+
+	binder basicBinder
 }
 
 func NewTrack(t database.SoundCloudTrack) *Track {
@@ -45,8 +50,19 @@ func (t *Track) CreateRenderer() fyne.WidgetRenderer {
 }
 
 func (t *Track) Bind(b *TrackBinding) {
+	t.binder.SetCallback(t.updateFromData)
+	t.binder.Bind(b)
+}
 
-	// t.TrackInfo.Bind()
-	// t.GetTrack.Bind()
-	// t.LinkTrack.Bind()
+func (t *Track) Unbind() {
+	t.binder.Unbind()
+}
+
+func (t *Track) updateFromData(b binding.DataItem) {
+	trackBind := b.(*TrackBinding)
+	scTrack := *trackBind.track
+
+	fmt.Println("updateFromData", scTrack)
+
+	t.TrackInfo.Update(scTrack)
 }
