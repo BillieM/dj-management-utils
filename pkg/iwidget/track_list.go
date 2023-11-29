@@ -26,7 +26,7 @@ type TrackListSection struct {
 	TrackListExportControls *TrackListExportControls
 }
 
-func NewTrackListSection(tlb *TrackListBinding, selectedTrack *TrackBinding) *TrackListSection {
+func NewTrackListSection(tlb *TrackListBinding, selectedTrack *SelectedTrackBinding) *TrackListSection {
 
 	tlb.FilterSortInfo = &FilterSortInfo{}
 
@@ -181,7 +181,7 @@ func (i *TrackListExportControls) CreateRenderer() fyne.WidgetRenderer {
 	)
 }
 
-func NewTrackList(tlb *TrackListBinding, selectedTrack *TrackBinding) *widget.List {
+func NewTrackList(tlb *TrackListBinding, selectedTrack *SelectedTrackBinding) *widget.List {
 
 	trackList := widget.NewListWithData(
 		tlb,
@@ -202,15 +202,15 @@ func NewTrackList(tlb *TrackListBinding, selectedTrack *TrackBinding) *widget.Li
 	)
 
 	trackList.OnSelected = func(id widget.ListItemID) {
-		fmt.Println("previously selected track", selectedTrack.track)
 		tli, err := tlb.GetItem(id)
 		if err != nil {
 			fmt.Println("error getting track from list", err)
 			return
 		}
-		selectedTrack = tli.(*TrackBinding)
-		selectedTrack.track = tli.(*TrackBinding).track
-		fmt.Println("selected track", selectedTrack.track)
+		selectedTrackBind := tli.(*TrackBinding)
+
+		selectedTrack.trackBinding = selectedTrackBind
+		selectedTrack.trigger()
 	}
 
 	return trackList
