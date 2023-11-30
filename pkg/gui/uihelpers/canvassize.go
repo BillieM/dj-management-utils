@@ -1,6 +1,8 @@
 package uihelpers
 
-import "fyne.io/fyne/v2"
+import (
+	"fyne.io/fyne/v2"
+)
 
 /*
 CanvasPercentSize returns a fyne.Size struct with the width and height set to
@@ -8,8 +10,10 @@ the percentage of the canvas size passed in
 
 Thank you to https://github.com/matwachich for this function <3
 */
-func CanvasPercentSize(w fyne.Window, percentW, percentH float32, minSize fyne.Size) fyne.Size {
-	csz := w.Canvas().Size()
+func CanvasPercentSize(win fyne.Window, percentW, percentH float32, minSize fyne.Size) fyne.Size {
+	csz := win.Canvas().Size()
+
+	size := fyne.NewSize(0, 0)
 
 	if percentW > 0 {
 		if percentW > 1 {
@@ -18,7 +22,9 @@ func CanvasPercentSize(w fyne.Window, percentW, percentH float32, minSize fyne.S
 
 		w := csz.Width * percentW
 		if w > minSize.Width {
-			minSize.Width = w
+			size.Width = w
+		} else {
+			size.Width = minSize.Width
 		}
 	}
 
@@ -29,9 +35,11 @@ func CanvasPercentSize(w fyne.Window, percentW, percentH float32, minSize fyne.S
 
 		h := csz.Height * percentH
 		if h > minSize.Height {
-			minSize.Height = h
+			size.Height = h
+		} else {
+			size.Height = minSize.Height
 		}
 	}
 
-	return minSize
+	return size
 }

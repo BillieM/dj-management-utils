@@ -24,6 +24,7 @@ func Entry() {
 
 	contentStack := container.NewStack()
 	e.setMainContent(contentStack, e.getViewList()["home"])
+	e.contentStack = contentStack
 
 	split := container.NewHSplit(e.makeNavMenu(contentStack), contentStack)
 	split.SetOffset(0)

@@ -12,6 +12,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"github.com/billiem/seren-management/pkg/database"
 	"github.com/billiem/seren-management/pkg/gui/iwidget"
+	"github.com/billiem/seren-management/pkg/gui/uihelpers"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/billiem/seren-management/pkg/operations"
 )
@@ -373,16 +374,6 @@ func (e *guiEnv) openPlaylistWindow(playlist database.SoundCloudPlaylist) {
 
 	loading := newViewLoading(fmt.Sprintf("Loading tracks for %s...", playlist.Name))
 
-	w := e.app.NewWindow("Playlist - " + playlist.Name)
-	e.guiState.busy = true
-
-	w.Resize(fyne.NewSize(1024, 768))
-	w.RequestFocus()
-
-	w.SetOnClosed(func() {
-		e.guiState.busy = false
-	})
-
 	var trackListBinding iwidget.TrackListBinding
 	selectedTrack := &iwidget.SelectedTrackBinding{}
 
@@ -391,18 +382,6 @@ func (e *guiEnv) openPlaylistWindow(playlist database.SoundCloudPlaylist) {
 		database.SoundCloudTrack{},
 	)
 	trackInfoContainer.Bind(selectedTrack)
-
-	go func(tlb *iwidget.TrackListBinding) {
-		t, err := e.SerenDB.GetSoundCloudTracks(playlist.ExternalID)
-		if err != nil {
-			w.Close()
-			e.showErrorDialog(err)
-			return
-		}
-		tlb.Set(t)
-		tlb.ApplyFilterSort()
-		loading.Hide()
-	}(&trackListBinding)
 
 	splitContainer := container.NewHSplit(
 		trackListContainer,
@@ -415,17 +394,28 @@ func (e *guiEnv) openPlaylistWindow(playlist database.SoundCloudPlaylist) {
 		loading,
 	)
 
-	w.SetContent(
-		container.NewBorder(
-			container.NewVBox(
-				widget.NewLabel(playlist.Name),
-				widget.NewSeparator(),
-			),
-			nil, nil, nil,
-			content,
-		),
+	playlistPopup := uihelpers.NewPercentagePopup(
+		playlist.Name,
+		content,
+		e.mainWindow,
+		e.contentStack,
+		0.9, 0.9,
+		func(close func()) {},
 	)
-	w.Show()
+
+	go func(tlb *iwidget.TrackListBinding) {
+		t, err := e.SerenDB.GetSoundCloudTracks(playlist.ExternalID)
+		if err != nil {
+			playlistPopup.Hide()
+			e.showErrorDialog(err)
+			return
+		}
+		tlb.Set(t)
+		tlb.ApplyFilterSort()
+		loading.Hide()
+	}(&trackListBinding)
+
+	playlistPopup.Show()
 }
 
 type streamingStepHandler struct {

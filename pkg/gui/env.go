@@ -14,11 +14,12 @@ type guiEnv struct {
 	*helpers.Config
 	*database.SerenDB
 	*guiState
-	tmpConfig   *helpers.Config
-	views       map[string]guiView
-	viewIndices map[string][]string
-	mainWindow  fyne.Window
-	app         fyne.App
+	tmpConfig    *helpers.Config
+	views        map[string]guiView
+	viewIndices  map[string][]string
+	mainWindow   fyne.Window
+	app          fyne.App
+	resizeEvents *[]func()
 }
 
 func (e *guiEnv) opEnv() *operations.OpEnv {
@@ -45,7 +46,7 @@ func buildGuiEnv(a fyne.App, w fyne.Window) (*guiEnv, error) {
 		return nil, err
 	}
 
-	e := &guiEnv{cfg, db, nil, nil, nil, nil, w, a}
+	e := &guiEnv{cfg, db, nil, nil, nil, nil, w, a, nil}
 
 	s := &guiState{}
 	operations := e.getViewList()

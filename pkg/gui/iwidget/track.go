@@ -18,6 +18,9 @@ inside of a playlist view
 type Track struct {
 	widget.BaseWidget
 
+	// placeholder screen
+	Placeholder *widget.Label
+
 	// track info
 	TrackInfo *TrackInfo
 
@@ -31,9 +34,10 @@ type Track struct {
 func NewTrack(t database.SoundCloudTrack) *Track {
 
 	i := &Track{
-		TrackInfo: NewTrackInfo(t),
-		GetTrack:  NewGetTrack(t.PurchaseTitle),
-		LinkTrack: NewLinkTrack(),
+		TrackInfo:   NewTrackInfo(t),
+		GetTrack:    NewGetTrack(t.PurchaseTitle),
+		LinkTrack:   NewLinkTrack(),
+		Placeholder: widget.NewLabel("Please select a track..."),
 	}
 
 	i.ExtendBaseWidget(i)
