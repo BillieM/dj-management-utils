@@ -21,9 +21,8 @@ func (e *OpEnv) RegisterStepHandler(sh StepHandler) {
 
 func (e *OpEnv) RegisterStepHandlerNew(sh StepHandlerNew) {
 	e.stepHandlerNew = &stepHandlerNew{
-		stepCallback:    sh.StepCallback,
-		successCallback: sh.SuccessCallback,
-		errorCallback:   sh.ErrorCallback,
+		stepCallback:     sh.StepCallback,
+		finishedCallback: sh.FinishedCallback,
 	}
 }
 
@@ -35,6 +34,10 @@ func (e *OpEnv) exit() {
 	e.stepHandler.exitCallback()
 }
 
-func (e *OpEnv) stepNew(stepInfo StepInfo) {
+func (e *OpEnv) stepNew(stepInfo StepInfoNew) {
 	e.stepHandlerNew.stepCallback(stepInfo)
+}
+
+func (e *OpEnv) finishedNew(finishedInfo FinishedInfo) {
+	e.stepHandlerNew.finishedCallback(finishedInfo)
 }

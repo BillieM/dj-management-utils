@@ -12,37 +12,6 @@ import (
 )
 
 /*
-This file serves as an entrypoint for all operations
-*/
-
-/*
-StepHandler is used to provide callbacks to the operations package
-*/
-type StepHandler interface {
-	StepCallback(StepInfo)
-	ExitCallback()
-}
-
-type StepHandlerNew interface {
-	StepCallback(StepInfo)
-	SuccessCallback(any)
-	ErrorCallback(error)
-}
-
-/*
-StepInfo is returned to the StepCallback after each step
-
-It provides information about the step that just finished
-*/
-type StepInfo struct {
-	SkipLog    bool
-	Progress   float64
-	Message    string
-	Error      error
-	Importance helpers.Importance
-}
-
-/*
 SeperateSingleStem separates stems from a single file
 */
 func (e *OpEnv) SeparateSingleStem(ctx context.Context, opts SeparateSingleStemOpts) {
@@ -280,8 +249,6 @@ func (e *OpEnv) DownloadSoundCloudFile(track database.SoundCloudTrack, playlistN
 	if playlistName != "" {
 		downloadDir = helpers.JoinFilepathToSlash(downloadDir, playlistName)
 	}
-
-	fmt.Println("downloading id: ", track.ExternalID)
 
 	s := streaming.SoundCloud{
 		ClientID: e.Config.SoundCloudClientID,

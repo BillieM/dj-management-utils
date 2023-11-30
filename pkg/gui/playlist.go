@@ -363,14 +363,17 @@ func (e *guiEnv) updatePlaylistsList(playlistWidget *playlistWidget, playlistBin
 				e.showErrorDialog(helpers.ErrBusyPleaseFinishFirst)
 				return
 			}
-			e.openPlaylistWindow(playlist)
+			e.openPlaylistPopup(playlist)
 		}
 	}
 
 	playlistWidget.Refresh()
 }
 
-func (e *guiEnv) openPlaylistWindow(playlist database.SoundCloudPlaylist) {
+/*
+openPlaylistPopup opens a popup window for a given playlist
+*/
+func (e *guiEnv) openPlaylistPopup(playlist database.SoundCloudPlaylist) {
 
 	loading := newViewLoading(fmt.Sprintf("Loading tracks for %s...", playlist.Name))
 
@@ -379,13 +382,8 @@ func (e *guiEnv) openPlaylistWindow(playlist database.SoundCloudPlaylist) {
 
 	trackListSection := iwidget.NewTrackListSection(&trackListBinding, selectedTrack)
 	trackSection := iwidget.NewTrackSection(
-		database.SoundCloudTrack{}, func(t database.SoundCloudTrack) {
-			opEnv := e.opEnv()
-			opEnv.RegisterStepHandlerNew(
-				streamingStepHandlerNew{},
-			)
-			opEnv.DownloadSoundCloudFile(t, playlist.Name)
-		},
+		database.SoundCloudTrack{},
+		e.getDownloadSoundCloudTrackFunc(playlist.Name),
 	)
 	trackSection.Bind(selectedTrack)
 
@@ -427,4 +425,20 @@ func (e *guiEnv) openPlaylistWindow(playlist database.SoundCloudPlaylist) {
 	e.guiState.busy = true
 
 	playlistPopup.Show()
+}
+
+/*
+getDownloadSoundCloudTrackFunc returns a function that can be used to download a SoundCloud track, we call
+this function when opening a playlist popup.
+
+Generating the function here saves us passing lots of data down the track widgets (i.e. env/ playlist name)
+*/
+func (e *guiEnv) getDownloadSoundCloudTrackFunc(playlistName string) func(database.SoundCloudTrack) {
+	return func(t database.SoundCloudTrack) {
+		opEnv := e.opEnv()
+		opEnv.RegisterStepHandlerNew(
+			streamingStepHandlerNew{},
+		)
+		opEnv.DownloadSoundCloudFile(t, playlistName)
+	}
 }

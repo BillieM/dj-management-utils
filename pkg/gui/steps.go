@@ -22,22 +22,16 @@ func (s streamingStepHandler) ExitCallback() {
 }
 
 type streamingStepHandlerNew struct {
-	stepCallback    func(operations.StepInfo)
-	successCallback func(any)
-	errorCallback   func(error)
+	stepCallback     func(operations.StepInfoNew)
+	finishedCallback func(operations.FinishedInfo)
 }
 
-func (s streamingStepHandlerNew) StepCallback(step operations.StepInfo) {
-	fmt.Println(step)
-	s.stepCallback(step)
-}
-
-func (s streamingStepHandlerNew) SuccessCallback(i any) {
+func (s streamingStepHandlerNew) StepCallback(i operations.StepInfoNew) {
 	fmt.Println(i)
-	s.successCallback(i)
+	s.stepCallback(i)
 }
 
-func (s streamingStepHandlerNew) ErrorCallback(err error) {
-	fmt.Println(err)
-	s.errorCallback(err)
+func (s streamingStepHandlerNew) FinishedCallback(i operations.FinishedInfo) {
+	fmt.Println(i)
+	s.finishedCallback(i)
 }
