@@ -27,6 +27,7 @@ require (
 	github.com/go-text/render v0.0.0-20230619120952-35bccb6164b8 // indirect
 	github.com/go-text/typesetting v0.0.0-20231126133128-3b7c9205d99e // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
+	github.com/google/uuid v1.4.0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect

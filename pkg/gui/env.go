@@ -3,6 +3,7 @@ package gui
 import (
 	"fyne.io/fyne/v2"
 	"github.com/billiem/seren-management/pkg/database"
+	"github.com/billiem/seren-management/pkg/gui/uihelpers"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/billiem/seren-management/pkg/operations"
 )
@@ -19,7 +20,7 @@ type guiEnv struct {
 	viewIndices  map[string][]string
 	mainWindow   fyne.Window
 	app          fyne.App
-	resizeEvents *[]func()
+	resizeEvents *uihelpers.ResizeEvents
 }
 
 func (e *guiEnv) opEnv() *operations.OpEnv {
@@ -51,10 +52,12 @@ func buildGuiEnv(a fyne.App, w fyne.Window) (*guiEnv, error) {
 	s := &guiState{}
 	operations := e.getViewList()
 	operationIndex := e.getViewIndex()
+	resizeEvents := uihelpers.NewResizeEvents()
 
 	e.guiState = s
 	e.views = operations
 	e.viewIndices = operationIndex
+	e.resizeEvents = resizeEvents
 
 	return e, nil
 }

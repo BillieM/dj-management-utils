@@ -2,7 +2,6 @@ package iwidget
 
 import (
 	"fmt"
-	"net/url"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -11,15 +10,64 @@ import (
 	"github.com/billiem/seren-management/pkg/database"
 )
 
+type TrackSection struct {
+	widget.BaseWidget
+
+	Track       *Track
+	Placeholder *widget.Label
+}
+
+func NewTrackSection(t database.SoundCloudTrack, downloadFunc func(database.SoundCloudTrack)) *TrackSection {
+
+	track := NewTrack(t, downloadFunc)
+
+	i := &TrackSection{
+		Track:       track,
+		Placeholder: widget.NewLabel("Please select a track..."),
+	}
+
+	i.Track.Hide()
+	i.Placeholder.Show()
+
+	i.ExtendBaseWidget(i)
+
+	return i
+}
+
+func (t *TrackSection) CreateRenderer() fyne.WidgetRenderer {
+	return widget.NewSimpleRenderer(
+		container.NewStack(
+			t.Track,
+			t.Placeholder,
+		),
+	)
+}
+
+func (trackSection *TrackSection) Bind(selectedTrack *SelectedTrackBinding) {
+	listener := binding.NewDataListener(func() {
+		trackSection.updateFromData(selectedTrack.TrackBinding)
+	})
+
+	selectedTrack.AddListener(listener)
+}
+
+func (trackSection *TrackSection) updateFromData(b *TrackBinding) {
+	if b.track != nil {
+		trackSection.Track.updateFromData(b)
+		trackSection.Track.Show()
+		trackSection.Placeholder.Hide()
+	} else {
+		trackSection.Track.Hide()
+		trackSection.Placeholder.Show()
+	}
+}
+
 /*
 Track is the main widget used for displaying a track selected from the track list
 inside of a playlist view
 */
 type Track struct {
 	widget.BaseWidget
-
-	// placeholder screen
-	Placeholder *widget.Label
 
 	// track info
 	TrackInfo *TrackInfo
@@ -31,13 +79,12 @@ type Track struct {
 	LinkTrack *LinkTrack
 }
 
-func NewTrack(t database.SoundCloudTrack) *Track {
+func NewTrack(t database.SoundCloudTrack, downloadFunc func(database.SoundCloudTrack)) *Track {
 
 	i := &Track{
-		TrackInfo:   NewTrackInfo(t),
-		GetTrack:    NewGetTrack(t.PurchaseTitle),
-		LinkTrack:   NewLinkTrack(),
-		Placeholder: widget.NewLabel("Please select a track..."),
+		TrackInfo: NewTrackInfo(t),
+		GetTrack:  NewGetTrack(downloadFunc),
+		LinkTrack: NewLinkTrack(),
 	}
 
 	i.ExtendBaseWidget(i)
@@ -52,7 +99,6 @@ func (t *Track) CreateRenderer() fyne.WidgetRenderer {
 			t.TrackInfo,
 			widget.NewSeparator(),
 			t.GetTrack,
-			widget.NewSeparator(),
 			t.LinkTrack,
 		),
 	)
@@ -60,22 +106,22 @@ func (t *Track) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(c)
 }
 
-func (trackWidget *Track) Bind(selectedTrack *SelectedTrackBinding) {
-	listener := binding.NewDataListener(func() {
-		trackWidget.updateFromData(selectedTrack.trackBinding)
-	})
-
-	selectedTrack.AddListener(listener)
-}
-
 func (t *Track) updateFromData(b *TrackBinding) {
-	t.TrackInfo.Update(*b.track)
+	t.TrackInfo.updateFromData(*b.track)
+
+	if b.track.HasDownloadsLeft || b.track.PurchaseTitle != "" {
+		t.GetTrack.Show()
+	} else {
+		t.GetTrack.Hide()
+	}
+	t.GetTrack.updateFromData(*b.track)
+	t.LinkTrack.updateFromData(*b.track)
 }
 
 type SelectedTrackBinding struct {
 	bindBase
 
-	trackBinding *TrackBinding
+	TrackBinding *TrackBinding
 }
 
 func (i *SelectedTrackBinding) AddListener(l binding.DataListener) {
@@ -132,9 +178,7 @@ func NewTrackInfo(t database.SoundCloudTrack) *TrackInfo {
 
 	i.TrackNameLink.TextStyle.Bold = true
 
-	i.TrackLinkButton.OnTapped = func() {
-
-	}
+	i.TrackLinkButton.OnTapped = func() {}
 
 	i.ExtendBaseWidget(i)
 
@@ -153,49 +197,11 @@ func (i *TrackInfo) CreateRenderer() fyne.WidgetRenderer {
 	)
 }
 
-func (i *TrackInfo) Update(t database.SoundCloudTrack) {
+func (i *TrackInfo) updateFromData(t database.SoundCloudTrack) {
 	i.TrackNameLink.SetURLFromString(t.Permalink)
 	i.TrackNameLink.SetText(t.Name)
-	i.TrackLinkButton.SetURLFromString(t.Permalink)
-	i.TrackProperties.Update(t)
-}
-
-type OpenInBrowserButton struct {
-	*widget.Button
-
-	URL *url.URL
-}
-
-func NewOpenInBrowserButton(text string, urlString string) *OpenInBrowserButton {
-
-	openInBrowserBtn := &OpenInBrowserButton{}
-
-	btn := widget.NewButton(text, func() {})
-
-	if urlString != "" {
-		openInBrowserBtn.SetURLFromString(urlString)
-	}
-	openInBrowserBtn.Button = btn
-
-	return openInBrowserBtn
-}
-
-func (i *OpenInBrowserButton) setOpenFunc() {
-	i.OnTapped = func() {
-		err := fyne.CurrentApp().OpenURL(i.URL)
-		if err != nil {
-			fyne.LogError("Failed to open url", err)
-		}
-	}
-}
-
-func (i *OpenInBrowserButton) SetURLFromString(urlStr string) {
-	u, err := url.Parse(urlStr)
-	if err != nil {
-		fyne.LogError("Failed to parse url", err)
-	}
-	i.URL = u
-	i.setOpenFunc()
+	i.TrackLinkButton.SetContent("Open in browser", t.Permalink)
+	i.TrackProperties.updateFromData(t)
 }
 
 type TrackProperties struct {
@@ -237,7 +243,7 @@ func (i *TrackProperties) CreateRenderer() fyne.WidgetRenderer {
 	)
 }
 
-func (i *TrackProperties) Update(t database.SoundCloudTrack) {
+func (i *TrackProperties) updateFromData(t database.SoundCloudTrack) {
 	i.GenrePropertyLabel.Update(t.Genre)
 	i.TagListPropertyLabel.Update(t.TagList)
 	i.PublisherPropertyLabel.Update(t.PublisherArtist)
@@ -247,13 +253,13 @@ func (i *TrackProperties) Update(t database.SoundCloudTrack) {
 type TrackProperty struct {
 	widget.BaseWidget
 	labelLabel    *widget.Label
-	PropertyLabel *EmphasizedLabel
+	PropertyLabel *widget.Label
 }
 
 func NewTrackProperty(propertyName string, propertyValue string) *TrackProperty {
 
 	labelLabel := widget.NewLabel(fmt.Sprintf("%s:", propertyName))
-	propertyLabel := NewEmphasizedLabel(propertyValue)
+	propertyLabel := widget.NewLabelWithStyle(propertyValue, fyne.TextAlignLeading, fyne.TextStyle{Bold: true})
 	i := &TrackProperty{
 		labelLabel:    labelLabel,
 		PropertyLabel: propertyLabel,
@@ -300,13 +306,13 @@ type GetTrack struct {
 	widget.BaseWidget
 
 	TrackDownload *TrackDownload
-	TrackPurchase *widget.Button
+	TrackPurchase *TrackPurchase
 }
 
-func NewGetTrack(purchaseBtnText string) *GetTrack {
+func NewGetTrack(downloadFunc func(database.SoundCloudTrack)) *GetTrack {
 	i := &GetTrack{
-		TrackDownload: NewTrackDownload(),
-		TrackPurchase: widget.NewButton("purchaseBtnText", func() {}),
+		TrackDownload: NewTrackDownload(downloadFunc),
+		TrackPurchase: NewTrackPurchase(),
 	}
 
 	i.ExtendBaseWidget(i)
@@ -316,12 +322,61 @@ func NewGetTrack(purchaseBtnText string) *GetTrack {
 
 func (i *GetTrack) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(
-		container.NewGridWithColumns(
-			2,
+		container.NewVBox(
 			i.TrackDownload,
 			i.TrackPurchase,
+			widget.NewSeparator(),
 		),
 	)
+}
+
+func (i *GetTrack) updateFromData(t database.SoundCloudTrack) {
+
+	if t.HasDownloadsLeft {
+		i.TrackDownload.Show()
+		i.TrackDownload.updateFromData(t)
+	} else {
+		i.TrackDownload.Hide()
+	}
+
+	if t.PurchaseTitle != "" {
+		i.TrackPurchase.Show()
+		i.TrackPurchase.updateFromData(t)
+	} else {
+		i.TrackPurchase.Hide()
+	}
+}
+
+/*
+TrackPurchase widget handles purchase/ free links visible on SoundCloud
+*/
+type TrackPurchase struct {
+	widget.BaseWidget
+
+	TrackPurchaseButton *OpenInBrowserButton
+}
+
+func NewTrackPurchase() *TrackPurchase {
+	i := &TrackPurchase{
+		TrackPurchaseButton: NewOpenInBrowserButton("Purchase Track", ""),
+	}
+
+	i.ExtendBaseWidget(i)
+
+	return i
+}
+
+func (i *TrackPurchase) CreateRenderer() fyne.WidgetRenderer {
+	return widget.NewSimpleRenderer(
+		container.NewHBox(
+			widget.NewLabel("Get track (opens in browser)"),
+			i.TrackPurchaseButton,
+		),
+	)
+}
+
+func (i *TrackPurchase) updateFromData(t database.SoundCloudTrack) {
+	i.TrackPurchaseButton.SetContent(t.PurchaseTitle, t.PurchaseURL)
 }
 
 /*
@@ -335,17 +390,23 @@ handled by 'TrackPurchase'
 type TrackDownload struct {
 	widget.BaseWidget
 
+	DownloadFunc func(database.SoundCloudTrack)
+
 	TrackDownloadButton   *widget.Button
 	TrackDownloadProgress *widget.ProgressBarInfinite
 }
 
-func NewTrackDownload() *TrackDownload {
+func NewTrackDownload(downloadFunc func(database.SoundCloudTrack)) *TrackDownload {
 
 	trackDownloadButton := widget.NewButton("Download Track", func() {})
 
+	trackDownloadProgress := widget.NewProgressBarInfinite()
+	trackDownloadProgress.Hide()
+
 	i := &TrackDownload{
 		TrackDownloadButton:   trackDownloadButton,
-		TrackDownloadProgress: widget.NewProgressBarInfinite(),
+		TrackDownloadProgress: trackDownloadProgress,
+		DownloadFunc:          downloadFunc,
 	}
 
 	i.ExtendBaseWidget(i)
@@ -355,15 +416,26 @@ func NewTrackDownload() *TrackDownload {
 
 func (i *TrackDownload) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(
-		container.NewVBox(
-			i.TrackDownloadButton,
+		container.NewBorder(
+			nil, nil,
+			container.NewHBox(
+				widget.NewLabel("Get track (save to output directory)"),
+				i.TrackDownloadButton,
+			),
+			nil,
 			i.TrackDownloadProgress,
 		),
 	)
 }
 
-func (i *TrackDownload) Update() {
-
+func (i *TrackDownload) updateFromData(t database.SoundCloudTrack) {
+	i.TrackDownloadButton.OnTapped = func() {
+		i.TrackDownloadProgress.Show()
+		go func() {
+			i.DownloadFunc(t)
+			i.TrackDownloadProgress.Hide()
+		}()
+	}
 }
 
 /*
@@ -386,4 +458,8 @@ func (i *LinkTrack) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(
 		widget.NewLabel("Link Track"),
 	)
+}
+
+func (i *LinkTrack) updateFromData(t database.SoundCloudTrack) {
+
 }

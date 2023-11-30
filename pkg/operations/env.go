@@ -9,6 +9,7 @@ type OpEnv struct {
 	helpers.Config
 	*database.SerenDB
 	*stepHandler
+	*stepHandlerNew
 }
 
 func (e *OpEnv) RegisterStepHandler(sh StepHandler) {
@@ -18,10 +19,22 @@ func (e *OpEnv) RegisterStepHandler(sh StepHandler) {
 	}
 }
 
+func (e *OpEnv) RegisterStepHandlerNew(sh StepHandlerNew) {
+	e.stepHandlerNew = &stepHandlerNew{
+		stepCallback:    sh.StepCallback,
+		successCallback: sh.SuccessCallback,
+		errorCallback:   sh.ErrorCallback,
+	}
+}
+
 func (e *OpEnv) step(stepInfo StepInfo) {
 	e.stepHandler.stepCallback(stepInfo)
 }
 
 func (e *OpEnv) exit() {
 	e.stepHandler.exitCallback()
+}
+
+func (e *OpEnv) stepNew(stepInfo StepInfo) {
+	e.stepHandlerNew.stepCallback(stepInfo)
 }

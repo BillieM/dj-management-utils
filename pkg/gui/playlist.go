@@ -377,15 +377,21 @@ func (e *guiEnv) openPlaylistWindow(playlist database.SoundCloudPlaylist) {
 	var trackListBinding iwidget.TrackListBinding
 	selectedTrack := &iwidget.SelectedTrackBinding{}
 
-	trackListContainer := iwidget.NewTrackListSection(&trackListBinding, selectedTrack)
-	trackInfoContainer := iwidget.NewTrack(
-		database.SoundCloudTrack{},
+	trackListSection := iwidget.NewTrackListSection(&trackListBinding, selectedTrack)
+	trackSection := iwidget.NewTrackSection(
+		database.SoundCloudTrack{}, func(t database.SoundCloudTrack) {
+			opEnv := e.opEnv()
+			opEnv.RegisterStepHandlerNew(
+				streamingStepHandlerNew{},
+			)
+			opEnv.DownloadSoundCloudFile(t, playlist.Name)
+		},
 	)
-	trackInfoContainer.Bind(selectedTrack)
+	trackSection.Bind(selectedTrack)
 
 	splitContainer := container.NewHSplit(
-		trackListContainer,
-		trackInfoContainer,
+		trackListSection,
+		trackSection,
 	)
 	splitContainer.SetOffset(0)
 
@@ -398,9 +404,12 @@ func (e *guiEnv) openPlaylistWindow(playlist database.SoundCloudPlaylist) {
 		playlist.Name,
 		content,
 		e.mainWindow,
-		e.contentStack,
+		e.resizeEvents,
 		0.9, 0.9,
-		func(close func()) {},
+		fyne.NewSize(1280, 0),
+		func(close func()) {
+			e.guiState.busy = false
+		},
 	)
 
 	go func(tlb *iwidget.TrackListBinding) {
@@ -415,20 +424,7 @@ func (e *guiEnv) openPlaylistWindow(playlist database.SoundCloudPlaylist) {
 		loading.Hide()
 	}(&trackListBinding)
 
+	e.guiState.busy = true
+
 	playlistPopup.Show()
-}
-
-type streamingStepHandler struct {
-	stepFunc     func()
-	finishedFunc func()
-}
-
-func (s streamingStepHandler) StepCallback(step operations.StepInfo) {
-	fmt.Println(step)
-	s.stepFunc()
-}
-
-func (s streamingStepHandler) ExitCallback() {
-	fmt.Println("finished")
-	s.finishedFunc()
 }

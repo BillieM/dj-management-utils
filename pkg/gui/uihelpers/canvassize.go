@@ -10,7 +10,7 @@ the percentage of the canvas size passed in
 
 Thank you to https://github.com/matwachich for this function <3
 */
-func CanvasPercentSize(win fyne.Window, percentW, percentH float32, minSize fyne.Size) fyne.Size {
+func CanvasPercentSize(win fyne.Window, percentW, percentH float32, minSize fyne.Size, maxSize fyne.Size) fyne.Size {
 	csz := win.Canvas().Size()
 
 	size := fyne.NewSize(0, 0)
@@ -21,10 +21,13 @@ func CanvasPercentSize(win fyne.Window, percentW, percentH float32, minSize fyne
 		}
 
 		w := csz.Width * percentW
-		if w > minSize.Width {
-			size.Width = w
-		} else {
+
+		if maxSize.Width > 0 && w > maxSize.Width {
+			size.Width = maxSize.Width
+		} else if minSize.Width > 0 && w < minSize.Width {
 			size.Width = minSize.Width
+		} else {
+			size.Width = w
 		}
 	}
 
@@ -34,10 +37,13 @@ func CanvasPercentSize(win fyne.Window, percentW, percentH float32, minSize fyne
 		}
 
 		h := csz.Height * percentH
-		if h > minSize.Height {
-			size.Height = h
-		} else {
+
+		if maxSize.Height > 0 && h > maxSize.Height {
+			size.Height = maxSize.Height
+		} else if minSize.Height > 0 && h < minSize.Height {
 			size.Height = minSize.Height
+		} else {
+			size.Height = h
 		}
 	}
 

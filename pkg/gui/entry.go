@@ -20,15 +20,20 @@ func Entry() {
 	// Seems strange this method is called SetMainMenu as it really defines the top bar of the application, but hey :)
 	w.SetMainMenu(e.makeNavBar(a, w))
 
-	w.Resize(fyne.NewSize(960, 720))
+	w.Resize(fyne.NewSize(1600, 900))
 
 	contentStack := container.NewStack()
+
 	e.setMainContent(contentStack, e.getViewList()["home"])
-	e.contentStack = contentStack
 
 	split := container.NewHSplit(e.makeNavMenu(contentStack), contentStack)
 	split.SetOffset(0)
 
-	w.SetContent(split)
+	w.SetContent(
+		container.NewStack(
+			container.New(e.resizeEvents, container.NewStack()),
+			split,
+		),
+	)
 	w.ShowAndRun()
 }

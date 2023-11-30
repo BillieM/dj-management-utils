@@ -23,6 +23,12 @@ type StepHandler interface {
 	ExitCallback()
 }
 
+type StepHandlerNew interface {
+	StepCallback(StepInfo)
+	SuccessCallback(any)
+	ErrorCallback(error)
+}
+
 /*
 StepInfo is returned to the StepCallback after each step
 
@@ -267,7 +273,7 @@ DownloadSoundCloudFile downloads a file straight from SoundCloud
 
 playlistName is optional and is used to create a folder for the playlist within the download directory
 */
-func (e *OpEnv) DownloadSoundCloudFile(track database.SoundCloudTrack, playlistName string) {
+func (e *OpEnv) DownloadSoundCloudFile(track database.SoundCloudTrack, playlistName string) error {
 
 	downloadDir := e.Config.DownloadDir
 
@@ -288,23 +294,14 @@ func (e *OpEnv) DownloadSoundCloudFile(track database.SoundCloudTrack, playlistN
 
 	if err != nil {
 		fmt.Println(err)
-		return
+		return err
 	}
 
 	/*
 		https://api-v2.soundcloud.com/tracks/1367921728/download
 			?client_id=1ZRkRXa5klyxfeCePlMbkWl1xNzz1Bu3&app_version=1700828706&app_locale=en
 	*/
-}
-
-func (e *OpEnv) OpenSoundCloudPurchase(track database.SoundCloudTrack) {
-	fmt.Printf("opening purchase for id: %v, URL: %s\n", track.ExternalID, track.PurchaseURL)
-
-	// this is based on OS
-	// gonna have to explore this at some point
-
-	helpers.CmdExec("cmd", "/C", "start", "chrome.exe", track.PurchaseURL)
-
+	return nil
 }
 
 /*

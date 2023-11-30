@@ -8,17 +8,11 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-func NewPercentagePopup(title string, content fyne.CanvasObject, win fyne.Window, contentStack *fyne.Container, percentW, percentH float32, onClose func(close func())) *widget.PopUp {
-
-	resizeLayout := NewPercentagePopupLayout(
-		win,
-		func() {},
-		0.9, 0.9,
-	)
-
-	resizeContainer := container.New(resizeLayout, container.NewStack())
+func NewPercentagePopup(title string, content fyne.CanvasObject, win fyne.Window, resizeEvents *ResizeEvents, percentW, percentH float32, maxSize fyne.Size, onClose func(close func())) *widget.PopUp {
 
 	var popup *widget.PopUp
+
+	key := resizeEvents.Add(func() {})
 
 	header := container.NewHBox()
 
@@ -28,7 +22,7 @@ func NewPercentagePopup(title string, content fyne.CanvasObject, win fyne.Window
 		if onClose != nil {
 			onClose(popup.Hide)
 		}
-		contentStack.Remove(resizeContainer)
+		resizeEvents.Remove(key)
 		popup.Hide()
 	}})
 
@@ -43,34 +37,11 @@ func NewPercentagePopup(title string, content fyne.CanvasObject, win fyne.Window
 		win.Canvas(),
 	)
 
-	contentStack.Add(resizeContainer)
+	resizeEvents.Set(key, func() {
+		popup.Resize(CanvasPercentSize(win, percentW, percentH, popupContent.MinSize(), maxSize))
+	})
 
-	resizeLayout.popupCallback = func() {
-		popup.Resize(CanvasPercentSize(win, percentW, percentH, popup.MinSize()))
-	}
+	popup.Resize(CanvasPercentSize(win, percentW, percentH, popupContent.MinSize(), maxSize))
 
 	return popup
-}
-
-type PercentagePopupLayout struct {
-	parentWindow       fyne.Window
-	popupCallback      func()
-	percentW, percentH float32
-}
-
-func NewPercentagePopupLayout(parentWindow fyne.Window, popupCallback func(), percentW, percentH float32) *PercentagePopupLayout {
-	return &PercentagePopupLayout{
-		parentWindow:  parentWindow,
-		percentW:      percentW,
-		percentH:      percentH,
-		popupCallback: popupCallback,
-	}
-}
-
-func (p *PercentagePopupLayout) MinSize(objects []fyne.CanvasObject) fyne.Size {
-	return fyne.NewSize(0, 0)
-}
-
-func (p *PercentagePopupLayout) Layout(objects []fyne.CanvasObject, size fyne.Size) {
-	p.popupCallback()
 }

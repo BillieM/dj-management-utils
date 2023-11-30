@@ -12,6 +12,15 @@ type stepHandler struct {
 }
 
 /*
+Experiment to replace the existing stepHandler with a more generic one
+*/
+type stepHandlerNew struct {
+	stepCallback    func(StepInfo)
+	successCallback func(any)
+	errorCallback   func(error)
+}
+
+/*
 Helper functions for building StepInfo objects
 */
 

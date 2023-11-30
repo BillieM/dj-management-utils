@@ -209,7 +209,7 @@ func NewTrackList(tlb *TrackListBinding, selectedTrack *SelectedTrackBinding) *w
 		}
 		selectedTrackBind := tli.(*TrackBinding)
 
-		selectedTrack.trackBinding = selectedTrackBind
+		selectedTrack.TrackBinding = selectedTrackBind
 		selectedTrack.trigger()
 	}
 
