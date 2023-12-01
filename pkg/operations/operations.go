@@ -180,18 +180,20 @@ GetPlaylist gets a playlist for a given platform and stores it in the database
 
 func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPlaylistOpts, p func(database.SoundCloudPlaylist, error)) {
 
-	// check if playlist with same url already exists in database
-	playlistByUrlCheck, err := e.SerenDB.GetSoundCloudPlaylistByURL(opts.PlaylistURL)
+	if !opts.Refresh {
+		// check if playlist with same url already exists in database
+		playlistByUrlCheck, err := e.SerenDB.GetSoundCloudPlaylistByURL(opts.PlaylistURL)
 
-	if err != nil {
-		e.step(dangerStepInfo(err))
-		p(database.SoundCloudPlaylist{}, err)
-		return
-	}
+		if err != nil {
+			e.step(dangerStepInfo(err))
+			p(database.SoundCloudPlaylist{}, err)
+			return
+		}
 
-	if playlistByUrlCheck.ID != 0 {
-		p(playlistByUrlCheck, helpers.ErrPlaylistAlreadyExists)
-		return
+		if playlistByUrlCheck.ID != 0 {
+			p(playlistByUrlCheck, helpers.ErrPlaylistAlreadyExists)
+			return
+		}
 	}
 
 	s := streaming.SoundCloud{
@@ -207,30 +209,23 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 		return
 	}
 
-	// check if playlist with same external id already exists in database
-	playlistByExternalIDCheck, err := e.SerenDB.GetSoundCloudPlaylistByExternalID(downloadedPlaylist.ExternalID)
+	if !opts.Refresh {
+		// check if playlist with same external id already exists in database
+		playlistByExternalIDCheck, err := e.SerenDB.GetSoundCloudPlaylistByExternalID(downloadedPlaylist.ExternalID)
 
-	if err != nil {
-		e.step(dangerStepInfo(err))
-		p(database.SoundCloudPlaylist{}, err)
-		return
-	}
+		if err != nil {
+			e.step(dangerStepInfo(err))
+			p(database.SoundCloudPlaylist{}, err)
+			return
+		}
 
-	if playlistByExternalIDCheck.ID != 0 {
-		p(playlistByExternalIDCheck, helpers.ErrPlaylistAlreadyExists)
-		return
+		if playlistByExternalIDCheck.ID != 0 {
+			p(playlistByExternalIDCheck, helpers.ErrPlaylistAlreadyExists)
+			return
+		}
 	}
 
 	downloadedPlaylist.SearchUrl = opts.PlaylistURL
-
-	// save playlist to database
-	err = e.SerenDB.CreateSoundCloudPlaylist(downloadedPlaylist)
-
-	if err != nil {
-		e.step(dangerStepInfo(err))
-		p(database.SoundCloudPlaylist{}, err)
-		return
-	}
 
 	p(downloadedPlaylist, nil)
 }

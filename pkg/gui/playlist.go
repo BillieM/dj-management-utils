@@ -326,11 +326,22 @@ func (e *guiEnv) getAddPlaylistCallback(playlistBindVals *playlistBindingList, r
 			if err != nil {
 				pbi.state = Failed
 				pbi.err = err
-			} else {
-				pbi.playlist = p
-				pbi.state = Found
-				pbi.err = nil
+				return
 			}
+
+			// save playlist to database
+			err = e.SerenDB.CreateSoundCloudPlaylist(p)
+
+			if err != nil {
+				pbi.state = Failed
+				pbi.err = err
+				return
+			}
+
+			pbi.playlist = p
+			pbi.state = Found
+			pbi.err = nil
+
 			refreshFunc()
 		})
 	}
@@ -380,7 +391,17 @@ func (e *guiEnv) openPlaylistPopup(playlist database.SoundCloudPlaylist) {
 	var trackListBinding iwidget.TrackListBinding
 	selectedTrack := &iwidget.SelectedTrackBinding{}
 
-	trackListSection := iwidget.NewTrackListSection(e.mainWindow, &trackListBinding, selectedTrack)
+	// Build the track list widget (displays list of tracks to select)
+	trackListSection := iwidget.NewTrackListSection(
+		e.mainWindow,
+		&trackListBinding,
+		selectedTrack,
+		iwidget.TrackListFuncs{
+			RefreshSoundCloudPlaylist: e.getRefreshSoundCloudPlaylistFunc(playlist, &trackListBinding),
+		},
+	)
+
+	// Build the track section widget (displays info about selected track)
 	trackSection := iwidget.NewTrackSection(
 		e.mainWindow,
 		iwidget.TrackFuncs{
@@ -488,5 +509,77 @@ func (e *guiEnv) getSaveSoundCloudTrackFunc(selectedTrack *iwidget.SelectedTrack
 			e.showErrorDialog(err)
 			return
 		}
+	}
+}
+
+/*
+getRefreshSoundCloudPlaylistFunc returns a function that can be used to refresh a SoundCloud playlist
+*/
+func (e *guiEnv) getRefreshSoundCloudPlaylistFunc(playlist database.SoundCloudPlaylist, trackListBinding *iwidget.TrackListBinding) func() {
+
+	processResultsFunc := func(p database.SoundCloudPlaylist, err error) {
+
+		currentTracksMap := make(map[int64]database.SoundCloudTrack)
+		existingTracksMap := make(map[int64]database.SoundCloudTrack)
+
+		if err != nil {
+			e.showErrorDialog(err)
+			return
+		}
+
+		for _, t := range p.Tracks {
+			currentTracksMap[t.ExternalID] = t
+		}
+
+		var tracksToSave []database.SoundCloudTrack
+
+		for _, t := range trackListBinding.Tracks {
+			existingTracksMap[t.ExternalID] = *t
+			v, ok := currentTracksMap[t.ExternalID]
+			if !ok {
+				t.RemovedFromPlaylist = true
+				tracksToSave = append(tracksToSave, *t)
+			}
+			*t = v
+		}
+
+		for _, t := range p.Tracks {
+			_, ok := existingTracksMap[t.ExternalID]
+			if !ok {
+				// track does not exist in current list, so we add it & save it
+				t.Playlists = append(t.Playlists, playlist)
+				newT := t
+				trackListBinding.Tracks = append(trackListBinding.Tracks, &newT)
+			}
+		}
+
+		if len(tracksToSave) > 0 {
+			err = e.SerenDB.SaveSoundCloudTracks(tracksToSave)
+
+			if err != nil {
+				e.showErrorDialog(err)
+				return
+			}
+		}
+
+		trackListBinding.ApplyFilterSort()
+	}
+
+	return func() {
+
+		opEnv := e.opEnv()
+		opEnv.RegisterStepHandler(streamingStepHandler{
+			stepFunc:     func() {},
+			finishedFunc: func() {},
+		})
+
+		ctx := context.Background()
+
+		opts := operations.GetSoundCloudPlaylistOpts{
+			PlaylistURL: playlist.Permalink,
+			Refresh:     true,
+		}
+
+		opEnv.GetSoundCloudPlaylist(ctx, opts, processResultsFunc)
 	}
 }

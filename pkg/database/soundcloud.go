@@ -21,19 +21,20 @@ type SoundCloudPlaylist struct {
 
 type SoundCloudTrack struct {
 	gorm.Model
-	ExternalID       int64  `gorm:"uniqueIndex"`
-	Name             string // change to title
-	Permalink        string
-	PurchaseTitle    string
-	PurchaseURL      string
-	HasDownloadsLeft bool
-	Genre            string
-	ArtworkURL       string
-	TagList          string
-	PublisherArtist  string // users/ artists use relationships
-	SoundCloudUser   string
-	LocalPath        string
-	LocalPathBroken  bool
+	ExternalID          int64  `gorm:"uniqueIndex"`
+	Name                string // change to title
+	Permalink           string
+	PurchaseTitle       string
+	PurchaseURL         string
+	HasDownloadsLeft    bool
+	Genre               string
+	ArtworkURL          string
+	TagList             string
+	PublisherArtist     string // users/ artists use relationships
+	SoundCloudUser      string
+	LocalPath           string
+	LocalPathBroken     bool
+	RemovedFromPlaylist bool
 
 	Playlists []SoundCloudPlaylist `gorm:"many2many:playlist_tracks;"`
 }
@@ -67,9 +68,6 @@ func (s *SerenDB) CreateSoundCloudPlaylist(p SoundCloudPlaylist) error {
 		clause.OnConflict{
 			Columns:   []clause.Column{{Name: "external_id"}},
 			DoUpdates: clause.AssignmentColumns([]string{"updated_at"}),
-		},
-		clause.OnConflict{
-			Columns: []clause.Column{{Name: "sound_cloud_tracks.external_id"}},
 		},
 	).Create(&p)
 
@@ -154,7 +152,7 @@ SaveSoundCloudTracks saves an array of SoundCloudTrack structs to the database
 */
 func (s *SerenDB) SaveSoundCloudTracks(tracks []SoundCloudTrack) error {
 	for _, track := range tracks {
-		fmt.Println(track)
+		fmt.Println(track.Playlists)
 	}
 
 	result := s.Clauses(

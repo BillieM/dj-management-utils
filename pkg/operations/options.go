@@ -119,6 +119,7 @@ GetSoundCloudPlaylistOpts contains the options for GetSoundCloudPlaylist
 */
 type GetSoundCloudPlaylistOpts struct {
 	PlaylistURL string // Mandatory
+	Refresh     bool   // Optional
 }
 
 /*

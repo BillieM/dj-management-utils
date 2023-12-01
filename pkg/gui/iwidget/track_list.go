@@ -26,10 +26,10 @@ type TrackListSection struct {
 
 	List                    *widget.List
 	TrackListControls       *TrackListControls
-	TrackListExportControls *TrackListExportControls
+	TrackListExportControls *TrackListImportExportControls
 }
 
-func NewTrackListSection(w fyne.Window, tlb *TrackListBinding, selectedTrack *SelectedTrackBinding) *TrackListSection {
+func NewTrackListSection(w fyne.Window, tlb *TrackListBinding, selectedTrack *SelectedTrackBinding, trackListFuncs TrackListFuncs) *TrackListSection {
 
 	tlb.FilterSortInfo = &FilterSortInfo{}
 
@@ -37,7 +37,7 @@ func NewTrackListSection(w fyne.Window, tlb *TrackListBinding, selectedTrack *Se
 		parentWindow:            w,
 		List:                    NewTrackList(w, tlb, selectedTrack),
 		TrackListControls:       NewTrackListControls(tlb),
-		TrackListExportControls: NewTrackListExportControls(),
+		TrackListExportControls: NewTrackListImportExportControls(trackListFuncs),
 	}
 
 	trackListSection.ExtendBaseWidget(trackListSection)
@@ -163,25 +163,33 @@ func (i *TrackListFilterControls) CreateRenderer() fyne.WidgetRenderer {
 TrackListExportControls contains controls for exporting a TrackList to a playlist
 within DJ software
 */
-type TrackListExportControls struct {
+type TrackListImportExportControls struct {
 	widget.BaseWidget
+
+	refreshButton *widget.Button
 
 	lTemp *widget.Label
 }
 
-func NewTrackListExportControls() *TrackListExportControls {
-	tlec := &TrackListExportControls{
-		lTemp: widget.NewLabel("TrackListExportControls"),
+func NewTrackListImportExportControls(trackListFuncs TrackListFuncs) *TrackListImportExportControls {
+	tliec := &TrackListImportExportControls{
+		lTemp: widget.NewLabel("TrackListImportExportControls"),
+		refreshButton: widget.NewButtonWithIcon("Refresh playlist", theme.ViewRefreshIcon(), func() {
+			trackListFuncs.RefreshSoundCloudPlaylist()
+		}),
 	}
 
-	tlec.ExtendBaseWidget(tlec)
+	tliec.ExtendBaseWidget(tliec)
 
-	return tlec
+	return tliec
 }
 
-func (i *TrackListExportControls) CreateRenderer() fyne.WidgetRenderer {
+func (i *TrackListImportExportControls) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(
-		i.lTemp,
+		container.NewVBox(
+			i.lTemp,
+			i.refreshButton,
+		),
 	)
 }
 
@@ -314,7 +322,7 @@ func (i *TrackListBinding) ApplyFilterSort() {
 	i.Lock()
 	defer i.Unlock()
 	// TODO
-	clear(i.VisibleTracks)
+	i.VisibleTracks = []*TrackBinding{}
 	for _, t := range i.Tracks {
 		i.VisibleTracks = append(i.VisibleTracks, &TrackBinding{Track: t})
 	}
@@ -340,4 +348,8 @@ func (i *TrackBinding) RemoveListener(l binding.DataListener) {
 	i.Lock()
 	defer i.Unlock()
 	i.listeners.Delete(l)
+}
+
+type TrackListFuncs struct {
+	RefreshSoundCloudPlaylist func()
 }
