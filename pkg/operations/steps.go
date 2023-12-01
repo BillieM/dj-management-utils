@@ -46,15 +46,16 @@ type StepInfo struct {
 }
 
 type StepInfoNew struct {
+	SkipLog    bool
+	Err        error
 	Progress   float64 // value between 0 and 1
 	Message    string
 	Importance helpers.Importance
 }
 
 type FinishedInfo struct {
-	Success bool
-	Data    any // TODO: consider changing this to an interface
-	err     error
+	Data map[string]any // TODO: consider changing this to an interface
+	Err  error
 }
 
 /*
@@ -122,5 +123,21 @@ func progressOnlyStepInfo(progress float64) StepInfo {
 	return StepInfo{
 		Progress: progress,
 		SkipLog:  true,
+	}
+}
+
+/*
+New StepInfo / FinishedInfo helpers
+*/
+
+func newFinishedSuccess(data map[string]any) FinishedInfo {
+	return FinishedInfo{
+		Data: data,
+	}
+}
+
+func newFinishedError(err error) FinishedInfo {
+	return FinishedInfo{
+		Err: err,
 	}
 }

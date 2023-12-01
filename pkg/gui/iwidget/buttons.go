@@ -1,7 +1,6 @@
 package iwidget
 
 import (
-	"fmt"
 	"net/url"
 	"os"
 
@@ -17,7 +16,7 @@ If the 'SEREN_USE_CHROME flag is set, then the url will be opened in Chrome.
 This flag is not set by default, and is only used for testing purposes.
 */
 type OpenInBrowserButton struct {
-	*widget.Button
+	widget.Button
 
 	URL *url.URL
 }
@@ -25,10 +24,6 @@ type OpenInBrowserButton struct {
 func NewOpenInBrowserButton(text string, urlString string) *OpenInBrowserButton {
 
 	openInBrowserBtn := &OpenInBrowserButton{}
-
-	btn := widget.NewButton(text, func() {})
-
-	openInBrowserBtn.Button = btn
 
 	if urlString != "" {
 		openInBrowserBtn.SetContent(text, urlString)
@@ -41,14 +36,14 @@ func NewOpenInBrowserButton(text string, urlString string) *OpenInBrowserButton 
 
 func (i *OpenInBrowserButton) setOpenFunc() {
 	if os.Getenv("SEREN_USE_CHROME") == "" {
-		i.Button.OnTapped = func() {
+		i.OnTapped = func() {
 			err := fyne.CurrentApp().OpenURL(i.URL)
 			if err != nil {
 				fyne.LogError("Failed to open url", err)
 			}
 		}
 	} else {
-		i.Button.OnTapped = func() {
+		i.OnTapped = func() {
 			helpers.OpenInChrome(i.URL)
 		}
 	}
@@ -61,8 +56,26 @@ func (i *OpenInBrowserButton) SetContent(text, urlStr string) {
 	}
 	i.URL = u
 	i.setOpenFunc()
-	fmt.Println(text)
-	fmt.Println(i.Button.Text)
-	i.Button.SetText(text)
-	fmt.Println(i.Button.Text)
+	i.SetText(text)
+}
+
+type ClickableLabel struct {
+	widget.Label
+
+	OnTapped func()
+}
+
+func NewClickableLabel(text string, tapped func()) *ClickableLabel {
+
+	clickableLabel := &ClickableLabel{
+		OnTapped: tapped,
+	}
+
+	clickableLabel.ExtendBaseWidget(clickableLabel)
+
+	return clickableLabel
+}
+
+func (i *ClickableLabel) Tapped() {
+	i.OnTapped()
 }

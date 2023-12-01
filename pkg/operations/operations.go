@@ -242,7 +242,12 @@ DownloadSoundCloudFile downloads a file straight from SoundCloud
 
 playlistName is optional and is used to create a folder for the playlist within the download directory
 */
-func (e *OpEnv) DownloadSoundCloudFile(track database.SoundCloudTrack, playlistName string) error {
+func (e *OpEnv) DownloadSoundCloudFile(track database.SoundCloudTrack, playlistName string) {
+
+	if e.Config.SoundCloudClientID == "" {
+		e.finishedNew(newFinishedError(helpers.ErrSoundCloudClientIDNotSet))
+		return
+	}
 
 	downloadDir := e.Config.DownloadDir
 
@@ -254,21 +259,21 @@ func (e *OpEnv) DownloadSoundCloudFile(track database.SoundCloudTrack, playlistN
 		ClientID: e.Config.SoundCloudClientID,
 	}
 
-	err := s.DownloadFile(
+	filePath, err := s.DownloadFile(
 		downloadDir,
 		track.ExternalID,
 	)
 
 	if err != nil {
-		fmt.Println(err)
-		return err
+		e.finishedNew(newFinishedError(err))
+		return
 	}
 
-	/*
-		https://api-v2.soundcloud.com/tracks/1367921728/download
-			?client_id=1ZRkRXa5klyxfeCePlMbkWl1xNzz1Bu3&app_version=1700828706&app_locale=en
-	*/
-	return nil
+	e.finishedNew(newFinishedSuccess(
+		map[string]any{
+			"filepath": filePath,
+		},
+	))
 }
 
 /*

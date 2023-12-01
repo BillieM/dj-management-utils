@@ -17,9 +17,9 @@ type TrackSection struct {
 	Placeholder *widget.Label
 }
 
-func NewTrackSection(t database.SoundCloudTrack, downloadFunc func(database.SoundCloudTrack)) *TrackSection {
+func NewTrackSection(w fyne.Window, downloadFunc func()) *TrackSection {
 
-	track := NewTrack(t, downloadFunc)
+	track := NewTrack(w, downloadFunc)
 
 	i := &TrackSection{
 		Track:       track,
@@ -52,7 +52,7 @@ func (trackSection *TrackSection) Bind(selectedTrack *SelectedTrackBinding) {
 }
 
 func (trackSection *TrackSection) updateFromData(b *TrackBinding) {
-	if b.track != nil {
+	if b.Track != nil {
 		trackSection.Track.updateFromData(b)
 		trackSection.Track.Show()
 		trackSection.Placeholder.Hide()
@@ -79,12 +79,12 @@ type Track struct {
 	LinkTrack *LinkTrack
 }
 
-func NewTrack(t database.SoundCloudTrack, downloadFunc func(database.SoundCloudTrack)) *Track {
+func NewTrack(w fyne.Window, downloadFunc func()) *Track {
 
 	i := &Track{
-		TrackInfo: NewTrackInfo(t),
+		TrackInfo: NewTrackInfo(w),
 		GetTrack:  NewGetTrack(downloadFunc),
-		LinkTrack: NewLinkTrack(),
+		LinkTrack: NewLinkTrack(w),
 	}
 
 	i.ExtendBaseWidget(i)
@@ -107,20 +107,22 @@ func (t *Track) CreateRenderer() fyne.WidgetRenderer {
 }
 
 func (t *Track) updateFromData(b *TrackBinding) {
-	t.TrackInfo.updateFromData(*b.track)
+	t.TrackInfo.updateFromData(*b.Track)
 
-	if b.track.HasDownloadsLeft || b.track.PurchaseTitle != "" {
+	if b.Track.HasDownloadsLeft || b.Track.PurchaseTitle != "" {
 		t.GetTrack.Show()
 	} else {
 		t.GetTrack.Hide()
 	}
-	t.GetTrack.updateFromData(*b.track)
-	t.LinkTrack.updateFromData(*b.track)
+	t.GetTrack.updateFromData(*b.Track)
+	t.LinkTrack.updateFromData(*b.Track)
 }
 
 type SelectedTrackBinding struct {
 	bindBase
 
+	Locked       bool
+	ListID       widget.ListItemID
 	TrackBinding *TrackBinding
 }
 
@@ -136,14 +138,30 @@ func (i *SelectedTrackBinding) RemoveListener(l binding.DataListener) {
 	i.listeners.Delete(l)
 }
 
-func (i *SelectedTrackBinding) trigger() (interface{}, error) {
+/*
+Trigger calls the DataChanged method on all listeners
+
+Somewhat of a hack, but it saves using Set methods
+*/
+func (i *SelectedTrackBinding) Trigger() {
 
 	i.listeners.Range(func(key, _ interface{}) bool {
 		key.(binding.DataListener).DataChanged()
 		return true
 	})
 
-	return nil, nil
+}
+
+func (i *SelectedTrackBinding) LockSelected() {
+	i.Lock()
+	defer i.Unlock()
+	i.Locked = true
+}
+
+func (i *SelectedTrackBinding) UnlockSelected() {
+	i.Lock()
+	defer i.Unlock()
+	i.Locked = false
 }
 
 /*
@@ -153,14 +171,16 @@ TrackInfo displays the track name, link to the track, and track properties
 type TrackInfo struct {
 	widget.BaseWidget
 
+	parentWindow fyne.Window
+
 	TrackNameLink   *widget.Hyperlink
 	TrackLinkButton *OpenInBrowserButton
 	TrackProperties *TrackProperties
 }
 
-func NewTrackInfo(t database.SoundCloudTrack) *TrackInfo {
+func NewTrackInfo(w fyne.Window) *TrackInfo {
 
-	trackNameLink := widget.NewHyperlink(t.Name, nil)
+	trackNameLink := widget.NewHyperlink("", nil)
 	trackLinkButton := NewOpenInBrowserButton("Open in browser", "")
 
 	if trackLinkButton.URL != nil {
@@ -173,7 +193,7 @@ func NewTrackInfo(t database.SoundCloudTrack) *TrackInfo {
 	i := &TrackInfo{
 		TrackNameLink:   trackNameLink,
 		TrackLinkButton: trackLinkButton,
-		TrackProperties: NewTrackProperties(t),
+		TrackProperties: NewTrackProperties(),
 	}
 
 	i.TrackNameLink.TextStyle.Bold = true
@@ -213,12 +233,12 @@ type TrackProperties struct {
 	SoundCloudUserPropertyLabel *TrackProperty
 }
 
-func NewTrackProperties(t database.SoundCloudTrack) *TrackProperties {
+func NewTrackProperties() *TrackProperties {
 
-	genrePropertyLabel := NewTrackProperty("Genre", t.Genre)
-	tagListPropertyLabel := NewTrackProperty("Tags", t.TagList)
-	publisherPropertyLabel := NewTrackProperty("Publisher", t.PublisherArtist)
-	soundCloudUserPropertyLabel := NewTrackProperty("SoundCloud User", t.SoundCloudUser)
+	genrePropertyLabel := NewTrackProperty("Genre", "")
+	tagListPropertyLabel := NewTrackProperty("Tags", "")
+	publisherPropertyLabel := NewTrackProperty("Publisher", "")
+	soundCloudUserPropertyLabel := NewTrackProperty("SoundCloud User", "")
 
 	i := &TrackProperties{
 		GenrePropertyLabel:          genrePropertyLabel,
@@ -309,7 +329,7 @@ type GetTrack struct {
 	TrackPurchase *TrackPurchase
 }
 
-func NewGetTrack(downloadFunc func(database.SoundCloudTrack)) *GetTrack {
+func NewGetTrack(downloadFunc func()) *GetTrack {
 	i := &GetTrack{
 		TrackDownload: NewTrackDownload(downloadFunc),
 		TrackPurchase: NewTrackPurchase(),
@@ -334,7 +354,6 @@ func (i *GetTrack) updateFromData(t database.SoundCloudTrack) {
 
 	if t.HasDownloadsLeft {
 		i.TrackDownload.Show()
-		i.TrackDownload.updateFromData(t)
 	} else {
 		i.TrackDownload.Hide()
 	}
@@ -390,23 +409,26 @@ handled by 'TrackPurchase'
 type TrackDownload struct {
 	widget.BaseWidget
 
-	DownloadFunc func(database.SoundCloudTrack)
-
 	TrackDownloadButton   *widget.Button
 	TrackDownloadProgress *widget.ProgressBarInfinite
 }
 
-func NewTrackDownload(downloadFunc func(database.SoundCloudTrack)) *TrackDownload {
-
-	trackDownloadButton := widget.NewButton("Download Track", func() {})
-
+func NewTrackDownload(downloadFunc func()) *TrackDownload {
 	trackDownloadProgress := widget.NewProgressBarInfinite()
 	trackDownloadProgress.Hide()
+
+	trackDownloadButton := widget.NewButton("Download Track",
+		func() {
+			go func() {
+				trackDownloadProgress.Show()
+				downloadFunc()
+				trackDownloadProgress.Hide()
+			}()
+		})
 
 	i := &TrackDownload{
 		TrackDownloadButton:   trackDownloadButton,
 		TrackDownloadProgress: trackDownloadProgress,
-		DownloadFunc:          downloadFunc,
 	}
 
 	i.ExtendBaseWidget(i)
@@ -428,26 +450,23 @@ func (i *TrackDownload) CreateRenderer() fyne.WidgetRenderer {
 	)
 }
 
-func (i *TrackDownload) updateFromData(t database.SoundCloudTrack) {
-	i.TrackDownloadButton.OnTapped = func() {
-		i.TrackDownloadProgress.Show()
-		go func() {
-			i.DownloadFunc(t)
-			i.TrackDownloadProgress.Hide()
-		}()
-	}
-}
-
 /*
 LinkTrack allows for the user to establish a link between a SoundCloud track and
 a track within their DJ libary/ local filesystem.
 */
 type LinkTrack struct {
 	widget.BaseWidget
+
+	parentWindow fyne.Window
+
+	LinkTrackFileSelect *LinkTrackFileSelect
 }
 
-func NewLinkTrack() *LinkTrack {
-	i := &LinkTrack{}
+func NewLinkTrack(w fyne.Window) *LinkTrack {
+	i := &LinkTrack{
+		parentWindow:        w,
+		LinkTrackFileSelect: NewLinkTrackFileSelect(w),
+	}
 
 	i.ExtendBaseWidget(i)
 
@@ -456,10 +475,43 @@ func NewLinkTrack() *LinkTrack {
 
 func (i *LinkTrack) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(
-		widget.NewLabel("Link Track"),
+		container.NewVBox(
+			i.LinkTrackFileSelect,
+		),
 	)
 }
 
 func (i *LinkTrack) updateFromData(t database.SoundCloudTrack) {
 
+}
+
+type LinkTrackFileSelect struct {
+	widget.BaseWidget
+
+	parentWindow fyne.Window
+
+	OpenPath *OpenPath
+}
+
+func NewLinkTrackFileSelect(w fyne.Window) *LinkTrackFileSelect {
+
+	openPath := NewOpenPath(w, "", File)
+
+	i := &LinkTrackFileSelect{
+		parentWindow: w,
+		OpenPath:     openPath,
+	}
+
+	i.ExtendBaseWidget(i)
+
+	return i
+}
+
+func (i *LinkTrackFileSelect) CreateRenderer() fyne.WidgetRenderer {
+	return widget.NewSimpleRenderer(
+		container.NewVBox(
+			widget.NewLabel("Select track file location from local file system"),
+			i.OpenPath,
+		),
+	)
 }

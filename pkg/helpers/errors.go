@@ -62,6 +62,8 @@ var (
 	ErrMissingRedirectURI        = errors.New("missing redirect URI")
 	ErrRequestingPlaylist        = errors.New("error requesting playlist")
 	ErrUserCancelled             = errors.New("user cancelled operation")
+	ErrSoundCloudClientIDNotSet  = errors.New("soundcloud client ID not set")
+	ErrPleaseWaitForDownload     = errors.New("please wait for the track to finish downloading")
 )
 
 var (

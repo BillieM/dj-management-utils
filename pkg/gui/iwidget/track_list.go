@@ -7,6 +7,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/billiem/seren-management/pkg/database"
@@ -21,17 +22,20 @@ controls to export the tracks to a playlist
 type TrackListSection struct {
 	widget.BaseWidget
 
+	parentWindow fyne.Window
+
 	List                    *widget.List
 	TrackListControls       *TrackListControls
 	TrackListExportControls *TrackListExportControls
 }
 
-func NewTrackListSection(tlb *TrackListBinding, selectedTrack *SelectedTrackBinding) *TrackListSection {
+func NewTrackListSection(w fyne.Window, tlb *TrackListBinding, selectedTrack *SelectedTrackBinding) *TrackListSection {
 
 	tlb.FilterSortInfo = &FilterSortInfo{}
 
 	trackListSection := &TrackListSection{
-		List:                    NewTrackList(tlb, selectedTrack),
+		parentWindow:            w,
+		List:                    NewTrackList(w, tlb, selectedTrack),
 		TrackListControls:       NewTrackListControls(tlb),
 		TrackListExportControls: NewTrackListExportControls(),
 	}
@@ -181,7 +185,7 @@ func (i *TrackListExportControls) CreateRenderer() fyne.WidgetRenderer {
 	)
 }
 
-func NewTrackList(tlb *TrackListBinding, selectedTrack *SelectedTrackBinding) *widget.List {
+func NewTrackList(w fyne.Window, tlb *TrackListBinding, selectedTrack *SelectedTrackBinding) *widget.List {
 
 	trackList := widget.NewListWithData(
 		tlb,
@@ -192,8 +196,8 @@ func NewTrackList(tlb *TrackListBinding, selectedTrack *SelectedTrackBinding) *w
 			trackListItem := o.(*TrackListItem)
 			trackBinding := i.(*TrackBinding)
 
-			trackListItem.TrackName.SetText(trackBinding.track.Name)
-			if trackBinding.track.LocalPath != "" && !trackBinding.track.LocalPathBroken {
+			trackListItem.TrackName.SetText(trackBinding.Track.Name)
+			if trackBinding.Track.LocalPath != "" && !trackBinding.Track.LocalPathBroken {
 				trackListItem.Linked.SetResource(theme.ConfirmIcon())
 			} else {
 				trackListItem.Linked.SetResource(theme.ContentRemoveIcon())
@@ -202,6 +206,12 @@ func NewTrackList(tlb *TrackListBinding, selectedTrack *SelectedTrackBinding) *w
 	)
 
 	trackList.OnSelected = func(id widget.ListItemID) {
+		if selectedTrack.Locked {
+			trackList.Select(selectedTrack.ListID)
+			dialog.ShowError(helpers.ErrPleaseWaitForDownload, w)
+			return
+		}
+
 		tli, err := tlb.GetItem(id)
 		if err != nil {
 			fmt.Println("error getting track from list", err)
@@ -210,7 +220,8 @@ func NewTrackList(tlb *TrackListBinding, selectedTrack *SelectedTrackBinding) *w
 		selectedTrackBind := tli.(*TrackBinding)
 
 		selectedTrack.TrackBinding = selectedTrackBind
-		selectedTrack.trigger()
+		selectedTrack.ListID = id
+		selectedTrack.Trigger()
 	}
 
 	return trackList
@@ -305,7 +316,7 @@ func (i *TrackListBinding) ApplyFilterSort() {
 	// TODO
 	clear(i.VisibleTracks)
 	for _, t := range i.Tracks {
-		i.VisibleTracks = append(i.VisibleTracks, &TrackBinding{track: t})
+		i.VisibleTracks = append(i.VisibleTracks, &TrackBinding{Track: t})
 	}
 }
 
@@ -316,7 +327,7 @@ type TrackBinding struct {
 	bindBase
 
 	// may want a context in here ?? later problem...
-	track *database.SoundCloudTrack
+	Track *database.SoundCloudTrack
 }
 
 func (i *TrackBinding) AddListener(l binding.DataListener) {

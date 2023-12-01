@@ -27,11 +27,9 @@ type streamingStepHandlerNew struct {
 }
 
 func (s streamingStepHandlerNew) StepCallback(i operations.StepInfoNew) {
-	fmt.Println(i)
 	s.stepCallback(i)
 }
 
 func (s streamingStepHandlerNew) FinishedCallback(i operations.FinishedInfo) {
-	fmt.Println(i)
 	s.finishedCallback(i)
 }

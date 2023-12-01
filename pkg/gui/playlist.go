@@ -380,10 +380,10 @@ func (e *guiEnv) openPlaylistPopup(playlist database.SoundCloudPlaylist) {
 	var trackListBinding iwidget.TrackListBinding
 	selectedTrack := &iwidget.SelectedTrackBinding{}
 
-	trackListSection := iwidget.NewTrackListSection(&trackListBinding, selectedTrack)
+	trackListSection := iwidget.NewTrackListSection(e.mainWindow, &trackListBinding, selectedTrack)
 	trackSection := iwidget.NewTrackSection(
-		database.SoundCloudTrack{},
-		e.getDownloadSoundCloudTrackFunc(playlist.Name),
+		e.mainWindow,
+		e.getDownloadSoundCloudTrackFunc(selectedTrack, playlist.Name),
 	)
 	trackSection.Bind(selectedTrack)
 
@@ -411,7 +411,7 @@ func (e *guiEnv) openPlaylistPopup(playlist database.SoundCloudPlaylist) {
 	)
 
 	go func(tlb *iwidget.TrackListBinding) {
-		t, err := e.SerenDB.GetSoundCloudTracks(playlist.ExternalID)
+		t, err := e.SerenDB.GetSoundCloudTracksByPlaylistID(playlist.ExternalID)
 		if err != nil {
 			playlistPopup.Hide()
 			e.showErrorDialog(err)
@@ -432,13 +432,46 @@ getDownloadSoundCloudTrackFunc returns a function that can be used to download a
 this function when opening a playlist popup.
 
 Generating the function here saves us passing lots of data down the track widgets (i.e. env/ playlist name)
+May consider changing this and attaching these to the widgets in the future
 */
-func (e *guiEnv) getDownloadSoundCloudTrackFunc(playlistName string) func(database.SoundCloudTrack) {
-	return func(t database.SoundCloudTrack) {
+func (e *guiEnv) getDownloadSoundCloudTrackFunc(selectedTrack *iwidget.SelectedTrackBinding, playlistName string) func() {
+	return func() {
+
+		selectedTrack.LockSelected()
+
+		track := selectedTrack.TrackBinding.Track
+
 		opEnv := e.opEnv()
 		opEnv.RegisterStepHandlerNew(
-			streamingStepHandlerNew{},
+			streamingStepHandlerNew{
+				stepCallback: func(i operations.StepInfoNew) {},
+				finishedCallback: func(i operations.FinishedInfo) {
+					if i.Err != nil {
+						e.showErrorDialog(i.Err)
+					} else {
+						path, ok := i.Data["filepath"].(string)
+						if !ok {
+							e.showErrorDialog(fmt.Errorf("filepath not found in finished data"))
+							return
+						}
+						track.LocalPath = path
+
+						err := e.SerenDB.SaveSoundCloudTracks([]database.SoundCloudTrack{*track})
+						if err != nil {
+							e.showErrorDialog(err)
+							return
+						}
+
+						e.showInfoDialog(
+							"Download Successful",
+							fmt.Sprintf("Downloaded %s to %s", track.Name, track.LocalPath),
+						)
+					}
+				},
+			},
 		)
-		opEnv.DownloadSoundCloudFile(t, playlistName)
+		opEnv.DownloadSoundCloudFile(*track, playlistName)
+
+		selectedTrack.UnlockSelected()
 	}
 }

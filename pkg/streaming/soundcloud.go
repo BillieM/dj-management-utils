@@ -187,7 +187,14 @@ func (s SoundCloud) makeSoundCloudTracksRequest(ids []int64) ([]TrackElement, er
 	return tracks, nil
 }
 
-func (s SoundCloud) DownloadFile(dirPath string, id int64) error {
+/*
+DownloadFile downloads a file from SoundCloud
+
+returns the path to the downloaded file if successful, otherwise returns an error
+
+The file extension is gathered from the Content-Disposition header
+*/
+func (s SoundCloud) DownloadFile(dirPath string, id int64) (string, error) {
 
 	req, err := http.NewRequest(
 		"GET",
@@ -196,7 +203,7 @@ func (s SoundCloud) DownloadFile(dirPath string, id int64) error {
 	)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	q := req.URL.Query()
@@ -210,13 +217,13 @@ func (s SoundCloud) DownloadFile(dirPath string, id int64) error {
 	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	var uriMap map[string]string
@@ -224,19 +231,19 @@ func (s SoundCloud) DownloadFile(dirPath string, id int64) error {
 	err = json.Unmarshal(body, &uriMap)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	val, ok := uriMap["redirectUri"]
 
 	if !ok {
-		return helpers.ErrMissingRedirectURI
+		return "", helpers.ErrMissingRedirectURI
 	}
 
 	resp, err = http.Get(val)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	defer resp.Body.Close()
@@ -246,19 +253,21 @@ func (s SoundCloud) DownloadFile(dirPath string, id int64) error {
 	filename, err := helpers.GetFileNameFromContentDisposition(contentDisposition)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = helpers.CreateDirIfNotExists(dirPath)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	f, err := os.Create(helpers.JoinFilepathToSlash(dirPath, filename))
+	filePath := helpers.JoinFilepathToSlash(dirPath, filename)
+
+	f, err := os.Create(filePath)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	defer f.Close()
@@ -266,8 +275,8 @@ func (s SoundCloud) DownloadFile(dirPath string, id int64) error {
 	_, err = io.Copy(f, resp.Body)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return filePath, nil
 }

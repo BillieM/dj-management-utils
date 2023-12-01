@@ -1,6 +1,8 @@
 package database
 
 import (
+	"fmt"
+
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -31,31 +33,45 @@ type SoundCloudTrack struct {
 	PublisherArtist  string // users/ artists use relationships
 	SoundCloudUser   string
 	LocalPath        string
+	LocalPathBroken  bool
 
 	Playlists []SoundCloudPlaylist `gorm:"many2many:playlist_tracks;"`
-
-	LocalPathBroken bool `gorm:"-"`
 }
 
-func (p *SoundCloudPlaylist) BeforeCreate(tx *gorm.DB) (err error) {
-	tx.Statement.AddClause(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "external_id"}},
-		DoNothing: true,
-	})
-	return nil
-}
+// func (p *SoundCloudPlaylist) BeforeCreate(s *gorm.DB) (err error) {
+// 	s.Statement.AddClause(clause.OnConflict{
+// 		Columns:   []clause.Column{{Name: "external_id"}},
+// 		DoNothing: true,
+// 	})
+// 	return nil
+// }
 
-func (t *SoundCloudTrack) BeforeCreate(tx *gorm.DB) (err error) {
-	tx.Statement.AddClause(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "external_id"}},
-		DoNothing: true,
-	})
-	return nil
-}
+// func (p *SoundCloudPlaylist) AfterSelect(s *gorm.DB) (err error) {
+// 	var count int64
+// 	s.Model(p).Association("Tracks").Count(&count)
+// 	p.NumTracks = int(count)
+// 	return nil
+// }
+
+// func (t *SoundCloudTrack) BeforeCreate(s *gorm.DB) (err error) {
+// 	s.Statement.AddClause(clause.OnConflict{
+// 		Columns:   []clause.Column{{Name: "external_id"}},
+// 		DoUpdates:
+// 	})
+// 	return nil
+// }
 
 func (s *SerenDB) CreateSoundCloudPlaylist(p SoundCloudPlaylist) error {
 
-	result := s.Create(&p)
+	result := s.Clauses(
+		clause.OnConflict{
+			Columns:   []clause.Column{{Name: "external_id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"updated_at"}),
+		},
+		clause.OnConflict{
+			Columns: []clause.Column{{Name: "sound_cloud_tracks.external_id"}},
+		},
+	).Create(&p)
 
 	if result.Error != nil {
 		return result.Error
@@ -99,7 +115,10 @@ func (s *SerenDB) GetSoundCloudPlaylistByExternalID(externalId int64) (SoundClou
 
 }
 
-func (s *SerenDB) GetSoundCloudTracks(playlistId int64) ([]*SoundCloudTrack, error) {
+/*
+GetSoundCloudTracksByPlaylistID returns an array of SoundCloudTrack structs for a given playlist id
+*/
+func (s *SerenDB) GetSoundCloudTracksByPlaylistID(playlistId int64) ([]*SoundCloudTrack, error) {
 
 	var playlist SoundCloudPlaylist
 	var tracks []*SoundCloudTrack
@@ -115,4 +134,43 @@ func (s *SerenDB) GetSoundCloudTracks(playlistId int64) ([]*SoundCloudTrack, err
 	}
 
 	return tracks, nil
+}
+
+func (s *SerenDB) GetSoundCloudTracksWithLocalPaths() ([]SoundCloudTrack, error) {
+
+	var tracks []SoundCloudTrack
+
+	result := s.Where("local_path IS NOT NULL").Find(&tracks)
+
+	if result.Error != nil {
+		return tracks, result.Error
+	}
+
+	return tracks, nil
+}
+
+/*
+SaveSoundCloudTracks saves an array of SoundCloudTrack structs to the database
+*/
+func (s *SerenDB) SaveSoundCloudTracks(tracks []SoundCloudTrack) error {
+	for _, track := range tracks {
+		fmt.Println(track)
+	}
+
+	result := s.Clauses(
+		clause.OnConflict{
+			Columns: []clause.Column{{Name: "external_id"}},
+			DoUpdates: clause.AssignmentColumns([]string{
+				"updated_at",
+				"local_path",
+				"local_path_broken",
+			}),
+		},
+	).Save(&tracks)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
 }
