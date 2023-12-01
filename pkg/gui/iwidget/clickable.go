@@ -10,6 +10,10 @@ import (
 )
 
 /*
+Contains a selection of clickable widgets, such as buttons and labels.
+*/
+
+/*
 Opens a url in the default browser.
 
 If the 'SEREN_USE_CHROME flag is set, then the url will be opened in Chrome.
@@ -76,6 +80,27 @@ func NewClickableLabel(text string, tapped func()) *ClickableLabel {
 	return clickableLabel
 }
 
-func (i *ClickableLabel) Tapped() {
+func (i *ClickableLabel) Tapped(_ *fyne.PointEvent) {
+	i.OnTapped()
+}
+
+type ClickableCard struct {
+	widget.Card
+
+	OnTapped func()
+}
+
+func NewClickableCard(tapped func()) *ClickableCard {
+
+	clickableCard := &ClickableCard{
+		OnTapped: tapped,
+	}
+
+	clickableCard.ExtendBaseWidget(clickableCard)
+
+	return clickableCard
+}
+
+func (i *ClickableCard) Tapped(_ *fyne.PointEvent) {
 	i.OnTapped()
 }

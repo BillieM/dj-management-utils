@@ -383,7 +383,11 @@ func (e *guiEnv) openPlaylistPopup(playlist database.SoundCloudPlaylist) {
 	trackListSection := iwidget.NewTrackListSection(e.mainWindow, &trackListBinding, selectedTrack)
 	trackSection := iwidget.NewTrackSection(
 		e.mainWindow,
-		e.getDownloadSoundCloudTrackFunc(selectedTrack, playlist.Name),
+		iwidget.TrackFuncs{
+			DownloadSoundCloudTrack: e.getDownloadSoundCloudTrackFunc(selectedTrack, playlist.Name),
+			SaveSoundCloudTrackToDB: e.getSaveSoundCloudTrackFunc(selectedTrack),
+		},
+		e.resizeEvents,
 	)
 	trackSection.Bind(selectedTrack)
 
@@ -473,5 +477,16 @@ func (e *guiEnv) getDownloadSoundCloudTrackFunc(selectedTrack *iwidget.SelectedT
 		opEnv.DownloadSoundCloudFile(*track, playlistName)
 
 		selectedTrack.UnlockSelected()
+	}
+}
+
+func (e *guiEnv) getSaveSoundCloudTrackFunc(selectedTrack *iwidget.SelectedTrackBinding) func() {
+	return func() {
+		track := selectedTrack.TrackBinding.Track
+		err := e.SerenDB.SaveSoundCloudTracks([]database.SoundCloudTrack{*track})
+		if err != nil {
+			e.showErrorDialog(err)
+			return
+		}
 	}
 }

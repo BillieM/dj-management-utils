@@ -6,8 +6,12 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	"github.com/billiem/seren-management/pkg/database"
+	"github.com/billiem/seren-management/pkg/gui/uihelpers"
+	"github.com/billiem/seren-management/pkg/helpers"
 )
 
 type TrackSection struct {
@@ -17,9 +21,9 @@ type TrackSection struct {
 	Placeholder *widget.Label
 }
 
-func NewTrackSection(w fyne.Window, downloadFunc func()) *TrackSection {
+func NewTrackSection(w fyne.Window, trackFuncs TrackFuncs, resizeEvents *uihelpers.ResizeEvents) *TrackSection {
 
-	track := NewTrack(w, downloadFunc)
+	track := NewTrack(w, trackFuncs, resizeEvents)
 
 	i := &TrackSection{
 		Track:       track,
@@ -43,16 +47,23 @@ func (t *TrackSection) CreateRenderer() fyne.WidgetRenderer {
 	)
 }
 
+/*
+Bind binds the TrackSection to a SelectedTrackBinding
+This allows the TrackSection to update when the selected track changes
+
+note: currently a bit of a hack, and the Trigger() method should be called
+to make the updates reflect
+*/
 func (trackSection *TrackSection) Bind(selectedTrack *SelectedTrackBinding) {
 	listener := binding.NewDataListener(func() {
-		trackSection.updateFromData(selectedTrack.TrackBinding)
+		trackSection.updateFromData(selectedTrack)
 	})
 
 	selectedTrack.AddListener(listener)
 }
 
-func (trackSection *TrackSection) updateFromData(b *TrackBinding) {
-	if b.Track != nil {
+func (trackSection *TrackSection) updateFromData(b *SelectedTrackBinding) {
+	if b.TrackBinding.Track != nil {
 		trackSection.Track.updateFromData(b)
 		trackSection.Track.Show()
 		trackSection.Placeholder.Hide()
@@ -79,12 +90,12 @@ type Track struct {
 	LinkTrack *LinkTrack
 }
 
-func NewTrack(w fyne.Window, downloadFunc func()) *Track {
+func NewTrack(w fyne.Window, trackFuncs TrackFuncs, resizeEvents *uihelpers.ResizeEvents) *Track {
 
 	i := &Track{
 		TrackInfo: NewTrackInfo(w),
-		GetTrack:  NewGetTrack(downloadFunc),
-		LinkTrack: NewLinkTrack(w),
+		GetTrack:  NewGetTrack(w, trackFuncs.DownloadSoundCloudTrack),
+		LinkTrack: NewLinkTrack(w, trackFuncs.SaveSoundCloudTrackToDB, resizeEvents),
 	}
 
 	i.ExtendBaseWidget(i)
@@ -106,16 +117,18 @@ func (t *Track) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(c)
 }
 
-func (t *Track) updateFromData(b *TrackBinding) {
-	t.TrackInfo.updateFromData(*b.Track)
+func (t *Track) updateFromData(b *SelectedTrackBinding) {
+	scTrack := *b.TrackBinding.Track
 
-	if b.Track.HasDownloadsLeft || b.Track.PurchaseTitle != "" {
+	t.TrackInfo.updateFromData(scTrack)
+
+	if scTrack.HasDownloadsLeft || scTrack.PurchaseTitle != "" {
 		t.GetTrack.Show()
 	} else {
 		t.GetTrack.Hide()
 	}
-	t.GetTrack.updateFromData(*b.Track)
-	t.LinkTrack.updateFromData(*b.Track)
+	t.GetTrack.updateFromData(scTrack)
+	t.LinkTrack.updateFromData(b)
 }
 
 type SelectedTrackBinding struct {
@@ -325,11 +338,13 @@ func (i *TrackNameLink) SetNameLinkFromString(name string, url string) {
 type GetTrack struct {
 	widget.BaseWidget
 
+	parentWindow fyne.Window
+
 	TrackDownload *TrackDownload
 	TrackPurchase *TrackPurchase
 }
 
-func NewGetTrack(downloadFunc func()) *GetTrack {
+func NewGetTrack(w fyne.Window, downloadFunc func()) *GetTrack {
 	i := &GetTrack{
 		TrackDownload: NewTrackDownload(downloadFunc),
 		TrackPurchase: NewTrackPurchase(),
@@ -462,10 +477,10 @@ type LinkTrack struct {
 	LinkTrackFileSelect *LinkTrackFileSelect
 }
 
-func NewLinkTrack(w fyne.Window) *LinkTrack {
+func NewLinkTrack(w fyne.Window, saveSoundCloudTrackFunc func(), resizeEvents *uihelpers.ResizeEvents) *LinkTrack {
 	i := &LinkTrack{
 		parentWindow:        w,
-		LinkTrackFileSelect: NewLinkTrackFileSelect(w),
+		LinkTrackFileSelect: NewLinkTrackFileSelect(w, saveSoundCloudTrackFunc, resizeEvents),
 	}
 
 	i.ExtendBaseWidget(i)
@@ -481,25 +496,53 @@ func (i *LinkTrack) CreateRenderer() fyne.WidgetRenderer {
 	)
 }
 
-func (i *LinkTrack) updateFromData(t database.SoundCloudTrack) {
-
+func (i *LinkTrack) updateFromData(t *SelectedTrackBinding) {
+	i.LinkTrackFileSelect.updateFromData(t)
 }
 
+/*
+LinkTrackFileSelect allows for the user to link a SoundCloud track to a file
+on their local file system via a file selection dialog
+*/
 type LinkTrackFileSelect struct {
 	widget.BaseWidget
 
 	parentWindow fyne.Window
 
+	resizeEvents            *uihelpers.ResizeEvents
+	saveSoundCloudTrackFunc func()
+
 	OpenPath *OpenPath
 }
 
-func NewLinkTrackFileSelect(w fyne.Window) *LinkTrackFileSelect {
+func NewLinkTrackFileSelect(w fyne.Window, saveSoundCloudTrackFunc func(), resizeEvents *uihelpers.ResizeEvents) *LinkTrackFileSelect {
 
 	openPath := NewOpenPath(w, "", File)
 
+	openPath.SetExtensionFilter(helpers.GetAudioExtensions())
+	openPath.SetOnErrorCallback(func(err error) {
+		dialog.ShowError(err, w)
+	})
+
+	resizeFunc := func() {
+		openPath.Dialog.Resize(uihelpers.CanvasPercentSize(w, 0.75, 0.75, fyne.NewSize(480, 320), fyne.NewSize(1280, 0)))
+	}
+
+	var key string
+
+	openPath.SetOnOpenCallback(func() {
+		resizeFunc()
+		key = resizeEvents.Add(resizeFunc)
+	})
+	openPath.SetOnCloseCallback(func() {
+		resizeEvents.Remove(key)
+	})
+
 	i := &LinkTrackFileSelect{
-		parentWindow: w,
-		OpenPath:     openPath,
+		parentWindow:            w,
+		OpenPath:                openPath,
+		resizeEvents:            resizeEvents,
+		saveSoundCloudTrackFunc: saveSoundCloudTrackFunc,
 	}
 
 	i.ExtendBaseWidget(i)
@@ -511,7 +554,32 @@ func (i *LinkTrackFileSelect) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(
 		container.NewVBox(
 			widget.NewLabel("Select track file location from local file system"),
-			i.OpenPath,
+			container.NewBorder(
+				nil, nil,
+				layout.NewSpacer(), layout.NewSpacer(),
+				i.OpenPath,
+			),
 		),
 	)
+}
+
+func (i *LinkTrackFileSelect) updateFromData(t *SelectedTrackBinding) {
+	scTrack := *t.TrackBinding.Track
+
+	if scTrack.LocalPath != "" {
+		i.OpenPath.SetURIFromPathString(scTrack.LocalPath)
+	} else {
+		i.OpenPath.SetURIFromPathString("/")
+	}
+
+	i.OpenPath.SetOnValidCallback(func(uri string) {
+		t.TrackBinding.Track.LocalPath = uri
+		i.saveSoundCloudTrackFunc()
+		t.Trigger()
+	})
+}
+
+type TrackFuncs struct {
+	DownloadSoundCloudTrack func()
+	SaveSoundCloudTrackToDB func()
 }

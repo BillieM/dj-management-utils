@@ -274,3 +274,19 @@ func GetFileNameFromContentDisposition(contentDisposition string) (string, error
 
 	return params["filename"], nil
 }
+
+func GetAudioExtensions() []string {
+	return []string{
+		"mp3",
+		"ogg",
+		"aac",
+		"alac",
+		"flac",
+		"aif",
+		"aiff",
+		"wav",
+		"aifc",
+		"mp4",
+		"m4a",
+	}
+}
