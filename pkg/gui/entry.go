@@ -4,31 +4,48 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"github.com/billiem/seren-management/pkg/gui/iwidget"
 	"github.com/billiem/seren-management/pkg/helpers"
 )
 
 func Entry() {
+	a := app.New()
+	mainWindow := a.NewWindow("Library Utilities")
 
-	e, err := buildGuiEnv()
+	e, err := buildGuiEnv(a, mainWindow)
 
 	if err != nil {
 		helpers.HandleFatalError(err)
 	}
 
-	a := app.New()
-	w := a.NewWindow("Library Utilities")
+	appLoading := iwidget.NewAppLoading()
 
-	// Seems strange this method is called SetMainMenu as it really defines the top bar of the application, but hey :)
-	w.SetMainMenu(e.makeNavBar(a, w))
+	mainWindow.SetContent(
+		container.NewStack(
+			appLoading,
+		),
+	)
 
-	w.Resize(fyne.NewSize(960, 720))
+	go e.loadApp(func() {
+		// Seems strange this method is called SetMainMenu as it really defines the top bar of the application, but hey :)
+		mainWindow.SetMainMenu(e.makeNavBar(a, mainWindow))
 
-	contentStack := container.NewStack()
-	e.setMainContent(w, contentStack, e.getViewList()["home"])
+		mainWindow.Resize(fyne.NewSize(1600, 900))
 
-	split := container.NewHSplit(e.makeNavMenu(w, contentStack), contentStack)
-	split.Offset = 0.25
+		contentStack := container.NewStack()
 
-	w.SetContent(split)
-	w.ShowAndRun()
+		e.setMainContent(contentStack, e.getViewList()["home"])
+
+		split := container.NewHSplit(e.makeNavMenu(contentStack), contentStack)
+		split.SetOffset(0)
+
+		mainWindow.SetContent(
+			container.NewStack(
+				container.New(e.resizeEvents, container.NewStack()),
+				split,
+			),
+		)
+	})
+
+	mainWindow.ShowAndRun()
 }

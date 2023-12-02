@@ -61,3 +61,31 @@ func enableBtnIfOptsOkay(o operations.OperationOptions, btn *widget.Button) {
 		btn.Enable()
 	}
 }
+
+type viewLoading struct {
+	widget.BaseWidget
+
+	loadingLabel *widget.Label
+	loadingBar   *widget.ProgressBarInfinite
+}
+
+func newViewLoading(loadingText string) *viewLoading {
+	i := &viewLoading{
+		loadingLabel: widget.NewLabel(loadingText),
+		loadingBar:   widget.NewProgressBarInfinite(),
+	}
+
+	i.ExtendBaseWidget(i)
+
+	return i
+}
+
+func (i *viewLoading) CreateRenderer() fyne.WidgetRenderer {
+
+	c := container.NewBorder(
+		i.loadingLabel, nil, nil, nil,
+		container.NewBorder(i.loadingBar, nil, nil, nil),
+	)
+
+	return widget.NewSimpleRenderer(c)
+}

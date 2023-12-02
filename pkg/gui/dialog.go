@@ -1,14 +1,13 @@
 package gui
 
 import (
-	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
 )
 
-func showErrorDialog(w fyne.Window, err error) {
-	dialog.ShowError(err, w)
+func (e *guiEnv) showErrorDialog(err error) {
+	dialog.ShowError(err, e.mainWindow)
 }
 
-func showInfoDialog(w fyne.Window, title, message string) {
-	dialog.ShowInformation(title, message, w)
+func (e *guiEnv) showInfoDialog(title, message string) {
+	dialog.ShowInformation(title, message, e.mainWindow)
 }

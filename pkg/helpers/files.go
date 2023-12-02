@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"mime"
 	"os"
 	"path/filepath"
 
@@ -33,7 +34,7 @@ Uses regex to check if a string contains any of the given extensions
 */
 func IsExtensionInArray(s string, a []string) bool {
 	for _, v := range a {
-		if regexContains(s, `(?i)\.`+v+`$`) {
+		if RegexContains(s, `(?i)\.`+v+`$`) {
 			return true
 		}
 	}
@@ -42,7 +43,7 @@ func IsExtensionInArray(s string, a []string) bool {
 
 func ReplaceTrackExtension(s string, r string, a []string) string {
 	for _, v := range a {
-		s = regexReplace(s, `(?i)\.`+v+`$`, r)
+		s = RegexReplace(s, `(?i)\.`+v+`$`, r)
 	}
 	return s
 }
@@ -56,6 +57,11 @@ func GetDirPathFromFilePath(s string) (string, error) {
 	return dir, nil
 }
 
+/*
+GetFileNameFromFilePath returns the file name from a given file path (without the extension)
+
+TODO: add an argument to include the extension
+*/
 func GetFileNameFromFilePath(s string) (string, error) {
 	_, file := filepath.Split(s)
 	if file == "" {
@@ -157,7 +163,7 @@ If no base directory is found, it will return the root directory (i.e. /)
 func GetClosestDir(path string, baseDirPath string, rCnt *int) (string, error) {
 	*rCnt++
 	fi, err := os.Stat(path)
-	// fmt.Println(*rCnt, path)
+
 	if err != nil {
 		if *rCnt <= 4 {
 			return GetClosestDir(JoinFilepathToSlash(path, ".."), baseDirPath, rCnt)
@@ -233,4 +239,54 @@ func GetAbsOrProjPath(path string) (string, error) {
 		return path, nil
 	}
 	return JoinFilepathToSlash(projectpath.Root, path), nil
+}
+
+/*
+GetFileExtensionFromContentType returns the file extension from a given content type
+*/
+func GetFileExtensionFromContentType(contentType string) (string, error) {
+	exts, err := mime.ExtensionsByType(contentType)
+
+	if err != nil {
+		return "", err
+	}
+
+	if len(exts) == 0 {
+		return "", ErrNoFileExtension
+	}
+
+	return exts[0], nil
+}
+
+/*
+GetFileExtensionFromContentDisposition returns the filename (with extension) from a given content disposition
+*/
+func GetFileNameFromContentDisposition(contentDisposition string) (string, error) {
+	_, params, err := mime.ParseMediaType(contentDisposition)
+
+	if err != nil {
+		return "", err
+	}
+
+	if params["filename"] == "" {
+		return "", ErrNoFileExtension
+	}
+
+	return params["filename"], nil
+}
+
+func GetAudioExtensions() []string {
+	return []string{
+		"mp3",
+		"ogg",
+		"aac",
+		"alac",
+		"flac",
+		"aif",
+		"aiff",
+		"wav",
+		"aifc",
+		"mp4",
+		"m4a",
+	}
 }

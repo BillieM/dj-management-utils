@@ -3,34 +3,13 @@ package operations
 import (
 	"context"
 	"fmt"
+	"os"
 
+	"github.com/billiem/seren-management/pkg/collection"
+	"github.com/billiem/seren-management/pkg/database"
 	"github.com/billiem/seren-management/pkg/helpers"
+	"github.com/billiem/seren-management/pkg/streaming"
 )
-
-/*
-This file serves as an entrypoint for all operations
-*/
-
-/*
-StepHandler is used to provide callbacks to the operations package
-*/
-type StepHandler interface {
-	StepCallback(StepInfo)
-	ExitCallback()
-}
-
-/*
-StepInfo is returned to the StepCallback after each step
-
-It provides information about the step that just finished
-*/
-type StepInfo struct {
-	SkipLog    bool
-	Progress   float64
-	Message    string
-	Error      error
-	Importance helpers.Importance
-}
 
 /*
 SeperateSingleStem separates stems from a single file
@@ -183,7 +162,7 @@ func (e *OpEnv) ConvertFolderMp3(ctx context.Context, opts ConvertFolderMp3Opts)
 /*
 ReadCollection reads a collection for a given platform and stores it in the database
 */
-func (e *OpEnv) ReadCollection(ctx context.Context, opts ReadCollectionOpts) {
+func (e *OpEnv) ReadCollection(ctx context.Context, opts collection.ReadCollectionOpts) {
 
 	collection := opts.Build(e.Config)
 
@@ -193,4 +172,147 @@ func (e *OpEnv) ReadCollection(ctx context.Context, opts ReadCollectionOpts) {
 		e.step(dangerStepInfo(err))
 		return
 	}
+}
+
+/*
+GetPlaylist gets a playlist for a given platform and stores it in the database
+*/
+
+func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPlaylistOpts, p func(database.SoundCloudPlaylist, error)) {
+
+	if !opts.Refresh {
+		// check if playlist with same url already exists in database
+		playlistByUrlCheck, err := e.SerenDB.GetSoundCloudPlaylistByURL(opts.PlaylistURL)
+
+		if err != nil {
+			e.step(dangerStepInfo(err))
+			p(database.SoundCloudPlaylist{}, err)
+			return
+		}
+
+		if playlistByUrlCheck.ID != 0 {
+			p(playlistByUrlCheck, helpers.ErrPlaylistAlreadyExists)
+			return
+		}
+	}
+
+	s := streaming.SoundCloud{
+		ClientID: e.Config.SoundCloudClientID,
+	}
+
+	// get playlist from SoundCloud
+	downloadedPlaylist, err := s.GetSoundCloudPlaylist(ctx, opts.PlaylistURL)
+
+	if err != nil {
+		e.step(dangerStepInfo(err))
+		p(database.SoundCloudPlaylist{}, err)
+		return
+	}
+
+	if !opts.Refresh {
+		// check if playlist with same external id already exists in database
+		playlistByExternalIDCheck, err := e.SerenDB.GetSoundCloudPlaylistByExternalID(downloadedPlaylist.ExternalID)
+
+		if err != nil {
+			e.step(dangerStepInfo(err))
+			p(database.SoundCloudPlaylist{}, err)
+			return
+		}
+
+		if playlistByExternalIDCheck.ID != 0 {
+			p(playlistByExternalIDCheck, helpers.ErrPlaylistAlreadyExists)
+			return
+		}
+	}
+
+	downloadedPlaylist.SearchUrl = opts.PlaylistURL
+
+	p(downloadedPlaylist, nil)
+}
+
+/*
+DownloadSoundCloudFile downloads a file straight from SoundCloud
+
+# This only works for files with download enabled
+
+playlistName is optional and is used to create a folder for the playlist within the download directory
+*/
+func (e *OpEnv) DownloadSoundCloudFile(track database.SoundCloudTrack, playlistName string) {
+
+	if e.Config.SoundCloudClientID == "" {
+		e.finishedNew(newFinishedError(helpers.ErrSoundCloudClientIDNotSet))
+		return
+	}
+
+	downloadDir := e.Config.DownloadDir
+
+	if playlistName != "" {
+		downloadDir = helpers.JoinFilepathToSlash(downloadDir, playlistName)
+	}
+
+	s := streaming.SoundCloud{
+		ClientID: e.Config.SoundCloudClientID,
+	}
+
+	filePath, err := s.DownloadFile(
+		downloadDir,
+		track.ExternalID,
+	)
+
+	if err != nil {
+		e.finishedNew(newFinishedError(err))
+		return
+	}
+
+	e.finishedNew(newFinishedSuccess(
+		map[string]any{
+			"filepath": filePath,
+		},
+	))
+}
+
+/*
+Flatten directory iteraves through a directory recursively and moves all files to the root of the directory
+*/
+func (e *OpEnv) FlattenDirectory(dirPath string) {
+	// Get the list of files in the specified directory
+	filePaths, err := helpers.GetFilesInDir(dirPath, true)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Iterate through each file and move it to the root of the directory
+	// TODO: move move file to path to a helper func
+	for _, filePath := range filePaths {
+
+		fileName, err := helpers.GetFileNameFromFilePath(filePath)
+
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		fileExt, err := helpers.GetFileExtensionFromFilePath(filePath)
+
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		newPath := helpers.JoinFilepathToSlash(dirPath, fileName+fileExt)
+
+		if filePath != newPath {
+			err = os.Rename(filePath, newPath)
+
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		}
+	}
+
+	// TODO: remove directories in the specified directory...
+
 }

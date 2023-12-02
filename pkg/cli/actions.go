@@ -9,6 +9,27 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+func flattenDir(c *cli.Context) error {
+
+	e, err := buildCliEnv(c.String("config"))
+
+	if err != nil {
+		return err
+	}
+
+	absPath, err := helpers.GetAbsOrWdPath(c.Args().First())
+
+	if err != nil {
+		return err
+	}
+
+	opEnv := e.opEnv()
+
+	opEnv.FlattenDirectory(absPath)
+
+	return nil
+}
+
 func convertMp3(c *cli.Context) error {
 	workingDir, err := os.Getwd()
 
@@ -48,6 +69,39 @@ func readTraktorCollection(c *cli.Context) error {
 	opEnv.RegisterStepHandler(stepHandler{})
 
 	opEnv.ReadCollection(c.Context, traktorCollectionOpts)
+
+	return nil
+}
+
+func getSoundcloudPlaylist(c *cli.Context) error {
+
+	// e, err := buildCliEnv(c.String("config"))
+
+	// if err != nil {
+	// 	return err
+	// }
+
+	// soundcloudOpts := operations.GetSoundCloudPlaylistOpts{
+	// 	PlaylistURL: c.String("url"),
+	// }
+
+	// opEnv := e.opEnv()
+	// opEnv.RegisterStepHandler(stepHandler{})
+
+	// opEnv.GetSoundCloudPlaylist(c.Context, soundcloudOpts, func(p streaming.SoundCloudPlaylist) {})
+
+	return nil
+}
+
+func getSpotifyPlaylist(c *cli.Context) error {
+
+	e, err := buildCliEnv(c.String("config"))
+
+	if err != nil {
+		return err
+	}
+
+	_ = e
 
 	return nil
 }

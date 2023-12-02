@@ -8,13 +8,21 @@ import (
 type OpEnv struct {
 	helpers.Config
 	*database.SerenDB
-	stepHandler
+	*stepHandler
+	*stepHandlerNew
 }
 
 func (e *OpEnv) RegisterStepHandler(sh StepHandler) {
-	e.stepHandler = stepHandler{
+	e.stepHandler = &stepHandler{
 		stepCallback: sh.StepCallback,
 		exitCallback: sh.ExitCallback,
+	}
+}
+
+func (e *OpEnv) RegisterStepHandlerNew(sh StepHandlerNew) {
+	e.stepHandlerNew = &stepHandlerNew{
+		stepCallback:     sh.StepCallback,
+		finishedCallback: sh.FinishedCallback,
 	}
 }
 
@@ -24,4 +32,12 @@ func (e *OpEnv) step(stepInfo StepInfo) {
 
 func (e *OpEnv) exit() {
 	e.stepHandler.exitCallback()
+}
+
+func (e *OpEnv) stepNew(stepInfo StepInfoNew) {
+	e.stepHandlerNew.stepCallback(stepInfo)
+}
+
+func (e *OpEnv) finishedNew(finishedInfo FinishedInfo) {
+	e.stepHandlerNew.finishedCallback(finishedInfo)
 }

@@ -2,13 +2,18 @@ package helpers
 
 import "regexp"
 
-func regexReplace(s string, regexStr string, replacementStr string) string {
+func RegexReplace(s string, regexStr string, replacementStr string) string {
 	re := regexp.MustCompile(regexStr)
 	s = re.ReplaceAllString(s, replacementStr)
 	return s
 }
 
-func regexContains(s string, regexStr string) bool {
+func RegexContains(s string, regexStr string) bool {
 	re := regexp.MustCompile(regexStr)
 	return re.MatchString(s)
+}
+
+func RegexAllSubmatches(s string, regexStr string) [][]string {
+	re := regexp.MustCompile(regexStr)
+	return re.FindAllStringSubmatch(s, -1)
 }

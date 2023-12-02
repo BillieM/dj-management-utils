@@ -1,7 +1,6 @@
 package operations
 
 import (
-	"github.com/billiem/seren-management/pkg/collection"
 	"github.com/billiem/seren-management/pkg/helpers"
 )
 
@@ -116,7 +115,22 @@ func (p ConvertFolderMp3Opts) Check() (bool, error) {
 }
 
 /*
- */
-type ReadCollectionOpts interface {
-	Build(helpers.Config) collection.PlatformCollection
+GetSoundCloudPlaylistOpts contains the options for GetSoundCloudPlaylist
+*/
+type GetSoundCloudPlaylistOpts struct {
+	PlaylistURL string // Mandatory
+	Refresh     bool   // Optional
+}
+
+/*
+check checks the options for the GetSoundCloudPlaylist operation
+*/
+func (p GetSoundCloudPlaylistOpts) Check() (bool, error) {
+	if p.PlaylistURL == "" {
+		return false, helpers.ErrMissingPlaylistURL
+	}
+
+	// perform some regex mapping to check the url is correct
+
+	return true, nil
 }

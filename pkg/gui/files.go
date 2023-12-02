@@ -12,19 +12,19 @@ import (
 	"github.com/billiem/seren-management/pkg/helpers"
 )
 
-func (e *guiEnv) openFileCanvas(w fyne.Window, title string, updateVal *string, fileFilter []string, callbackFn func()) fyne.CanvasObject {
+func (e *guiEnv) openFileCanvas(title string, updateVal *string, fileFilter []string, callbackFn func()) fyne.CanvasObject {
 
 	pathCard := buildPathCard(*updateVal, "file")
 
 	buttonWidget := widget.NewButtonWithIcon("Open", theme.FolderOpenIcon(), func() {
-		if e.guiState.processing {
-			showErrorDialog(w, helpers.ErrPleaseWaitForProcess)
+		if e.guiState.busy {
+			e.showErrorDialog(helpers.ErrBusyPleaseFinishFirst)
 			return
 		}
 
 		f := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err != nil {
-				showErrorDialog(w, err)
+				e.showErrorDialog(err)
 				return
 			}
 			if reader == nil {
@@ -34,11 +34,11 @@ func (e *guiEnv) openFileCanvas(w fyne.Window, title string, updateVal *string, 
 			*updateVal = reader.URI().Path()
 			pathCard.SetSubTitle(*updateVal)
 			callbackFn()
-		}, w)
+		}, e.mainWindow)
 		// Set properties of the file open dialog
 		location, err := e.getListableURI(*updateVal)
 		if err != nil {
-			showErrorDialog(w, err)
+			e.showErrorDialog(err)
 			return
 		}
 		f.SetLocation(location)
@@ -50,20 +50,20 @@ func (e *guiEnv) openFileCanvas(w fyne.Window, title string, updateVal *string, 
 	return formatOpenCanvas(title, pathCard, buttonWidget)
 }
 
-func (e *guiEnv) openDirCanvas(w fyne.Window, title string, updateVal *string, callbackFn func()) fyne.CanvasObject {
+func (e *guiEnv) openDirCanvas(title string, updateVal *string, callbackFn func()) fyne.CanvasObject {
 
 	pathCard := buildPathCard(*updateVal, "directory")
 
 	buttonWidget := widget.NewButtonWithIcon("Open", theme.FolderOpenIcon(), func() {
 
-		if e.guiState.processing {
-			showErrorDialog(w, helpers.ErrPleaseWaitForProcess)
+		if e.guiState.busy {
+			e.showErrorDialog(helpers.ErrBusyPleaseFinishFirst)
 			return
 		}
 
 		f := dialog.NewFolderOpen(func(reader fyne.ListableURI, err error) {
 			if err != nil {
-				showErrorDialog(w, err)
+				e.showErrorDialog(err)
 				return
 			}
 			if reader == nil {
@@ -73,11 +73,11 @@ func (e *guiEnv) openDirCanvas(w fyne.Window, title string, updateVal *string, c
 			*updateVal = reader.Path()
 			pathCard.SetSubTitle(*updateVal)
 			callbackFn()
-		}, w)
+		}, e.mainWindow)
 		// Set properties of the folder open dialog
 		location, err := e.getListableURI(*updateVal)
 		if err != nil {
-			showErrorDialog(w, err)
+			e.showErrorDialog(err)
 			return
 		}
 		f.SetLocation(location)

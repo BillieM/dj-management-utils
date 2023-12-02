@@ -51,10 +51,10 @@ func (e *guiEnv) settingsList(w fyne.Window) []fyne.CanvasObject {
 	objs := []fyne.CanvasObject{}
 
 	objs = append(objs, e.openFileCanvas(
-		w, "Traktor Collection Filepath", &e.tmpConfig.TraktorCollectionPath, []string{".nml"}, func() {},
+		"Traktor Collection Filepath", &e.tmpConfig.TraktorCollectionPath, []string{".nml"}, func() {},
 	))
 	objs = append(objs, e.openDirCanvas(
-		w, "Temporary Content Directory", &e.tmpConfig.TmpDir, func() {},
+		"Temporary Content Directory", &e.tmpConfig.TmpDir, func() {},
 	))
 
 	objs = append(objs, e.saveButton(w))
@@ -69,15 +69,15 @@ and then saves the Config struct to the config file
 */
 func (e *guiEnv) saveButton(w fyne.Window) *widget.Button {
 	btn := widget.NewButton("Save", func() {
-		if e.guiState.processing {
-			showErrorDialog(w, helpers.ErrPleaseWaitForProcess)
+		if e.guiState.busy {
+			e.showErrorDialog(helpers.ErrBusyPleaseFinishFirst)
 			return
 		}
 
 		e.Config = e.tmpConfig
 		err := e.Config.SaveConfig()
 		if err != nil {
-			showErrorDialog(w, err)
+			e.showErrorDialog(err)
 			return
 		}
 		dialog.ShowInformation("Settings", "Settings saved", w)

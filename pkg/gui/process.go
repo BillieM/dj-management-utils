@@ -17,7 +17,7 @@ stepHandler Implements methods defined in the StepHandler interface defined in o
 
 The callbacks are used to update the UI as the process runs
 */
-type stepHandler struct {
+type convertStepHandler struct {
 	ctxClose             context.CancelCauseFunc
 	bindVals             *progressBindingList
 	progressBarBindValue binding.Float
@@ -28,7 +28,7 @@ type stepHandler struct {
 /*
 StepCallback is executed each time a step finishes inside the operations package
 */
-func (o stepHandler) StepCallback(stepInfo operations.StepInfo) {
+func (o convertStepHandler) StepCallback(stepInfo operations.StepInfo) {
 	if stepInfo.Progress != 0 {
 		o.progressBarBindValue.Set(stepInfo.Progress)
 	}
@@ -46,7 +46,7 @@ func (o stepHandler) StepCallback(stepInfo operations.StepInfo) {
 /*
 ExitCallback is executed when the process finishes in the operations package
 */
-func (o stepHandler) ExitCallback() {
+func (o convertStepHandler) ExitCallback() {
 	o.finishedFunc()
 }
 

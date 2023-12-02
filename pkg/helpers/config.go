@@ -18,8 +18,13 @@ type Config struct {
 	TmpDir                      string   `json:"tmpDir"`
 	BaseDir                     string   `json:"baseDir"`
 	BaseOutputDir               string   `json:"baseOutputDir"`
+	DownloadDir                 string   `json:"downloadDir"`
 	ExtensionsToConvertToMp3    []string `json:"extensionsToConvertToMp3"`
 	ExtensionsToSeparateToStems []string `json:"extensionsToSeparateToStems"`
+
+	// these are not stored in config.json
+	SoundCloudClientID    string `json:"-"`
+	SoundCloudSecretToken string `json:"-"`
 }
 
 // buildDefaultConfig builds default config values and saves them to config.json
@@ -30,9 +35,13 @@ func buildDefaultConfig() (*Config, error) {
 		TmpDir:                      "",
 		BaseDir:                     "",
 		BaseOutputDir:               "",
+		DownloadDir:                 "",
 		ExtensionsToConvertToMp3:    []string{"wav", "aiff", "flac", "ogg", "m4a"},
 		ExtensionsToSeparateToStems: []string{"mp3", "wav"},
 	}
+
+	cfg.loadEnvConfig()
+
 	err := cfg.SaveConfig()
 	if err != nil {
 		return nil, err
@@ -105,6 +114,8 @@ func loadConfig(configPath string) (*Config, error) {
 		return nil, err
 	}
 
+	config.loadEnvConfig()
+
 	return &config, nil
 }
 
@@ -120,6 +131,16 @@ func (c *Config) SaveConfig() error {
 	}
 
 	return nil
+}
+
+/*
+loadEnvConfig loads config values stored in environment variables
+
+Such as API keys/secrets
+*/
+func (c *Config) loadEnvConfig() {
+	c.SoundCloudClientID = os.Getenv("SOUNDCLOUD_CLIENT_ID")
+	c.SoundCloudSecretToken = os.Getenv("SOUNDCLOUD_SECRET_TOKEN")
 }
 
 /*

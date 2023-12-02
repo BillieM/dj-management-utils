@@ -2,7 +2,9 @@ package cli
 
 import (
 	"errors"
+	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/billiem/seren-management/pkg/helpers"
@@ -22,6 +24,32 @@ func Entry() {
 		},
 		Usage: "A collection of useful utilities to help manage your DJ library",
 		Commands: []*cli.Command{
+			{
+				Name: "flatten-dir",
+				Aliases: []string{
+					"fd",
+					"flatten",
+				},
+				Usage:  "Flattens a directory structure",
+				Action: flattenDir,
+				Before: func(c *cli.Context) error {
+					path := c.Args().First()
+					if path == "" {
+						return helpers.ErrNoDirPath
+					}
+					filePaths, err := helpers.GetFilesInDir(path, true)
+					if err != nil {
+						return err
+					}
+					fmt.Printf("%v files in dir, continue? (y/n)\n", len(filePaths))
+					var proceed string
+					fmt.Scanln(&proceed)
+					if strings.ToLower(proceed) != "y" {
+						return helpers.ErrUserCancelled
+					}
+					return nil
+				},
+			},
 			{
 				Name:    "convertmp3",
 				Aliases: []string{"cmp3"},
@@ -53,6 +81,25 @@ func Entry() {
 								Required: false,
 							},
 						},
+					},
+				},
+			},
+			{
+				Name:    "get-playlist",
+				Aliases: []string{"gp"},
+				Usage:   "Gets a playlist from a given streaming platform and stores it in the applications database",
+				Subcommands: []*cli.Command{
+					{
+						Name:    "spotify",
+						Aliases: []string{"sp"},
+						Usage:   "Get playlists from Spotify and store them in the applications database",
+						Action:  getSpotifyPlaylist,
+					},
+					{
+						Name:    "soundcloud",
+						Aliases: []string{"sc"},
+						Usage:   "Get playlists from Soundcloud and store them in the applications database",
+						Action:  getSoundcloudPlaylist,
 					},
 				},
 			},
