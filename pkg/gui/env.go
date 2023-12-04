@@ -2,7 +2,7 @@ package gui
 
 import (
 	"fyne.io/fyne/v2"
-	"github.com/billiem/seren-management/pkg/database"
+	"github.com/billiem/seren-management/pkg/data"
 	"github.com/billiem/seren-management/pkg/gui/uihelpers"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/billiem/seren-management/pkg/operations"
@@ -13,7 +13,7 @@ guiEnv holds the environment for the GUI
 */
 type guiEnv struct {
 	*helpers.Config
-	*database.SerenDB
+	*data.SerenDB
 	*guiState
 	tmpConfig    *helpers.Config
 	views        map[string]guiView
@@ -41,13 +41,13 @@ func buildGuiEnv(a fyne.App, w fyne.Window) (*guiEnv, error) {
 		return nil, err
 	}
 
-	db, err := database.Connect()
+	queries, err := data.Connect()
 
 	if err != nil {
 		return nil, err
 	}
 
-	e := &guiEnv{cfg, db, nil, nil, nil, nil, w, a, nil}
+	e := &guiEnv{cfg, queries, nil, nil, nil, nil, w, a, nil}
 
 	s := &guiState{}
 	operations := e.getViewList()

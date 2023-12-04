@@ -2,11 +2,11 @@ package operations
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"os"
 
 	"github.com/billiem/seren-management/pkg/collection"
-	"github.com/billiem/seren-management/pkg/database"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/billiem/seren-management/pkg/streaming"
 )
@@ -178,20 +178,23 @@ func (e *OpEnv) ReadCollection(ctx context.Context, opts collection.ReadCollecti
 GetPlaylist gets a playlist for a given platform and stores it in the database
 */
 
-func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPlaylistOpts, p func(database.SoundCloudPlaylist, error)) {
+func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPlaylistOpts, p func(streaming.SoundCloudPlaylist, error)) {
 
 	if !opts.Refresh {
 		// check if playlist with same url already exists in database
-		playlistByUrlCheck, err := e.SerenDB.GetSoundCloudPlaylistByURL(opts.PlaylistURL)
+		numPlaylists, err := e.SerenDB.GetNumSoundCloudPlaylistByURL(
+			context.Background(),
+			sql.NullString{Valid: true, String: opts.PlaylistURL},
+		)
 
 		if err != nil {
 			e.step(dangerStepInfo(err))
-			p(database.SoundCloudPlaylist{}, err)
+			p(streaming.SoundCloudPlaylist{}, err)
 			return
 		}
 
-		if playlistByUrlCheck.ID != 0 {
-			p(playlistByUrlCheck, helpers.ErrPlaylistAlreadyExists)
+		if numPlaylists > 0 {
+			p(streaming.SoundCloudPlaylist{}, helpers.ErrPlaylistAlreadyExists)
 			return
 		}
 	}
@@ -205,22 +208,25 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 
 	if err != nil {
 		e.step(dangerStepInfo(err))
-		p(database.SoundCloudPlaylist{}, err)
+		p(streaming.SoundCloudPlaylist{}, err)
 		return
 	}
 
 	if !opts.Refresh {
 		// check if playlist with same external id already exists in database
-		playlistByExternalIDCheck, err := e.SerenDB.GetSoundCloudPlaylistByExternalID(downloadedPlaylist.ExternalID)
+		numPlaylists, err := e.SerenDB.GetNumSoundCloudPlaylistByExternalID(
+			context.Background(),
+			sql.NullInt64{Valid: true, Int64: downloadedPlaylist.ExternalID},
+		)
 
 		if err != nil {
 			e.step(dangerStepInfo(err))
-			p(database.SoundCloudPlaylist{}, err)
+			p(streaming.SoundCloudPlaylist{}, err)
 			return
 		}
 
-		if playlistByExternalIDCheck.ID != 0 {
-			p(playlistByExternalIDCheck, helpers.ErrPlaylistAlreadyExists)
+		if numPlaylists > 0 {
+			p(streaming.SoundCloudPlaylist{}, helpers.ErrPlaylistAlreadyExists)
 			return
 		}
 	}
@@ -237,7 +243,7 @@ DownloadSoundCloudFile downloads a file straight from SoundCloud
 
 playlistName is optional and is used to create a folder for the playlist within the download directory
 */
-func (e *OpEnv) DownloadSoundCloudFile(track database.SoundCloudTrack, playlistName string) {
+func (e *OpEnv) DownloadSoundCloudFile(track streaming.SoundCloudTrack, playlistName string) {
 
 	if e.Config.SoundCloudClientID == "" {
 		e.finishedNew(newFinishedError(helpers.ErrSoundCloudClientIDNotSet))

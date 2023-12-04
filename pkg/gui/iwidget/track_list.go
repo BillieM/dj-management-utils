@@ -10,8 +10,8 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	"github.com/billiem/seren-management/pkg/database"
 	"github.com/billiem/seren-management/pkg/helpers"
+	"github.com/billiem/seren-management/pkg/streaming"
 )
 
 /*
@@ -274,7 +274,7 @@ type TrackListBinding struct {
 
 	FilterSortInfo *FilterSortInfo
 
-	Tracks        []*database.SoundCloudTrack
+	Tracks        []*streaming.SoundCloudTrack
 	VisibleTracks []*TrackBinding
 }
 
@@ -312,7 +312,7 @@ func (i *TrackListBinding) Append(p *TrackBinding) {
 	i.VisibleTracks = append(i.VisibleTracks, p)
 }
 
-func (i *TrackListBinding) Set(p []*database.SoundCloudTrack) {
+func (i *TrackListBinding) Set(p []*streaming.SoundCloudTrack) {
 	i.Lock()
 	defer i.Unlock()
 	i.Tracks = p
@@ -335,7 +335,7 @@ type TrackBinding struct {
 	bindBase
 
 	// may want a context in here ?? later problem...
-	Track *database.SoundCloudTrack
+	Track *streaming.SoundCloudTrack
 }
 
 func (i *TrackBinding) AddListener(l binding.DataListener) {

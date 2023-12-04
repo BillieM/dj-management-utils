@@ -9,9 +9,9 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
-	"github.com/billiem/seren-management/pkg/database"
 	"github.com/billiem/seren-management/pkg/gui/uihelpers"
 	"github.com/billiem/seren-management/pkg/helpers"
+	"github.com/billiem/seren-management/pkg/streaming"
 )
 
 type TrackSection struct {
@@ -230,7 +230,7 @@ func (i *TrackInfo) CreateRenderer() fyne.WidgetRenderer {
 	)
 }
 
-func (i *TrackInfo) updateFromData(t database.SoundCloudTrack) {
+func (i *TrackInfo) updateFromData(t streaming.SoundCloudTrack) {
 	i.TrackNameLink.SetURLFromString(t.Permalink)
 	i.TrackNameLink.SetText(t.Name)
 	i.TrackLinkButton.SetContent("Open in browser", t.Permalink)
@@ -276,7 +276,7 @@ func (i *TrackProperties) CreateRenderer() fyne.WidgetRenderer {
 	)
 }
 
-func (i *TrackProperties) updateFromData(t database.SoundCloudTrack) {
+func (i *TrackProperties) updateFromData(t streaming.SoundCloudTrack) {
 	i.GenrePropertyLabel.Update(t.Genre)
 	i.TagListPropertyLabel.Update(t.TagList)
 	i.PublisherPropertyLabel.Update(t.PublisherArtist)
@@ -365,7 +365,7 @@ func (i *GetTrack) CreateRenderer() fyne.WidgetRenderer {
 	)
 }
 
-func (i *GetTrack) updateFromData(t database.SoundCloudTrack) {
+func (i *GetTrack) updateFromData(t streaming.SoundCloudTrack) {
 
 	if t.HasDownloadsLeft {
 		i.TrackDownload.Show()
@@ -409,7 +409,7 @@ func (i *TrackPurchase) CreateRenderer() fyne.WidgetRenderer {
 	)
 }
 
-func (i *TrackPurchase) updateFromData(t database.SoundCloudTrack) {
+func (i *TrackPurchase) updateFromData(t streaming.SoundCloudTrack) {
 	i.TrackPurchaseButton.SetContent(t.PurchaseTitle, t.PurchaseURL)
 }
 

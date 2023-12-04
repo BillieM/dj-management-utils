@@ -1,10 +1,12 @@
 package operations
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/billiem/seren-management/pkg/database"
+	"github.com/billiem/seren-management/pkg/data"
 	"github.com/billiem/seren-management/pkg/helpers"
+	"github.com/billiem/seren-management/pkg/streaming"
 )
 
 /*
@@ -13,21 +15,25 @@ TODO: handle all these with step handlers
 
 func (e *OpEnv) CheckLocalPaths() {
 
-	var brokenPathChanged []database.SoundCloudTrack
+	var brokenPathChanged []streaming.SoundCloudTrack
 
-	tracks, err := e.SerenDB.GetSoundCloudTracksWithLocalPaths()
+	tracks, err := e.SerenDB.ListSoundCloudTracksHasLocalPath(context.Background())
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
 	for _, track := range tracks {
-		fileExists := helpers.DoesFileExist(track.LocalPath)
 
-		if fileExists == track.LocalPathBroken {
-			track.LocalPathBroken = !fileExists
+		t := streaming.SoundCloudTrack{}
+		t.LoadFromDB(track)
 
-			brokenPathChanged = append(brokenPathChanged, track)
+		fileExists := helpers.DoesFileExist(t.LocalPath)
+
+		if fileExists == t.LocalPathBroken {
+			t.LocalPathBroken = !fileExists
+
+			brokenPathChanged = append(brokenPathChanged, t)
 		}
 	}
 
@@ -38,7 +44,13 @@ func (e *OpEnv) CheckLocalPaths() {
 
 	fmt.Printf("Found %d tracks with changed broken status\n", len(brokenPathChanged))
 
-	e.SerenDB.SaveSoundCloudTracks(brokenPathChanged)
+	dataT := make([]data.SoundcloudTrack, len(brokenPathChanged))
+
+	for i, t := range brokenPathChanged {
+		dataT[i] = t.ToDB()
+	}
+
+	e.SerenDB.TxUpsertSoundCloudTracks(dataT)
 }
 
 func (e *OpEnv) IndexCollections() {
