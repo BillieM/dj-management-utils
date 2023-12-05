@@ -7,6 +7,7 @@ import (
 
 type OpEnv struct {
 	helpers.Config
+	helpers.AppLogger
 	*data.SerenDB
 	*stepHandler
 	*stepHandlerNew

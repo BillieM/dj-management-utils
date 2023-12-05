@@ -14,6 +14,7 @@ guiEnv holds the environment for the GUI
 type guiEnv struct {
 	*helpers.Config
 	*data.SerenDB
+	*helpers.AppLogger
 	*guiState
 	tmpConfig    *helpers.Config
 	views        map[string]guiView
@@ -25,8 +26,9 @@ type guiEnv struct {
 
 func (e *guiEnv) opEnv() *operations.OpEnv {
 	return &operations.OpEnv{
-		Config:  *e.Config,
-		SerenDB: e.SerenDB,
+		Config:    *e.Config,
+		AppLogger: *e.AppLogger,
+		SerenDB:   e.SerenDB,
 	}
 }
 
@@ -41,13 +43,19 @@ func buildGuiEnv(a fyne.App, w fyne.Window) (*guiEnv, error) {
 		return nil, err
 	}
 
-	queries, err := data.Connect()
+	logger, err := helpers.BuildAppLogger(*cfg)
 
 	if err != nil {
 		return nil, err
 	}
 
-	e := &guiEnv{cfg, queries, nil, nil, nil, nil, w, a, nil}
+	queries, err := data.Connect(*cfg, *logger)
+
+	if err != nil {
+		return nil, err
+	}
+
+	e := &guiEnv{cfg, queries, logger, nil, nil, nil, nil, w, a, nil}
 
 	s := &guiState{}
 	operations := e.getViewList()

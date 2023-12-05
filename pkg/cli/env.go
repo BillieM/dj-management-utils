@@ -9,6 +9,7 @@ import (
 type cliEnv struct {
 	helpers.Config
 	*data.SerenDB
+	*helpers.AppLogger
 }
 
 func (e cliEnv) opEnv() operations.OpEnv {
@@ -26,13 +27,19 @@ func buildCliEnv(configPath string) (*cliEnv, error) {
 		return nil, err
 	}
 
-	sDB, err := data.Connect()
+	logger, err := helpers.BuildAppLogger(cfg)
 
 	if err != nil {
 		return nil, err
 	}
 
-	e := &cliEnv{cfg, sDB}
+	sDB, err := data.Connect(cfg, *logger)
+
+	if err != nil {
+		return nil, err
+	}
+
+	e := &cliEnv{cfg, sDB, logger}
 
 	return e, nil
 }
