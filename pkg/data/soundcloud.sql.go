@@ -356,19 +356,8 @@ INSERT INTO soundcloud_tracks (
     ?14
 ) ON CONFLICT (external_id) DO UPDATE SET
     updated_at = CURRENT_TIMESTAMP,
-    name = sqlc.narg('name'),
-    permalink = sqlc.narg('permalink'),
-    purchase_title = sqlc.narg('purchase_title'),
-    purchase_url = sqlc.narg('purchase_url'),
-    has_downloads_left = sqlc.narg('has_downloads_left'),
-    genre = sqlc.narg('genre'),
-    artwork_url = sqlc.narg('artwork_url'),
-    tag_list = sqlc.narg('tag_list'),
-    publisher_artist = sqlc.narg('publisher_artist'),
-    sound_cloud_user = sqlc.narg('sound_cloud_user'),
-    local_path = sqlc.narg('local_path'),
-    local_path_broken = sqlc.narg('local_path_broken'),
-    removed_from_playlist = sqlc.narg('removed_from_playlist')
+
+    name = coalesce(?1, name)
 RETURNING id, created_at, updated_at, external_id, name, permalink, purchase_title, purchase_url, has_downloads_left, genre, artwork_url, tag_list, publisher_artist, sound_cloud_user, local_path, local_path_broken, removed_from_playlist
 `
 

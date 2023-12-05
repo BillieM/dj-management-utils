@@ -345,6 +345,7 @@ func (e *guiEnv) syncSoundCloudView() fyne.CanvasObject {
 		loading.Hide()
 	}()
 
+	// Function to call when the add playlist button is clicked
 	addPlaylistCanvas := newAddPlaylistWidget(e.getAddPlaylistCallback(
 		&playlistBindVals, func() {
 			playlistsList.Refresh()

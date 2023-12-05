@@ -3,11 +3,12 @@ package operations
 import (
 	"github.com/billiem/seren-management/pkg/data"
 	"github.com/billiem/seren-management/pkg/helpers"
+	"github.com/charmbracelet/log"
 )
 
 type OpEnv struct {
 	helpers.Config
-	helpers.AppLogger
+	*log.Logger
 	*data.SerenDB
 	*stepHandler
 	*stepHandlerNew

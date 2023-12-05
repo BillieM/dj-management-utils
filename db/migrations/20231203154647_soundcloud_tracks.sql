@@ -4,7 +4,7 @@ CREATE TABLE soundcloud_tracks (
     id                    INTEGER  PRIMARY KEY AUTOINCREMENT,
     created_at            DATETIME,
     updated_at            DATETIME,
-    external_id           INTEGER,
+    external_id           INTEGER UNIQUE,
     name                  TEXT,
     permalink             TEXT,
     purchase_title        TEXT,

@@ -10,6 +10,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/Southclaws/fault"
+	"github.com/Southclaws/fault/fmsg"
 	"github.com/billiem/seren-management/pkg/data"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/deliveryhero/pipeline/v2"
@@ -215,13 +217,16 @@ func (s SoundCloud) completeTracks(ctx context.Context, p *HydratableSoundCloudP
 	trackIdsToRequest := []int64{}
 
 	for _, track := range p.Tracks {
-		ok, err := track.check()
+		needToRequestTrack, err := track.check()
 
 		if err != nil {
-			return err
+			return fault.Wrap(
+				err,
+				fmsg.With(fmt.Sprintf("Error checking track %d", track.ID)),
+			)
 		}
 
-		if !ok {
+		if !needToRequestTrack {
 			trackIdsToRequest = append(trackIdsToRequest, track.ID)
 			continue
 		}
@@ -232,7 +237,10 @@ func (s SoundCloud) completeTracks(ctx context.Context, p *HydratableSoundCloudP
 	remainingTracks, err := s.getRemainingTracks(ctx, trackIdsToRequest)
 
 	if err != nil {
-		return err
+		return fault.Wrap(
+			err,
+			fmsg.With("Error getting remaining tracks"),
+		)
 	}
 
 	p.Tracks = append(okayTracks, remainingTracks...)
@@ -255,19 +263,23 @@ func (track HydratableSoundCloudTrack) check() (bool, error) {
 
 func (s SoundCloud) getRemainingTracks(ctx context.Context, ids []int64) ([]HydratableSoundCloudTrack, error) {
 
+	ctx, cancel := context.WithCancelCause(ctx)
+
 	trackIDChan := pipeline.Emit(ids...)
 
 	// TODO: figure out how big this array can be
 	tracksOut := pipeline.ProcessBatchConcurrently(ctx, 2, 50, time.Second*15, pipeline.NewProcessor(func(ctx context.Context, ids []int64) ([]HydratableSoundCloudTrack, error) {
 		trackArr, err := s.makeSoundCloudTracksRequest(ids)
 		if err != nil {
-			return nil, err
+			return nil, fault.Wrap(
+				err,
+				fmsg.With("Error making SoundCloud tracks request"),
+			)
 		}
 		return trackArr, nil
 	}, func(ids []int64, err error) {
 		if err != nil {
-			// TODO: make this not just panic...
-			panic(err)
+			cancel(err)
 		}
 	}), trackIDChan)
 
@@ -277,7 +289,14 @@ func (s SoundCloud) getRemainingTracks(ctx context.Context, ids []int64) ([]Hydr
 		outTracks = append(outTracks, track)
 	}
 
-	return outTracks, nil
+	if ctx.Err() != nil {
+		return nil, fault.Wrap(
+			context.Cause(ctx),
+			fmsg.With("Error making batch requests for remaining tracks"),
+		)
+	}
+
+	return outTracks, ctx.Err()
 }
 
 func (s SoundCloud) makeSoundCloudTracksRequest(ids []int64) ([]HydratableSoundCloudTrack, error) {
@@ -285,7 +304,10 @@ func (s SoundCloud) makeSoundCloudTracksRequest(ids []int64) ([]HydratableSoundC
 	req, err := http.NewRequest("GET", "https://api-v2.soundcloud.com/tracks", nil)
 
 	if err != nil {
-		return nil, err
+		return nil, fault.Wrap(
+			err,
+			fmsg.With("Error creating request"),
+		)
 	}
 
 	q := req.URL.Query()
@@ -300,19 +322,35 @@ func (s SoundCloud) makeSoundCloudTracksRequest(ids []int64) ([]HydratableSoundC
 	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {
-		return nil, err
+		return nil, fault.Wrap(
+			err,
+			fmsg.With("Error making request"),
+		)
 	}
+
+	if resp.StatusCode != 200 {
+		return nil, fault.New(fmt.Sprintf(
+			"Error making request to get SoundCloud tracks, status code %d", resp.StatusCode,
+		))
+	}
+
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fault.Wrap(
+			err,
+			fmsg.With("Error reading response body"),
+		)
 	}
 
 	var tracks []HydratableSoundCloudTrack
 	err = json.Unmarshal(body, &tracks)
 	if err != nil {
-		return nil, err
+		return nil, fault.Wrap(
+			err,
+			fmsg.With("Error unmarshalling response body to tracks"),
+		)
 	}
 
 	return tracks, nil

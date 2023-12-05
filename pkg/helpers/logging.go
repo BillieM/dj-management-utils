@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/Southclaws/fault"
+	"github.com/Southclaws/fault/fmsg"
 	"github.com/charmbracelet/log"
 	sqldblogger "github.com/simukti/sqldb-logger"
 )
@@ -22,7 +24,7 @@ func BuildAppLogger(c Config) (*AppLogger, error) {
 	dbF, err := os.OpenFile("log/db.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 
 	if err != nil {
-		return nil, err
+		return nil, fault.Wrap(err, fmsg.With("Error opening database log file"))
 	}
 
 	return &AppLogger{

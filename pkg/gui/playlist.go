@@ -11,6 +11,8 @@ import (
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/widget"
+	"github.com/Southclaws/fault"
+	"github.com/Southclaws/fault/fmsg"
 	"github.com/billiem/seren-management/pkg/data"
 	"github.com/billiem/seren-management/pkg/gui/iwidget"
 	"github.com/billiem/seren-management/pkg/gui/uihelpers"
@@ -320,6 +322,10 @@ func (e *guiEnv) getAddPlaylistCallback(playlistBindVals *playlistBindingList, r
 			pbi.playlist = streaming.SoundCloudPlaylist{SearchUrl: urlRaw}
 			playlistBindVals.Append(pbi)
 			refreshFunc()
+			opEnv.Logger.Error(fault.Wrap(
+				err,
+				fmsg.With("Error parsing url"),
+			))
 			return
 		}
 
@@ -338,17 +344,10 @@ func (e *guiEnv) getAddPlaylistCallback(playlistBindVals *playlistBindingList, r
 			if err != nil {
 				pbi.state = Failed
 				pbi.err = err
-				return
-			}
-
-			dataP, dataT := p.ToDB()
-
-			// save playlist to database
-			err = e.SerenDB.TxUpsertSoundCloudPlaylistAndTracks(dataP, dataT)
-
-			if err != nil {
-				pbi.state = Failed
-				pbi.err = err
+				opEnv.Logger.Error(fault.Wrap(
+					err,
+					fmsg.With("Error getting playlist"),
+				))
 				return
 			}
 

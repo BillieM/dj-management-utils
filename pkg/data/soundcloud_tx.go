@@ -3,6 +3,9 @@ package data
 import (
 	"context"
 	"database/sql"
+
+	"github.com/Southclaws/fault"
+	"github.com/Southclaws/fault/fmsg"
 )
 
 /*
@@ -14,7 +17,10 @@ func (sDB *SerenDB) TxUpsertSoundCloudPlaylistAndTracks(p SoundcloudPlaylist, tr
 	tx, err := sDB.Begin()
 
 	if err != nil {
-		return err
+		return fault.Wrap(
+			err,
+			fmsg.With("Error starting transaction"),
+		)
 	}
 	defer tx.Rollback()
 
@@ -29,7 +35,10 @@ func (sDB *SerenDB) TxUpsertSoundCloudPlaylistAndTracks(p SoundcloudPlaylist, tr
 
 	if err != nil {
 		tx.Rollback()
-		return err
+		return fault.Wrap(
+			err,
+			fmsg.With("Error inserting playlist"),
+		)
 	}
 
 	for _, t := range tracks {
@@ -52,7 +61,10 @@ func (sDB *SerenDB) TxUpsertSoundCloudPlaylistAndTracks(p SoundcloudPlaylist, tr
 
 		if err != nil {
 			tx.Rollback()
-			return err
+			return fault.Wrap(
+				err,
+				fmsg.With("Error inserting track"),
+			)
 		}
 
 		_, err = qtx.UpsertSoundCloudPlaylistTrack(context.Background(), UpsertSoundCloudPlaylistTrackParams{
@@ -62,7 +74,10 @@ func (sDB *SerenDB) TxUpsertSoundCloudPlaylistAndTracks(p SoundcloudPlaylist, tr
 
 		if err != nil {
 			tx.Rollback()
-			return err
+			return fault.Wrap(
+				err,
+				fmsg.With("Error inserting playlist track"),
+			)
 		}
 	}
 
@@ -75,7 +90,10 @@ func (sDB *SerenDB) TxUpsertSoundCloudTracks(t []SoundcloudTrack) error {
 	tx, err := sDB.Begin()
 
 	if err != nil {
-		return err
+		return fault.Wrap(
+			err,
+			fmsg.With("Error starting transaction"),
+		)
 	}
 
 	defer tx.Rollback()
@@ -103,7 +121,10 @@ func (sDB *SerenDB) TxUpsertSoundCloudTracks(t []SoundcloudTrack) error {
 
 		if err != nil {
 			tx.Rollback()
-			return err
+			return fault.Wrap(
+				err,
+				fmsg.With("Error inserting track"),
+			)
 		}
 	}
 

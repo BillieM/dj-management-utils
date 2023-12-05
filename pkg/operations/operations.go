@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Southclaws/fault"
+	"github.com/Southclaws/fault/fmsg"
 	"github.com/billiem/seren-management/pkg/collection"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/billiem/seren-management/pkg/streaming"
@@ -188,13 +190,24 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 		)
 
 		if err != nil {
-			e.step(dangerStepInfo(err))
-			p(streaming.SoundCloudPlaylist{}, err)
+			p(
+				streaming.SoundCloudPlaylist{},
+				fault.Wrap(
+					err,
+					fmsg.With("Error checking if playlist already exists in database by url"),
+				),
+			)
 			return
 		}
 
 		if numPlaylists > 0 {
-			p(streaming.SoundCloudPlaylist{}, helpers.ErrPlaylistAlreadyExists)
+			p(
+				streaming.SoundCloudPlaylist{},
+				fault.Wrap(
+					helpers.ErrPlaylistAlreadyExists,
+					fmsg.With("Playlist with same url already exists in database"),
+				),
+			)
 			return
 		}
 	}
@@ -207,8 +220,10 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 	downloadedPlaylist, err := s.GetSoundCloudPlaylist(ctx, opts.PlaylistURL)
 
 	if err != nil {
-		e.step(dangerStepInfo(err))
-		p(streaming.SoundCloudPlaylist{}, err)
+		p(
+			streaming.SoundCloudPlaylist{},
+			fault.Wrap(err, fmsg.With("Error getting playlist from SoundCloud")),
+		)
 		return
 	}
 
@@ -220,18 +235,42 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 		)
 
 		if err != nil {
-			e.step(dangerStepInfo(err))
-			p(streaming.SoundCloudPlaylist{}, err)
+			p(
+				streaming.SoundCloudPlaylist{},
+				fault.Wrap(
+					err,
+					fmsg.With("Error checking if playlist already exists in database by external id"),
+				),
+			)
 			return
 		}
 
 		if numPlaylists > 0 {
-			p(streaming.SoundCloudPlaylist{}, helpers.ErrPlaylistAlreadyExists)
+			p(
+				streaming.SoundCloudPlaylist{},
+				fault.Wrap(
+					helpers.ErrPlaylistAlreadyExists,
+					fmsg.With("Playlist with same external id already exists in database"),
+				),
+			)
 			return
 		}
 	}
 
 	downloadedPlaylist.SearchUrl = opts.PlaylistURL
+
+	dataP, dataT := downloadedPlaylist.ToDB()
+
+	// save playlist to database
+	err = e.SerenDB.TxUpsertSoundCloudPlaylistAndTracks(dataP, dataT)
+
+	if err != nil {
+		p(
+			streaming.SoundCloudPlaylist{},
+			fault.Wrap(err, fmsg.With("Error saving playlist to database")),
+		)
+		return
+	}
 
 	p(downloadedPlaylist, nil)
 }

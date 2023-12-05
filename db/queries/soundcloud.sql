@@ -64,6 +64,11 @@ INSERT INTO soundcloud_playlists (
     sqlc.narg('permalink')
 ) ON CONFLICT (external_id) DO UPDATE SET
     updated_at = CURRENT_TIMESTAMP
+
+    name = coalesce(?2, name),
+    search_url = coalesce(?3, search_url),
+    permalink = coalesce(?4, permalink)
+
 RETURNING *;
 
 -- name: UpsertSoundCloudTrack :one
@@ -103,19 +108,21 @@ INSERT INTO soundcloud_tracks (
     sqlc.narg('removed_from_playlist')
 ) ON CONFLICT (external_id) DO UPDATE SET
     updated_at = CURRENT_TIMESTAMP,
-    name = sqlc.narg('name'),
-    permalink = sqlc.narg('permalink'),
-    purchase_title = sqlc.narg('purchase_title'),
-    purchase_url = sqlc.narg('purchase_url'),
-    has_downloads_left = sqlc.narg('has_downloads_left'),
-    genre = sqlc.narg('genre'),
-    artwork_url = sqlc.narg('artwork_url'),
-    tag_list = sqlc.narg('tag_list'),
-    publisher_artist = sqlc.narg('publisher_artist'),
-    sound_cloud_user = sqlc.narg('sound_cloud_user'),
-    local_path = sqlc.narg('local_path'),
-    local_path_broken = sqlc.narg('local_path_broken'),
-    removed_from_playlist = sqlc.narg('removed_from_playlist')
+
+    name = coalesce(?2, name),
+    permalink = coalesce(?3, permalink),
+    purchase_title = coalesce(?4, purchase_title),
+    purchase_url = coalesce(?5, purchase_url),
+    has_downloads_left = coalesce(?6, has_downloads_left),
+    genre = coalesce(?7, genre),
+    artwork_url = coalesce(?8, artwork_url),
+    tag_list = coalesce(?9, tag_list),
+    publisher_artist = coalesce(?10, publisher_artist),
+    sound_cloud_user = coalesce(?11, sound_cloud_user),
+    local_path = coalesce(?12, local_path),
+    local_path_broken = coalesce(?13, local_path_broken),
+    removed_from_playlist = coalesce(?14, removed_from_playlist)
+
 RETURNING *;
 
 -- name: UpsertSoundCloudPlaylistTrack :one
