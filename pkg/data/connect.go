@@ -26,7 +26,9 @@ func Connect(c helpers.Config, l helpers.AppLogger) (*SerenDB, error) {
 	db = sqldblogger.OpenDriver(
 		dsn,
 		db.Driver(),
-		&helpers.CharmLogAdapter{*l.DBLogger},
+		&helpers.CharmLogAdapter{
+			Logger: *l.DBLogger,
+		},
 	)
 
 	queries := New(db)

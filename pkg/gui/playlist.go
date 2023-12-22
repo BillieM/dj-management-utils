@@ -322,10 +322,10 @@ func (e *guiEnv) getAddPlaylistCallback(playlistBindVals *playlistBindingList, r
 			pbi.playlist = streaming.SoundCloudPlaylist{SearchUrl: urlRaw}
 			playlistBindVals.Append(pbi)
 			refreshFunc()
-			opEnv.Logger.Error(fault.Wrap(
+			opEnv.Logger.Error(fault.Flatten(fault.Wrap(
 				err,
-				fmsg.With("Error parsing url"),
-			))
+				fmsg.With("error parsing url"),
+			)))
 			return
 		}
 
@@ -344,10 +344,10 @@ func (e *guiEnv) getAddPlaylistCallback(playlistBindVals *playlistBindingList, r
 			if err != nil {
 				pbi.state = Failed
 				pbi.err = err
-				opEnv.Logger.Error(fault.Wrap(
-					err,
-					fmsg.With("Error getting playlist"),
-				))
+				opEnv.Logger.Error(
+					"error getting playlist",
+					fault.Flatten(err),
+				)
 				return
 			}
 
@@ -545,6 +545,10 @@ func (e *guiEnv) getRefreshSoundCloudPlaylistFunc(playlist streaming.SoundCloudP
 		existingTracksMap := make(map[int64]streaming.SoundCloudTrack)
 
 		if err != nil {
+			e.OPLogger.Error(
+				"err refreshing playlist",
+				fault.Flatten(err),
+			)
 			e.showErrorDialog(err)
 			return
 		}

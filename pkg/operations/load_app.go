@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Southclaws/fault"
+	"github.com/Southclaws/fault/fmsg"
 	"github.com/billiem/seren-management/pkg/data"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/billiem/seren-management/pkg/streaming"
@@ -19,7 +21,10 @@ func (e *OpEnv) CheckLocalPaths() {
 
 	tracks, err := e.SerenDB.ListSoundCloudTracksHasLocalPath(context.Background())
 	if err != nil {
-		fmt.Println(err)
+		e.Logger.Error(fault.Flatten(fault.Wrap(
+			err,
+			fmsg.With("error listing tracks with local path in db"),
+		)))
 		return
 	}
 
@@ -38,11 +43,14 @@ func (e *OpEnv) CheckLocalPaths() {
 	}
 
 	if len(brokenPathChanged) == 0 {
-		fmt.Println("No tracks have changed broken status")
+		e.Logger.Info("no tracks with changed broken status")
 		return
 	}
 
-	fmt.Printf("Found %d tracks with changed broken status\n", len(brokenPathChanged))
+	e.Logger.Info(fmt.Sprintf(
+		"found %d tracks with changed broken status\n",
+		len(brokenPathChanged),
+	))
 
 	dataT := make([]data.SoundcloudTrack, len(brokenPathChanged))
 
@@ -50,7 +58,17 @@ func (e *OpEnv) CheckLocalPaths() {
 		dataT[i] = t.ToDB()
 	}
 
-	e.SerenDB.TxUpsertSoundCloudTracks(dataT)
+	err = e.SerenDB.TxUpsertSoundCloudTracks(dataT)
+
+	if err != nil {
+		e.Logger.Error(fault.Flatten(fault.Wrap(
+			err,
+			fmsg.With(
+				"error updating tracks in db",
+			),
+		)))
+		return
+	}
 }
 
 func (e *OpEnv) IndexCollections() {

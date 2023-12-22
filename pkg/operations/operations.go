@@ -182,6 +182,13 @@ GetPlaylist gets a playlist for a given platform and stores it in the database
 
 func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPlaylistOpts, p func(streaming.SoundCloudPlaylist, error)) {
 
+	// netUrl, err := url.Parse(opts.PlaylistURL)
+
+	// if err != nil {
+	// 	e.stepHandlerNew.finishedCallback()
+
+	// 	e.operationHandler.finished()
+
 	if !opts.Refresh {
 		// check if playlist with same url already exists in database
 		numPlaylists, err := e.SerenDB.GetNumSoundCloudPlaylistByURL(
@@ -205,7 +212,7 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 				streaming.SoundCloudPlaylist{},
 				fault.Wrap(
 					helpers.ErrPlaylistAlreadyExists,
-					fmsg.With("Playlist with same url already exists in database"),
+					fmsg.With("playlist with same url already exists in db"),
 				),
 			)
 			return
@@ -222,7 +229,10 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 	if err != nil {
 		p(
 			streaming.SoundCloudPlaylist{},
-			fault.Wrap(err, fmsg.With("Error getting playlist from SoundCloud")),
+			fault.Wrap(
+				err, 
+				fmsg.With("error getting playlist from SoundCloud")
+			),
 		)
 		return
 	}
@@ -239,7 +249,7 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 				streaming.SoundCloudPlaylist{},
 				fault.Wrap(
 					err,
-					fmsg.With("Error checking if playlist already exists in database by external id"),
+					fmsg.With("error checking if playlist already exists in database by external id"),
 				),
 			)
 			return
@@ -250,7 +260,7 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 				streaming.SoundCloudPlaylist{},
 				fault.Wrap(
 					helpers.ErrPlaylistAlreadyExists,
-					fmsg.With("Playlist with same external id already exists in database"),
+					fmsg.With("playlist with same external id already exists in db"),
 				),
 			)
 			return
@@ -267,7 +277,7 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 	if err != nil {
 		p(
 			streaming.SoundCloudPlaylist{},
-			fault.Wrap(err, fmsg.With("Error saving playlist to database")),
+			fault.Wrap(err, fmsg.With("error saving playlist to database")),
 		)
 		return
 	}
