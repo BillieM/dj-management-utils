@@ -14,10 +14,9 @@ Config is the main config struct for the application
 Built from config.json
 */
 type Config struct {
+	Development                 bool     `json:"development"`
 	TraktorCollectionPath       string   `json:"traktorCollectionPath"`
-	TmpDir                      string   `json:"tmpDir"`
 	BaseDir                     string   `json:"baseDir"`
-	BaseOutputDir               string   `json:"baseOutputDir"`
 	DownloadDir                 string   `json:"downloadDir"`
 	ExtensionsToConvertToMp3    []string `json:"extensionsToConvertToMp3"`
 	ExtensionsToSeparateToStems []string `json:"extensionsToSeparateToStems"`
@@ -32,9 +31,7 @@ type Config struct {
 func buildDefaultConfig() (*Config, error) {
 	cfg := &Config{
 		TraktorCollectionPath:       "",
-		TmpDir:                      "",
 		BaseDir:                     "",
-		BaseOutputDir:               "",
 		DownloadDir:                 "",
 		ExtensionsToConvertToMp3:    []string{"wav", "aiff", "flac", "ogg", "m4a"},
 		ExtensionsToSeparateToStems: []string{"mp3", "wav"},
@@ -155,17 +152,6 @@ func (c *Config) CheckTraktorCollectionPath() (bool, string) {
 	return true, ""
 }
 
-func (c *Config) CheckTmpDir() (bool, string) {
-	fi, err := os.Stat(c.TmpDir)
-	if err != nil {
-		return false, "Temporary directory does not exist"
-	}
-	if !fi.IsDir() {
-		return false, "Temporary directory is not a directory"
-	}
-	return true, ""
-}
-
 func (c *Config) CheckBaseDir() (bool, string) {
 	fi, err := os.Stat(c.BaseDir)
 	if err != nil {
@@ -173,17 +159,6 @@ func (c *Config) CheckBaseDir() (bool, string) {
 	}
 	if !fi.IsDir() {
 		return false, "Base directory is not a directory"
-	}
-	return true, ""
-}
-
-func (c *Config) CheckBaseOutputDir() (bool, string) {
-	fi, err := os.Stat(c.BaseOutputDir)
-	if err != nil {
-		return false, "Base output directory does not exist"
-	}
-	if !fi.IsDir() {
-		return false, "Base output directory is not a directory"
 	}
 	return true, ""
 }

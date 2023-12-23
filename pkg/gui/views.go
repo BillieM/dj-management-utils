@@ -138,7 +138,7 @@ func (e *guiEnv) stemsView() fyne.CanvasObject {
 }
 
 func (e *guiEnv) separateSingleStemView() fyne.CanvasObject {
-	ok, canvas := e.checkConfig([]func() (bool, string){e.Config.CheckTmpDir})
+	ok, canvas := e.checkConfig([]func() (bool, string){})
 
 	if !ok {
 		return canvas
@@ -171,7 +171,7 @@ func (e *guiEnv) separateSingleStemView() fyne.CanvasObject {
 }
 
 func (e *guiEnv) separateFolderStemView() fyne.CanvasObject {
-	ok, canvas := e.checkConfig([]func() (bool, string){e.Config.CheckTmpDir})
+	ok, canvas := e.checkConfig([]func() (bool, string){})
 
 	if !ok {
 		return canvas
@@ -218,7 +218,7 @@ func (e *guiEnv) convertMp3sView() fyne.CanvasObject {
 
 // convertSingleMp3View returns the view for the convert single mp3 operation
 func (e *guiEnv) convertSingleMp3View() fyne.CanvasObject {
-	ok, canvas := e.checkConfig([]func() (bool, string){e.Config.CheckTmpDir})
+	ok, canvas := e.checkConfig([]func() (bool, string){})
 
 	if !ok {
 		return canvas
@@ -250,7 +250,7 @@ func (e *guiEnv) convertSingleMp3View() fyne.CanvasObject {
 
 // convertFolderMp3View returns the view for the convert folder mp3 operation
 func (e *guiEnv) convertFolderMp3View() fyne.CanvasObject {
-	ok, canvas := e.checkConfig([]func() (bool, string){e.Config.CheckTmpDir})
+	ok, canvas := e.checkConfig([]func() (bool, string){})
 
 	if !ok {
 		return canvas

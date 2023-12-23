@@ -53,9 +53,6 @@ func (e *guiEnv) settingsList(w fyne.Window) []fyne.CanvasObject {
 	objs = append(objs, e.openFileCanvas(
 		"Traktor Collection Filepath", &e.tmpConfig.TraktorCollectionPath, []string{".nml"}, func() {},
 	))
-	objs = append(objs, e.openDirCanvas(
-		"Temporary Content Directory", &e.tmpConfig.TmpDir, func() {},
-	))
 
 	objs = append(objs, e.saveButton(w))
 

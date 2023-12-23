@@ -230,8 +230,8 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 		p(
 			streaming.SoundCloudPlaylist{},
 			fault.Wrap(
-				err, 
-				fmsg.With("error getting playlist from SoundCloud")
+				err,
+				fmsg.With("error getting playlist from SoundCloud"),
 			),
 		)
 		return
