@@ -31,19 +31,17 @@ godotenv ( [github.com/joho/godotenv](https://github.com/joho/godotenv) )
 - available via go install (`go install github.com/joho/godotenv/cmd/godotenv@latest`)
 
 ## Creating new DB migrations & queries
-`github.com/sqlc-dev/sqlc`
-- Main database queries within application logic are handled by sqlc
-- sqlc generates go from queries inside ./db/queries
-- add queries and run `sqlc generate`
 
-`github.com/pressly/goose`
-- Database migrations are handled by goose.
-- migration status
-    - `godotenv goose status`
-- new migration
-    - `godotenv goose create query_name sql`
+goose is used in order to run the migrations inside `./db/migrations` on the database, we combine this with godotenv to simplify these commands. For example...
+
 - apply migrations
     - `godotenv goose up`
+- new migration
+    - `godotenv goose create query_name sql`
+- migration status
+    - `godotenv goose status`
+
+We also use sqlc to generate go code from queries inside `./db/queries`. This is done by running `sqlc generate`
 
 ## XML Schema generation
 
