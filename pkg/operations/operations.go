@@ -2,11 +2,13 @@ package operations
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"os"
 
+	"github.com/Southclaws/fault"
+	"github.com/Southclaws/fault/fmsg"
 	"github.com/billiem/seren-management/pkg/collection"
-	"github.com/billiem/seren-management/pkg/database"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/billiem/seren-management/pkg/streaming"
 )
@@ -178,20 +180,41 @@ func (e *OpEnv) ReadCollection(ctx context.Context, opts collection.ReadCollecti
 GetPlaylist gets a playlist for a given platform and stores it in the database
 */
 
-func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPlaylistOpts, p func(database.SoundCloudPlaylist, error)) {
+func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPlaylistOpts, p func(streaming.SoundCloudPlaylist, error)) {
+
+	// netUrl, err := url.Parse(opts.PlaylistURL)
+
+	// if err != nil {
+	// 	e.stepHandlerNew.finishedCallback()
+
+	// 	e.operationHandler.finished()
 
 	if !opts.Refresh {
 		// check if playlist with same url already exists in database
-		playlistByUrlCheck, err := e.SerenDB.GetSoundCloudPlaylistByURL(opts.PlaylistURL)
+		numPlaylists, err := e.SerenDB.GetNumSoundCloudPlaylistByURL(
+			context.Background(),
+			sql.NullString{Valid: true, String: opts.PlaylistURL},
+		)
 
 		if err != nil {
-			e.step(dangerStepInfo(err))
-			p(database.SoundCloudPlaylist{}, err)
+			p(
+				streaming.SoundCloudPlaylist{},
+				fault.Wrap(
+					err,
+					fmsg.With("Error checking if playlist already exists in database by url"),
+				),
+			)
 			return
 		}
 
-		if playlistByUrlCheck.ID != 0 {
-			p(playlistByUrlCheck, helpers.ErrPlaylistAlreadyExists)
+		if numPlaylists > 0 {
+			p(
+				streaming.SoundCloudPlaylist{},
+				fault.Wrap(
+					helpers.ErrPlaylistAlreadyExists,
+					fmsg.With("playlist with same url already exists in db"),
+				),
+			)
 			return
 		}
 	}
@@ -204,28 +227,60 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 	downloadedPlaylist, err := s.GetSoundCloudPlaylist(ctx, opts.PlaylistURL)
 
 	if err != nil {
-		e.step(dangerStepInfo(err))
-		p(database.SoundCloudPlaylist{}, err)
+		p(
+			streaming.SoundCloudPlaylist{},
+			fault.Wrap(
+				err,
+				fmsg.With("error getting playlist from SoundCloud"),
+			),
+		)
 		return
 	}
 
 	if !opts.Refresh {
 		// check if playlist with same external id already exists in database
-		playlistByExternalIDCheck, err := e.SerenDB.GetSoundCloudPlaylistByExternalID(downloadedPlaylist.ExternalID)
+		numPlaylists, err := e.SerenDB.GetNumSoundCloudPlaylistByExternalID(
+			context.Background(),
+			sql.NullInt64{Valid: true, Int64: downloadedPlaylist.ExternalID},
+		)
 
 		if err != nil {
-			e.step(dangerStepInfo(err))
-			p(database.SoundCloudPlaylist{}, err)
+			p(
+				streaming.SoundCloudPlaylist{},
+				fault.Wrap(
+					err,
+					fmsg.With("error checking if playlist already exists in database by external id"),
+				),
+			)
 			return
 		}
 
-		if playlistByExternalIDCheck.ID != 0 {
-			p(playlistByExternalIDCheck, helpers.ErrPlaylistAlreadyExists)
+		if numPlaylists > 0 {
+			p(
+				streaming.SoundCloudPlaylist{},
+				fault.Wrap(
+					helpers.ErrPlaylistAlreadyExists,
+					fmsg.With("playlist with same external id already exists in db"),
+				),
+			)
 			return
 		}
 	}
 
 	downloadedPlaylist.SearchUrl = opts.PlaylistURL
+
+	dataP, dataT := downloadedPlaylist.ToDB()
+
+	// save playlist to database
+	err = e.SerenDB.TxUpsertSoundCloudPlaylistAndTracks(dataP, dataT)
+
+	if err != nil {
+		p(
+			streaming.SoundCloudPlaylist{},
+			fault.Wrap(err, fmsg.With("error saving playlist to database")),
+		)
+		return
+	}
 
 	p(downloadedPlaylist, nil)
 }
@@ -237,7 +292,7 @@ DownloadSoundCloudFile downloads a file straight from SoundCloud
 
 playlistName is optional and is used to create a folder for the playlist within the download directory
 */
-func (e *OpEnv) DownloadSoundCloudFile(track database.SoundCloudTrack, playlistName string) {
+func (e *OpEnv) DownloadSoundCloudFile(track streaming.SoundCloudTrack, playlistName string) {
 
 	if e.Config.SoundCloudClientID == "" {
 		e.finishedNew(newFinishedError(helpers.ErrSoundCloudClientIDNotSet))

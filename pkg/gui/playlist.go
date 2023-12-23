@@ -2,6 +2,7 @@ package gui
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"net/url"
 
@@ -10,11 +11,14 @@ import (
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/widget"
-	"github.com/billiem/seren-management/pkg/database"
+	"github.com/Southclaws/fault"
+	"github.com/Southclaws/fault/fmsg"
+	"github.com/billiem/seren-management/pkg/data"
 	"github.com/billiem/seren-management/pkg/gui/iwidget"
 	"github.com/billiem/seren-management/pkg/gui/uihelpers"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/billiem/seren-management/pkg/operations"
+	"github.com/billiem/seren-management/pkg/streaming"
 )
 
 /*
@@ -93,14 +97,18 @@ func (i *playlistBindingList) Append(p *playlistBindingItem) {
 /*
 load loads all playlists from the database into the playlistBindingList
 */
-func (i *playlistBindingList) load(s *database.SerenDB) {
+func (i *playlistBindingList) load(s *data.SerenDB) {
 
 	// TODO err handling...
-	playlists, _ := s.GetSoundCloudPlaylists()
+	playlists, _ := s.ListSoundCloudPlaylists(context.Background())
 
 	for _, playlist := range playlists {
+
+		p := streaming.SoundCloudPlaylist{}
+		p.LoadFromDB(playlist, nil)
+
 		i.Append(&playlistBindingItem{
-			playlist: playlist,
+			playlist: p,
 			state:    Found,
 		})
 	}
@@ -115,7 +123,7 @@ type playlistBindingItem struct {
 	bindBase
 
 	// may want a context in here ?? later problem...
-	playlist database.SoundCloudPlaylist
+	playlist streaming.SoundCloudPlaylist
 	state    playlistState
 	err      error
 }
@@ -284,6 +292,12 @@ func (i *addPlaylistWidget) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(c)
 }
 
+/*
+getAddPlaylistCallback returns a function that can be used to add a playlist.
+
+This function calls SoundCloud, and adds the playlist to the database, it is attached to the
+'add playlist' button
+*/
 func (e *guiEnv) getAddPlaylistCallback(playlistBindVals *playlistBindingList, refreshFunc func()) func(string) {
 	ctx := context.Background()
 	ctx, ctxClose := context.WithCancel(ctx)
@@ -305,15 +319,19 @@ func (e *guiEnv) getAddPlaylistCallback(playlistBindVals *playlistBindingList, r
 		if err != nil {
 			pbi.state = Failed
 			pbi.err = err
-			pbi.playlist = database.SoundCloudPlaylist{SearchUrl: urlRaw}
+			pbi.playlist = streaming.SoundCloudPlaylist{SearchUrl: urlRaw}
 			playlistBindVals.Append(pbi)
 			refreshFunc()
+			opEnv.Logger.Error(fault.Flatten(fault.Wrap(
+				err,
+				fmsg.With("error parsing url"),
+			)))
 			return
 		}
 
 		netUrl.RawQuery = ""
 
-		pbi.playlist = database.SoundCloudPlaylist{
+		pbi.playlist = streaming.SoundCloudPlaylist{
 			SearchUrl: netUrl.String(),
 		}
 
@@ -322,19 +340,14 @@ func (e *guiEnv) getAddPlaylistCallback(playlistBindVals *playlistBindingList, r
 
 		go opEnv.GetSoundCloudPlaylist(ctx, operations.GetSoundCloudPlaylistOpts{
 			PlaylistURL: netUrl.String(),
-		}, func(p database.SoundCloudPlaylist, err error) {
+		}, func(p streaming.SoundCloudPlaylist, err error) {
 			if err != nil {
 				pbi.state = Failed
 				pbi.err = err
-				return
-			}
-
-			// save playlist to database
-			err = e.SerenDB.CreateSoundCloudPlaylist(p)
-
-			if err != nil {
-				pbi.state = Failed
-				pbi.err = err
+				opEnv.Logger.Error(
+					"error getting playlist",
+					fault.Flatten(err),
+				)
 				return
 			}
 
@@ -384,7 +397,7 @@ func (e *guiEnv) updatePlaylistsList(playlistWidget *playlistWidget, playlistBin
 /*
 openPlaylistPopup opens a popup window for a given playlist
 */
-func (e *guiEnv) openPlaylistPopup(playlist database.SoundCloudPlaylist) {
+func (e *guiEnv) openPlaylistPopup(playlist streaming.SoundCloudPlaylist) {
 
 	loading := newViewLoading(fmt.Sprintf("Loading tracks for %s...", playlist.Name))
 
@@ -436,13 +449,22 @@ func (e *guiEnv) openPlaylistPopup(playlist database.SoundCloudPlaylist) {
 	)
 
 	go func(tlb *iwidget.TrackListBinding) {
-		t, err := e.SerenDB.GetSoundCloudTracksByPlaylistID(playlist.ExternalID)
+		tracks, err := e.SerenDB.ListSoundCloudTracksByPlaylistExternalID(
+			context.Background(),
+			sql.NullInt64{Valid: true, Int64: playlist.ExternalID},
+		)
 		if err != nil {
 			playlistPopup.Hide()
 			e.showErrorDialog(err)
 			return
 		}
-		tlb.Set(t)
+		streamTracks := make([]*streaming.SoundCloudTrack, len(tracks))
+		for i, track := range tracks {
+			streamTrack := streaming.SoundCloudTrack{}
+			streamTrack.LoadFromDB(track)
+			streamTracks[i] = &streamTrack
+		}
+		tlb.Set(streamTracks)
 		tlb.ApplyFilterSort()
 		loading.Hide()
 	}(&trackListBinding)
@@ -481,7 +503,7 @@ func (e *guiEnv) getDownloadSoundCloudTrackFunc(selectedTrack *iwidget.SelectedT
 						}
 						track.LocalPath = path
 
-						err := e.SerenDB.SaveSoundCloudTracks([]database.SoundCloudTrack{*track})
+						err := e.SerenDB.TxUpsertSoundCloudTracks([]data.SoundcloudTrack{track.ToDB()})
 						if err != nil {
 							e.showErrorDialog(err)
 							return
@@ -504,7 +526,7 @@ func (e *guiEnv) getDownloadSoundCloudTrackFunc(selectedTrack *iwidget.SelectedT
 func (e *guiEnv) getSaveSoundCloudTrackFunc(selectedTrack *iwidget.SelectedTrackBinding) func() {
 	return func() {
 		track := selectedTrack.TrackBinding.Track
-		err := e.SerenDB.SaveSoundCloudTracks([]database.SoundCloudTrack{*track})
+		err := e.SerenDB.TxUpsertSoundCloudTracks([]data.SoundcloudTrack{track.ToDB()})
 		if err != nil {
 			e.showErrorDialog(err)
 			return
@@ -515,14 +537,18 @@ func (e *guiEnv) getSaveSoundCloudTrackFunc(selectedTrack *iwidget.SelectedTrack
 /*
 getRefreshSoundCloudPlaylistFunc returns a function that can be used to refresh a SoundCloud playlist
 */
-func (e *guiEnv) getRefreshSoundCloudPlaylistFunc(playlist database.SoundCloudPlaylist, trackListBinding *iwidget.TrackListBinding) func() {
+func (e *guiEnv) getRefreshSoundCloudPlaylistFunc(playlist streaming.SoundCloudPlaylist, trackListBinding *iwidget.TrackListBinding) func() {
 
-	processResultsFunc := func(p database.SoundCloudPlaylist, err error) {
+	processResultsFunc := func(p streaming.SoundCloudPlaylist, err error) {
 
-		currentTracksMap := make(map[int64]database.SoundCloudTrack)
-		existingTracksMap := make(map[int64]database.SoundCloudTrack)
+		currentTracksMap := make(map[int64]streaming.SoundCloudTrack)
+		existingTracksMap := make(map[int64]streaming.SoundCloudTrack)
 
 		if err != nil {
+			e.OPLogger.Error(
+				"err refreshing playlist",
+				fault.Flatten(err),
+			)
 			e.showErrorDialog(err)
 			return
 		}
@@ -531,7 +557,7 @@ func (e *guiEnv) getRefreshSoundCloudPlaylistFunc(playlist database.SoundCloudPl
 			currentTracksMap[t.ExternalID] = t
 		}
 
-		var tracksToSave []database.SoundCloudTrack
+		var tracksToSave []streaming.SoundCloudTrack
 
 		for _, t := range trackListBinding.Tracks {
 			existingTracksMap[t.ExternalID] = *t
@@ -554,7 +580,13 @@ func (e *guiEnv) getRefreshSoundCloudPlaylistFunc(playlist database.SoundCloudPl
 		}
 
 		if len(tracksToSave) > 0 {
-			err = e.SerenDB.SaveSoundCloudTracks(tracksToSave)
+
+			dataT := make([]data.SoundcloudTrack, len(tracksToSave))
+			for i, t := range tracksToSave {
+				dataT[i] = t.ToDB()
+			}
+
+			err = e.SerenDB.TxUpsertSoundCloudTracks(dataT)
 
 			if err != nil {
 				e.showErrorDialog(err)

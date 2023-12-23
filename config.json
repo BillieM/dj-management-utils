@@ -1,9 +1,7 @@
 {
   "traktorCollectionPath": "H:/Native Instruments/Traktor Windows/collection_backup_outdated.nml",
-  "tmpDir": "H:/tmp/testdir/testtest",
-  "baseDir": "H:/",
-  "baseOutputDir": "H:/tmp/seren-output-dir",
-  "downloadDir": "H:/Music/to process",
+  "baseDir": "/Users/billiemerz/seren",
+  "downloadDir": "/Users/billiemerz/seren/music/downloads",
   "extensionsToConvertToMp3": [
     "flac",
     "aiff",

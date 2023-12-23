@@ -1,11 +1,14 @@
 package gui
 
 import (
+	"log"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"github.com/Southclaws/fault"
+	"github.com/Southclaws/fault/fmsg"
 	"github.com/billiem/seren-management/pkg/gui/iwidget"
-	"github.com/billiem/seren-management/pkg/helpers"
 )
 
 func Entry() {
@@ -15,7 +18,9 @@ func Entry() {
 	e, err := buildGuiEnv(a, mainWindow)
 
 	if err != nil {
-		helpers.HandleFatalError(err)
+		log.Fatal(
+			fault.Wrap(err, fmsg.With("Error building GUI environment, exiting")),
+		)
 	}
 
 	appLoading := iwidget.NewAppLoading()

@@ -2,7 +2,9 @@ package gui
 
 import (
 	"fyne.io/fyne/v2"
-	"github.com/billiem/seren-management/pkg/database"
+	"github.com/Southclaws/fault"
+	"github.com/Southclaws/fault/fmsg"
+	"github.com/billiem/seren-management/pkg/data"
 	"github.com/billiem/seren-management/pkg/gui/uihelpers"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/billiem/seren-management/pkg/operations"
@@ -13,7 +15,8 @@ guiEnv holds the environment for the GUI
 */
 type guiEnv struct {
 	*helpers.Config
-	*database.SerenDB
+	*data.SerenDB
+	*helpers.AppLogger
 	*guiState
 	tmpConfig    *helpers.Config
 	views        map[string]guiView
@@ -26,6 +29,7 @@ type guiEnv struct {
 func (e *guiEnv) opEnv() *operations.OpEnv {
 	return &operations.OpEnv{
 		Config:  *e.Config,
+		Logger:  e.AppLogger.OPLogger,
 		SerenDB: e.SerenDB,
 	}
 }
@@ -38,16 +42,22 @@ func buildGuiEnv(a fyne.App, w fyne.Window) (*guiEnv, error) {
 	cfg, err := helpers.LoadGUIConfig()
 
 	if err != nil {
-		return nil, err
+		return nil, fault.Wrap(err, fmsg.With("Error loading GUI config"))
 	}
 
-	db, err := database.Connect()
+	logger, err := helpers.BuildAppLogger(*cfg)
 
 	if err != nil {
-		return nil, err
+		return nil, fault.Wrap(err, fmsg.With("Error building logger"))
 	}
 
-	e := &guiEnv{cfg, db, nil, nil, nil, nil, w, a, nil}
+	queries, err := data.Connect(*cfg, *logger)
+
+	if err != nil {
+		return nil, fault.Wrap(err, fmsg.With("Error connecting to database"))
+	}
+
+	e := &guiEnv{cfg, queries, logger, nil, nil, nil, nil, w, a, nil}
 
 	s := &guiState{}
 	operations := e.getViewList()

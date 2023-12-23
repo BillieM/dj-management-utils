@@ -2,6 +2,7 @@ package streaming
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,7 +10,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/billiem/seren-management/pkg/database"
+	"github.com/Southclaws/fault"
+	"github.com/Southclaws/fault/fmsg"
+	"github.com/billiem/seren-management/pkg/data"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/deliveryhero/pipeline/v2"
 )
@@ -31,12 +34,140 @@ type SoundCloud struct {
 	ClientID string
 }
 
-func (s SoundCloud) GetSoundCloudPlaylist(ctx context.Context, playlistUrl string) (database.SoundCloudPlaylist, error) {
+type SoundCloudPlaylist struct {
+	ExternalID int64
+	Name       string
+	SearchUrl  string
+	Permalink  string
+
+	Tracks []SoundCloudTrack
+
+	NumTracks int
+}
+
+func (p *SoundCloudPlaylist) loadFromHydratable(hp HydratableSoundCloudPlaylist) {
+
+	tracks := []SoundCloudTrack{}
+
+	for _, track := range hp.Tracks {
+		var newTrack SoundCloudTrack
+		newTrack.loadFromHydratable(track)
+		tracks = append(tracks, newTrack)
+	}
+
+	p.ExternalID = hp.ID
+	p.Name = hp.Title
+	p.Permalink = hp.Permalink
+	p.Tracks = tracks
+}
+
+func (p *SoundCloudPlaylist) LoadFromDB(dp data.SoundcloudPlaylist, tracks []data.SoundcloudTrack) {
+
+	for _, track := range tracks {
+		var newTrack SoundCloudTrack
+		newTrack.LoadFromDB(track)
+		p.Tracks = append(p.Tracks, newTrack)
+	}
+
+	p.ExternalID = dp.ExternalID.Int64
+	p.Name = dp.Name.String
+	p.SearchUrl = dp.SearchUrl.String
+	p.Permalink = dp.Permalink.String
+}
+
+func (p *SoundCloudPlaylist) ToDB() (data.SoundcloudPlaylist, []data.SoundcloudTrack) {
+	dataP := data.SoundcloudPlaylist{
+		ExternalID: sql.NullInt64{Valid: true, Int64: p.ExternalID},
+		Name:       sql.NullString{Valid: true, String: p.Name},
+		SearchUrl:  sql.NullString{Valid: true, String: p.SearchUrl},
+		Permalink:  sql.NullString{Valid: true, String: p.Permalink},
+	}
+
+	dataTracks := []data.SoundcloudTrack{}
+
+	for _, track := range p.Tracks {
+		dataTracks = append(dataTracks, track.ToDB())
+	}
+
+	return dataP, dataTracks
+}
+
+type SoundCloudTrack struct {
+	ExternalID          int64  `gorm:"uniqueIndex"`
+	Name                string // change to title
+	Permalink           string
+	PurchaseTitle       string
+	PurchaseURL         string
+	HasDownloadsLeft    bool
+	Genre               string
+	ArtworkURL          string
+	TagList             string
+	PublisherArtist     string // users/ artists use relationships
+	SoundCloudUser      string
+	LocalPath           string
+	LocalPathBroken     bool
+	RemovedFromPlaylist bool
+
+	Playlists []SoundCloudPlaylist `gorm:"many2many:playlist_tracks;"`
+}
+
+func (t *SoundCloudTrack) loadFromHydratable(ht HydratableSoundCloudTrack) {
+
+	t.ExternalID = ht.ID
+	t.Name = ht.Title
+	t.Permalink = ht.PermalinkURL
+	t.PurchaseTitle = ht.PurchaseTitle
+	t.PurchaseURL = ht.PurchaseURL
+	t.HasDownloadsLeft = ht.HasDownloadsLeft
+	t.Genre = ht.Genre
+	t.ArtworkURL = ht.ArtworkURL
+	t.TagList = ht.TagList
+	t.PublisherArtist = ht.PublisherMetadata.Artist
+	t.SoundCloudUser = ht.User.Username
+}
+
+func (t *SoundCloudTrack) LoadFromDB(dt data.SoundcloudTrack) {
+	t.ExternalID = dt.ExternalID.Int64
+	t.Name = dt.Name.String
+	t.Permalink = dt.Permalink.String
+	t.PurchaseTitle = dt.PurchaseTitle.String
+	t.PurchaseURL = dt.PurchaseUrl.String
+	t.HasDownloadsLeft = dt.HasDownloadsLeft.Bool
+	t.Genre = dt.Genre.String
+	t.ArtworkURL = dt.ArtworkUrl.String
+	t.TagList = dt.TagList.String
+	t.PublisherArtist = dt.PublisherArtist.String
+	t.SoundCloudUser = dt.SoundCloudUser.String
+	t.LocalPath = dt.LocalPath.String
+	t.LocalPathBroken = dt.LocalPathBroken.Bool
+	t.RemovedFromPlaylist = dt.RemovedFromPlaylist.Bool
+}
+
+func (t *SoundCloudTrack) ToDB() data.SoundcloudTrack {
+	return data.SoundcloudTrack{
+		ExternalID:          sql.NullInt64{Valid: true, Int64: t.ExternalID},
+		Name:                sql.NullString{Valid: true, String: t.Name},
+		Permalink:           sql.NullString{Valid: true, String: t.Permalink},
+		PurchaseTitle:       sql.NullString{Valid: true, String: t.PurchaseTitle},
+		PurchaseUrl:         sql.NullString{Valid: true, String: t.PurchaseURL},
+		HasDownloadsLeft:    sql.NullBool{Valid: true, Bool: t.HasDownloadsLeft},
+		Genre:               sql.NullString{Valid: true, String: t.Genre},
+		ArtworkUrl:          sql.NullString{Valid: true, String: t.ArtworkURL},
+		TagList:             sql.NullString{Valid: true, String: t.TagList},
+		PublisherArtist:     sql.NullString{Valid: true, String: t.PublisherArtist},
+		SoundCloudUser:      sql.NullString{Valid: true, String: t.SoundCloudUser},
+		LocalPath:           sql.NullString{Valid: true, String: t.LocalPath},
+		LocalPathBroken:     sql.NullBool{Valid: true, Bool: t.LocalPathBroken},
+		RemovedFromPlaylist: sql.NullBool{Valid: true, Bool: t.RemovedFromPlaylist},
+	}
+}
+
+func (s SoundCloud) GetSoundCloudPlaylist(ctx context.Context, playlistUrl string) (SoundCloudPlaylist, error) {
 
 	resp, err := http.Get(playlistUrl)
 
 	if err != nil {
-		return database.SoundCloudPlaylist{}, err
+		return SoundCloudPlaylist{}, err
 	}
 
 	defer resp.Body.Close()
@@ -44,33 +175,35 @@ func (s SoundCloud) GetSoundCloudPlaylist(ctx context.Context, playlistUrl strin
 	body, err := io.ReadAll(resp.Body)
 
 	if err != nil {
-		return database.SoundCloudPlaylist{}, err
+		return SoundCloudPlaylist{}, err
 	}
 
 	hydratableStr, err := extractSCHydrationString(string(body))
 
 	if err != nil {
-		return database.SoundCloudPlaylist{}, err
+		return SoundCloudPlaylist{}, err
 	}
 
 	h := Hydratable{}
 	err = h.UnmarshalJSON([]byte(hydratableStr))
 
 	if err != nil {
-		return database.SoundCloudPlaylist{}, err
+		return SoundCloudPlaylist{}, err
 	}
 
 	if h.Playlist.ID == 0 {
-		return database.SoundCloudPlaylist{}, helpers.ErrRequestingPlaylist
+		return SoundCloudPlaylist{}, helpers.ErrRequestingPlaylist
 	}
 
 	err = s.completeTracks(ctx, &h.Playlist)
 
 	if err != nil {
-		return database.SoundCloudPlaylist{}, err
+		return SoundCloudPlaylist{}, err
 	}
 
-	return h.Playlist.ToDB(), nil
+	p := SoundCloudPlaylist{}
+	p.loadFromHydratable(h.Playlist)
+	return p, nil
 }
 
 /*
@@ -78,19 +211,22 @@ completePlaylistTracks adds missing data to tracks in a SoundCloudPlaylist struc
 
 This is needed as soundcloud only returns IDs for any tracks beyond the first 5
 */
-func (s SoundCloud) completeTracks(ctx context.Context, p *SoundCloudPlaylist) error {
+func (s SoundCloud) completeTracks(ctx context.Context, p *HydratableSoundCloudPlaylist) error {
 
-	okayTracks := []TrackElement{}
+	okayTracks := []HydratableSoundCloudTrack{}
 	trackIdsToRequest := []int64{}
 
 	for _, track := range p.Tracks {
-		ok, err := track.check()
+		needToRequestTrack, err := track.check()
 
 		if err != nil {
-			return err
+			return fault.Wrap(
+				err,
+				fmsg.With(fmt.Sprintf("Error checking track %d", track.ID)),
+			)
 		}
 
-		if !ok {
+		if !needToRequestTrack {
 			trackIdsToRequest = append(trackIdsToRequest, track.ID)
 			continue
 		}
@@ -101,7 +237,10 @@ func (s SoundCloud) completeTracks(ctx context.Context, p *SoundCloudPlaylist) e
 	remainingTracks, err := s.getRemainingTracks(ctx, trackIdsToRequest)
 
 	if err != nil {
-		return err
+		return fault.Wrap(
+			err,
+			fmsg.With("Error getting remaining tracks"),
+		)
 	}
 
 	p.Tracks = append(okayTracks, remainingTracks...)
@@ -109,7 +248,7 @@ func (s SoundCloud) completeTracks(ctx context.Context, p *SoundCloudPlaylist) e
 	return nil
 }
 
-func (track TrackElement) check() (bool, error) {
+func (track HydratableSoundCloudTrack) check() (bool, error) {
 	if track.ID == 0 {
 		return false, helpers.ErrTrackMissingID
 	}
@@ -122,39 +261,53 @@ func (track TrackElement) check() (bool, error) {
 	return true, nil
 }
 
-func (s SoundCloud) getRemainingTracks(ctx context.Context, ids []int64) ([]TrackElement, error) {
+func (s SoundCloud) getRemainingTracks(ctx context.Context, ids []int64) ([]HydratableSoundCloudTrack, error) {
+
+	ctx, cancel := context.WithCancelCause(ctx)
 
 	trackIDChan := pipeline.Emit(ids...)
 
 	// TODO: figure out how big this array can be
-	tracksOut := pipeline.ProcessBatchConcurrently(ctx, 2, 50, time.Second*15, pipeline.NewProcessor(func(ctx context.Context, ids []int64) ([]TrackElement, error) {
+	tracksOut := pipeline.ProcessBatchConcurrently(ctx, 2, 50, time.Second*15, pipeline.NewProcessor(func(ctx context.Context, ids []int64) ([]HydratableSoundCloudTrack, error) {
 		trackArr, err := s.makeSoundCloudTracksRequest(ids)
 		if err != nil {
-			return nil, err
+			return nil, fault.Wrap(
+				err,
+				fmsg.With("Error making SoundCloud tracks request"),
+			)
 		}
 		return trackArr, nil
 	}, func(ids []int64, err error) {
 		if err != nil {
-			// TODO: make this not just panic...
-			panic(err)
+			cancel(err)
 		}
 	}), trackIDChan)
 
-	outTracks := []TrackElement{}
+	outTracks := []HydratableSoundCloudTrack{}
 
 	for track := range tracksOut {
 		outTracks = append(outTracks, track)
 	}
 
-	return outTracks, nil
+	if ctx.Err() != nil {
+		return nil, fault.Wrap(
+			context.Cause(ctx),
+			fmsg.With("Error making batch requests for remaining tracks"),
+		)
+	}
+
+	return outTracks, ctx.Err()
 }
 
-func (s SoundCloud) makeSoundCloudTracksRequest(ids []int64) ([]TrackElement, error) {
+func (s SoundCloud) makeSoundCloudTracksRequest(ids []int64) ([]HydratableSoundCloudTrack, error) {
 
 	req, err := http.NewRequest("GET", "https://api-v2.soundcloud.com/tracks", nil)
 
 	if err != nil {
-		return nil, err
+		return nil, fault.Wrap(
+			err,
+			fmsg.With("Error creating request"),
+		)
 	}
 
 	q := req.URL.Query()
@@ -169,19 +322,35 @@ func (s SoundCloud) makeSoundCloudTracksRequest(ids []int64) ([]TrackElement, er
 	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {
-		return nil, err
+		return nil, fault.Wrap(
+			err,
+			fmsg.With("Error making request"),
+		)
 	}
+
+	if resp.StatusCode != 200 {
+		return nil, fault.New(fmt.Sprintf(
+			"Error making request to get SoundCloud tracks, status code %d", resp.StatusCode,
+		))
+	}
+
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fault.Wrap(
+			err,
+			fmsg.With("Error reading response body"),
+		)
 	}
 
-	var tracks []TrackElement
+	var tracks []HydratableSoundCloudTrack
 	err = json.Unmarshal(body, &tracks)
 	if err != nil {
-		return nil, err
+		return nil, fault.Wrap(
+			err,
+			fmsg.With("Error unmarshalling response body to tracks"),
+		)
 	}
 
 	return tracks, nil

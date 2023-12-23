@@ -1,13 +1,15 @@
 package operations
 
 import (
-	"github.com/billiem/seren-management/pkg/database"
+	"github.com/billiem/seren-management/pkg/data"
 	"github.com/billiem/seren-management/pkg/helpers"
+	"github.com/charmbracelet/log"
 )
 
 type OpEnv struct {
 	helpers.Config
-	*database.SerenDB
+	*log.Logger
+	*data.SerenDB
 	*stepHandler
 	*stepHandlerNew
 }
