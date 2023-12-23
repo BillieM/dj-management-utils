@@ -4,14 +4,14 @@ A collection of utilities for DJ library management.
 
 ## Dependencies
 
-ffmpeg (https://ffmpeg.org/)
+ffmpeg [ffmpeg.org](https://ffmpeg.org/)
 - Required for audio processing/ demucs dependency
 - Available on macOS via homebrew (`brew install ffmpeg`)
 - Available on Ubuntu via apt (`sudo apt-get install ffmpeg`)
 - Available on Windows via chocolatey (`choco install ffmpeg`)
 - Binaries also available on the ffmpeg website (https://ffmpeg.org/download.html)
 
-fyne (https://developer.fyne.io/ / https://github.com/fyne-io/fyne)
+fyne [developer.fyne.io](https://developer.fyne.io/) / [github.com/fyne-io/fyne](https://github.com/fyne-io/fyne)
 - UI framework
 - requires golang/ a compatible c compiler/ graphics drivers on some platforms (macOS should work out of the box)
 - detailed installation instructions available at `https://developer.fyne.io/started/`
