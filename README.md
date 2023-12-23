@@ -10,18 +10,22 @@ ffmpeg (https://ffmpeg.org/)
 - Available on Ubuntu via apt (`sudo apt-get install ffmpeg`)
 - Available on Windows via chocolatey (`choco install ffmpeg`)
 - Binaries also available on the ffmpeg website (https://ffmpeg.org/download.html)
+
 fyne (https://developer.fyne.io/ / https://github.com/fyne-io/fyne)
 - UI framework
 - requires golang/ a compatible c compiler/ graphics drivers on some platforms (macOS should work out of the box)
 - detailed installation instructions available at `https://developer.fyne.io/started/`
+
 demucs (github.com/facebookresearch/demucs)
 - Used for audio source separation
 - detailed installation instructions available at github.com/facebookresearch/demucs
 - available via pip (`python3 -m pip install -U demucs`)
+
 goose (github.com/pressly/goose)
 - For running database migrations
 - available on macOS via homebrew (`brew install goose`)
 - avilable via go install (`go install github.com/pressly/goose/v3/cmd/goose@latest`)
+
 godotenv (github.com/joho/godotenv)
 - to simplify loading environment variables from .env files to run development commands
 - available via go install (`go install github.com/joho/godotenv/cmd/godotenv@latest`)
