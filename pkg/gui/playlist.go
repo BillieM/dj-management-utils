@@ -12,7 +12,6 @@ import (
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/widget"
 	"github.com/Southclaws/fault"
-	"github.com/Southclaws/fault/fctx"
 	"github.com/Southclaws/fault/fmsg"
 	"github.com/billiem/seren-management/pkg/data"
 	"github.com/billiem/seren-management/pkg/gui/iwidget"
@@ -361,6 +360,12 @@ func (e *guiEnv) getAddPlaylistCallback(playlistBindVals *playlistBindingList, r
 	}
 }
 
+/*
+updatePlaylistsList updates the playlistWidget for a given playlist
+
+This is called when a playlist is added, or when the state of the playlist changes,
+for example when the request to get information about the playlist fails, or is completed
+*/
 func (e *guiEnv) updatePlaylistsList(playlistWidget *playlistWidget, playlistBindingItem *playlistBindingItem) {
 
 	playlist := playlistBindingItem.playlist
@@ -397,6 +402,8 @@ func (e *guiEnv) updatePlaylistsList(playlistWidget *playlistWidget, playlistBin
 
 /*
 openPlaylistPopup opens a popup window for a given playlist
+
+This is called when a user clicks the 'open playlist' button on a playlist
 */
 func (e *guiEnv) openPlaylistPopup(playlist streaming.SoundCloudPlaylist) {
 
@@ -474,179 +481,4 @@ func (e *guiEnv) openPlaylistPopup(playlist streaming.SoundCloudPlaylist) {
 	e.guiState.busy = true
 
 	playlistPopup.Show()
-}
-
-/*
-getDownloadSoundCloudTrackFunc returns a function that can be used to download a SoundCloud track, we call
-this function when opening a playlist popup.
-
-Generating the function here saves us passing lots of data down the track widgets (i.e. env/ playlist name)
-May consider changing this and attaching these to the widgets in the future
-*/
-func (e *guiEnv) getDownloadSoundCloudTrackFunc(selectedTrack *iwidget.SelectedTrackBinding, playlistName string) func() {
-	return func() {
-
-		selectedTrack.LockSelected()
-
-		track := selectedTrack.TrackBinding.Track
-
-		opEnv := e.opEnv()
-		opEnv.RegisterStepHandlerNew(
-			streamingStepHandlerNew{
-				stepCallback: func(i operations.StepInfoNew) {},
-				finishedCallback: func(i operations.FinishedInfo) {
-					if i.Err != nil {
-						e.showErrorDialog(i.Err)
-					} else {
-						path, ok := i.Data["filepath"].(string)
-						if !ok {
-							e.showErrorDialog(fmt.Errorf("filepath not found in finished data"))
-							return
-						}
-						track.LocalPath = path
-
-						err := e.SerenDB.TxUpsertSoundCloudTracks([]data.SoundcloudTrack{track.ToDB()})
-						if err != nil {
-							e.showErrorDialog(err)
-							return
-						}
-
-						e.showInfoDialog(
-							"Download Successful",
-							fmt.Sprintf("Downloaded %s to %s", track.Name, track.LocalPath),
-						)
-					}
-				},
-			},
-		)
-		opEnv.DownloadSoundCloudFile(*track, playlistName)
-
-		selectedTrack.UnlockSelected()
-	}
-}
-
-func (e *guiEnv) getSaveSoundCloudTrackFunc(selectedTrack *iwidget.SelectedTrackBinding) func() {
-
-	track := selectedTrack.TrackBinding.Track
-
-	ctx := context.Background()
-	ctx = fctx.WithMeta(ctx,
-		"track_name", track.Name,
-		"track_permalink", track.Permalink,
-		"track_external_id", fmt.Sprintf("%d", track.ExternalID),
-		"track_local_path", track.LocalPath,
-	)
-
-	return func() {
-		err := e.SerenDB.TxUpsertSoundCloudTracks([]data.SoundcloudTrack{track.ToDB()})
-		if err != nil {
-			e.displayErrorDialog(
-				fault.Wrap(
-					err,
-					fctx.With(ctx),
-					fmsg.With("error saving track to database"),
-				),
-			)
-			return
-		}
-	}
-}
-
-/*
-getRefreshSoundCloudPlaylistFunc returns a function that can be used to refresh a SoundCloud playlist
-
-Generating the function here saves us passing lots of data down the track widgets (i.e. env/ playlist name)
-*/
-func (e *guiEnv) getRefreshSoundCloudPlaylistFunc(playlist streaming.SoundCloudPlaylist, trackListBinding *iwidget.TrackListBinding) func() {
-
-	ctx := context.Background()
-
-	ctx = fctx.WithMeta(ctx,
-		"playlist_name", playlist.Name,
-		"playlist_external_id", fmt.Sprintf("%d", playlist.ExternalID),
-	)
-
-	processResultsFunc := func(p streaming.SoundCloudPlaylist, err error) {
-
-		if err != nil {
-			e.displayErrorDialog(fault.Wrap(
-				err,
-				fctx.With(ctx),
-				fmsg.WithDesc(
-					"err refreshing SoundCloud playlist",
-					"Error refreshing SoundCloud playlist",
-				),
-			))
-			return
-		}
-
-		currentTracksMap := make(map[int64]streaming.SoundCloudTrack)
-		existingTracksMap := make(map[int64]streaming.SoundCloudTrack)
-
-		for _, t := range p.Tracks {
-			currentTracksMap[t.ExternalID] = t
-		}
-
-		var tracksToSave []streaming.SoundCloudTrack
-
-		for _, t := range trackListBinding.Tracks {
-			existingTracksMap[t.ExternalID] = *t
-			v, ok := currentTracksMap[t.ExternalID]
-			if !ok {
-				t.RemovedFromPlaylist = true
-				tracksToSave = append(tracksToSave, *t)
-			}
-			*t = v
-		}
-
-		for _, t := range p.Tracks {
-			_, ok := existingTracksMap[t.ExternalID]
-			if !ok {
-				// track does not exist in current list, so we add it & save it
-				t.Playlists = append(t.Playlists, playlist)
-				newT := t
-				trackListBinding.Tracks = append(trackListBinding.Tracks, &newT)
-			}
-		}
-
-		if len(tracksToSave) > 0 {
-
-			dataT := make([]data.SoundcloudTrack, len(tracksToSave))
-			for i, t := range tracksToSave {
-				dataT[i] = t.ToDB()
-			}
-
-			err = e.SerenDB.TxUpsertSoundCloudTracks(dataT)
-
-			if err != nil {
-				e.displayErrorDialog(fault.Wrap(
-					err,
-					fctx.With(ctx),
-					fmsg.WithDesc(
-						"error saving tracks to database",
-						"Error saving tracks to database",
-					),
-				))
-				return
-			}
-		}
-
-		trackListBinding.ApplyFilterSort()
-	}
-
-	return func() {
-
-		opEnv := e.opEnv()
-		opEnv.RegisterStepHandler(streamingStepHandler{
-			stepFunc:     func() {},
-			finishedFunc: func() {},
-		})
-
-		opts := operations.GetSoundCloudPlaylistOpts{
-			PlaylistURL: playlist.Permalink,
-			Refresh:     true,
-		}
-
-		opEnv.GetSoundCloudPlaylist(ctx, opts, processResultsFunc)
-	}
 }
