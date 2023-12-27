@@ -275,6 +275,11 @@ func GetFileNameFromContentDisposition(contentDisposition string) (string, error
 	return params["filename"], nil
 }
 
+/*
+GetAudioExtensions returns a list of possible audio file extensions.
+
+This is primarily used for generic file filtering by extension
+*/
 func GetAudioExtensions() []string {
 	return []string{
 		"mp3",

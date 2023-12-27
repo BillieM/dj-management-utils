@@ -101,8 +101,3 @@ var (
 		return fmt.Errorf("%s %s: %w", ErrCleanupStep, name, err)
 	}
 )
-
-func HandleFatalError(err error) {
-	fmt.Println(err)
-	panic(err)
-}

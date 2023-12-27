@@ -1,9 +1,10 @@
 package helpers
 
 import (
-	"errors"
-	"fmt"
 	"os/exec"
+
+	"github.com/Southclaws/fault"
+	"github.com/Southclaws/fault/fmsg"
 )
 
 // CmdExec Execute a command
@@ -19,13 +20,16 @@ func CmdExec(args ...string) (string, error) {
 	if err != nil {
 		var errDetail error
 		if execExitError, ok := err.(*exec.ExitError); ok {
-			errDetail = errors.New(string(execExitError.Stderr))
+			errDetail = fault.New(string(execExitError.Stderr))
 		} else if execError, ok := err.(*exec.Error); ok {
 			errDetail = execError.Err
 		} else {
-			errDetail = errors.New("unknown execution error")
+			errDetail = fault.New("unknown execution error")
 		}
-		return outStr, fmt.Errorf("%s: %w", err.Error(), errDetail)
+		return outStr, fault.Wrap(
+			err,
+			fmsg.With(errDetail.Error()),
+		)
 	}
 
 	return outStr, nil

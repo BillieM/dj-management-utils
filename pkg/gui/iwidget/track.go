@@ -6,7 +6,6 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	"github.com/billiem/seren-management/pkg/gui/uihelpers"
@@ -95,7 +94,12 @@ func NewTrack(w fyne.Window, trackFuncs TrackFuncs, resizeEvents *uihelpers.Resi
 	i := &Track{
 		TrackInfo: NewTrackInfo(w),
 		GetTrack:  NewGetTrack(w, trackFuncs.DownloadSoundCloudTrack),
-		LinkTrack: NewLinkTrack(w, trackFuncs.SaveSoundCloudTrackToDB, resizeEvents),
+		LinkTrack: NewLinkTrack(
+			w,
+			trackFuncs.SaveSoundCloudTrackToDB,
+			trackFuncs.OnError,
+			resizeEvents,
+		),
 	}
 
 	i.ExtendBaseWidget(i)
@@ -183,8 +187,6 @@ TrackInfo displays the track name, link to the track, and track properties
 */
 type TrackInfo struct {
 	widget.BaseWidget
-
-	parentWindow fyne.Window
 
 	TrackNameLink   *widget.Hyperlink
 	TrackLinkButton *OpenInBrowserButton
@@ -338,8 +340,6 @@ func (i *TrackNameLink) SetNameLinkFromString(name string, url string) {
 type GetTrack struct {
 	widget.BaseWidget
 
-	parentWindow fyne.Window
-
 	TrackDownload *TrackDownload
 	TrackPurchase *TrackPurchase
 }
@@ -477,10 +477,10 @@ type LinkTrack struct {
 	LinkTrackFileSelect *LinkTrackFileSelect
 }
 
-func NewLinkTrack(w fyne.Window, saveSoundCloudTrackFunc func(), resizeEvents *uihelpers.ResizeEvents) *LinkTrack {
+func NewLinkTrack(w fyne.Window, saveSoundCloudTrackFunc func(), onError func(error), resizeEvents *uihelpers.ResizeEvents) *LinkTrack {
 	i := &LinkTrack{
 		parentWindow:        w,
-		LinkTrackFileSelect: NewLinkTrackFileSelect(w, saveSoundCloudTrackFunc, resizeEvents),
+		LinkTrackFileSelect: NewLinkTrackFileSelect(w, saveSoundCloudTrackFunc, onError, resizeEvents),
 	}
 
 	i.ExtendBaseWidget(i)
@@ -515,14 +515,12 @@ type LinkTrackFileSelect struct {
 	OpenPath *OpenPath
 }
 
-func NewLinkTrackFileSelect(w fyne.Window, saveSoundCloudTrackFunc func(), resizeEvents *uihelpers.ResizeEvents) *LinkTrackFileSelect {
+func NewLinkTrackFileSelect(w fyne.Window, saveSoundCloudTrackFunc func(), onError func(error), resizeEvents *uihelpers.ResizeEvents) *LinkTrackFileSelect {
 
 	openPath := NewOpenPath(w, "", File)
 
 	openPath.SetExtensionFilter(helpers.GetAudioExtensions())
-	openPath.SetOnErrorCallback(func(err error) {
-		dialog.ShowError(err, w)
-	})
+	openPath.SetOnError(onError)
 
 	resizeFunc := func() {
 		openPath.Dialog.Resize(uihelpers.CanvasPercentSize(w, 0.75, 0.75, fyne.NewSize(480, 320), fyne.NewSize(1280, 0)))
@@ -530,11 +528,11 @@ func NewLinkTrackFileSelect(w fyne.Window, saveSoundCloudTrackFunc func(), resiz
 
 	var key string
 
-	openPath.SetOnOpenCallback(func() {
+	openPath.SetOnOpen(func() {
 		resizeFunc()
 		key = resizeEvents.Add(resizeFunc)
 	})
-	openPath.SetOnCloseCallback(func() {
+	openPath.SetOnClose(func() {
 		resizeEvents.Remove(key)
 	})
 
@@ -572,7 +570,7 @@ func (i *LinkTrackFileSelect) updateFromData(t *SelectedTrackBinding) {
 		i.OpenPath.SetURIFromPathString("/")
 	}
 
-	i.OpenPath.SetOnValidCallback(func(uri string) {
+	i.OpenPath.SetOnValid(func(uri string) {
 		t.TrackBinding.Track.LocalPath = uri
 		i.saveSoundCloudTrackFunc()
 		t.Trigger()
@@ -582,4 +580,5 @@ func (i *LinkTrackFileSelect) updateFromData(t *SelectedTrackBinding) {
 type TrackFuncs struct {
 	DownloadSoundCloudTrack func()
 	SaveSoundCloudTrackToDB func()
+	OnError                 func(error)
 }

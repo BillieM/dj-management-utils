@@ -182,13 +182,6 @@ GetPlaylist gets a playlist for a given platform and stores it in the database
 
 func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPlaylistOpts, p func(streaming.SoundCloudPlaylist, error)) {
 
-	// netUrl, err := url.Parse(opts.PlaylistURL)
-
-	// if err != nil {
-	// 	e.stepHandlerNew.finishedCallback()
-
-	// 	e.operationHandler.finished()
-
 	if !opts.Refresh {
 		// check if playlist with same url already exists in database
 		numPlaylists, err := e.SerenDB.GetNumSoundCloudPlaylistByURL(
@@ -201,7 +194,10 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 				streaming.SoundCloudPlaylist{},
 				fault.Wrap(
 					err,
-					fmsg.With("Error checking if playlist already exists in database by url"),
+					fmsg.WithDesc(
+						"err checking if playlist exists in db by url",
+						"Error checking if playlist with the same URL already exists in the applications database",
+					),
 				),
 			)
 			return
@@ -212,7 +208,10 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 				streaming.SoundCloudPlaylist{},
 				fault.Wrap(
 					helpers.ErrPlaylistAlreadyExists,
-					fmsg.With("playlist with same url already exists in db"),
+					fmsg.WithDesc(
+						"playlist with same url already exists in db",
+						"A playlist with that URL already exists",
+					),
 				),
 			)
 			return
@@ -231,7 +230,10 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 			streaming.SoundCloudPlaylist{},
 			fault.Wrap(
 				err,
-				fmsg.With("error getting playlist from SoundCloud"),
+				fmsg.WithDesc(
+					"error getting playlist info from SoundCloud",
+					"Error getting playlist information from SoundCloud",
+				),
 			),
 		)
 		return

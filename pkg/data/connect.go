@@ -3,6 +3,8 @@ package data
 import (
 	"database/sql"
 
+	"github.com/charmbracelet/log"
+
 	"github.com/billiem/seren-management/pkg/helpers"
 	_ "github.com/mattn/go-sqlite3"
 	sqldblogger "github.com/simukti/sqldb-logger"
@@ -13,7 +15,7 @@ type SerenDB struct {
 	*Queries
 }
 
-func Connect(c helpers.Config, l helpers.AppLogger) (*SerenDB, error) {
+func Connect(c helpers.Config, l log.Logger) (*SerenDB, error) {
 
 	dsn := "file:seren.db?cache=shared&mode=rwc"
 
@@ -27,7 +29,7 @@ func Connect(c helpers.Config, l helpers.AppLogger) (*SerenDB, error) {
 		dsn,
 		db.Driver(),
 		&helpers.CharmLogAdapter{
-			Logger: *l.DBLogger,
+			Logger: l,
 		},
 	)
 

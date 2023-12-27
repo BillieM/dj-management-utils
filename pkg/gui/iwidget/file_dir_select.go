@@ -31,10 +31,10 @@ type OpenPath struct {
 
 	ExtensionFilter []string
 
-	onValidCallback func(string)
-	onErrorCallback func(error)
-	onOpenCallback  func()
-	onCloseCallback func()
+	onValid func(string)
+	onError func(error)
+	onOpen  func()
+	onClose func()
 
 	PathCard *ClickablePathCard
 
@@ -65,15 +65,15 @@ func NewOpenPath(w fyne.Window, startingPath string, pathType PathType) *OpenPat
 
 		func() {
 			fmt.Println("Opening dialog")
-			if openPath.onOpenCallback != nil {
-				openPath.onOpenCallback()
+			if openPath.onOpen != nil {
+				openPath.onOpen()
 			}
 		}()
 
 		defer func() {
 			fmt.Println("Closing dialog")
-			if openPath.onCloseCallback != nil {
-				openPath.onCloseCallback()
+			if openPath.onClose != nil {
+				openPath.onClose()
 			}
 		}()
 
@@ -132,8 +132,8 @@ Callback for when a valid file or directory is selected
 The path is passed to the callback as a string
 */
 
-func (i *OpenPath) SetOnValidCallback(callback func(string)) {
-	i.onValidCallback = callback
+func (i *OpenPath) SetOnValid(callback func(string)) {
+	i.onValid = callback
 }
 
 /*
@@ -141,16 +141,16 @@ Callback for when an error occurs
 
 The error is passed to the callback
 */
-func (i *OpenPath) SetOnErrorCallback(callback func(error)) {
-	i.onErrorCallback = callback
+func (i *OpenPath) SetOnError(callback func(error)) {
+	i.onError = callback
 }
 
-func (i *OpenPath) SetOnOpenCallback(callback func()) {
-	i.onOpenCallback = callback
+func (i *OpenPath) SetOnOpen(callback func()) {
+	i.onOpen = callback
 }
 
-func (i *OpenPath) SetOnCloseCallback(callback func()) {
-	i.onCloseCallback = callback
+func (i *OpenPath) SetOnClose(callback func()) {
+	i.onClose = callback
 }
 
 func (i *OpenPath) CreateRenderer() fyne.WidgetRenderer {
@@ -166,7 +166,7 @@ func (i *OpenPath) setDialog() {
 	case File:
 		i.Dialog = dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err != nil {
-				i.onErrorCallback(err)
+				i.onError(err)
 				return
 			}
 			if reader == nil {
@@ -174,14 +174,14 @@ func (i *OpenPath) setDialog() {
 			}
 			// Below runs if file selection was valid
 			i.SetURI(reader.URI())
-			if i.onValidCallback != nil {
-				i.onValidCallback(reader.URI().Path())
+			if i.onValid != nil {
+				i.onValid(reader.URI().Path())
 			}
 		}, i.parentWindow)
 	case Directory:
 		i.Dialog = dialog.NewFolderOpen(func(reader fyne.ListableURI, err error) {
 			if err != nil {
-				i.onErrorCallback(err)
+				i.onError(err)
 				return
 			}
 			if reader == nil {
@@ -189,8 +189,8 @@ func (i *OpenPath) setDialog() {
 			}
 			// Below runs if directory selection was valid
 			i.SetURI(reader)
-			if i.onValidCallback != nil {
-				i.onValidCallback(reader.Path())
+			if i.onValid != nil {
+				i.onValid(reader.Path())
 			}
 		}, i.parentWindow)
 	}

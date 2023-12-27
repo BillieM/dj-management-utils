@@ -7,89 +7,86 @@ import (
 	"time"
 
 	"github.com/Southclaws/fault"
+	"github.com/Southclaws/fault/fctx"
 	"github.com/Southclaws/fault/fmsg"
 	"github.com/billiem/seren-management/pkg/projectpath"
 	"github.com/charmbracelet/log"
 	sqldblogger "github.com/simukti/sqldb-logger"
 )
 
-type AppLogger struct {
-	DBLogger *log.Logger
-	UILogger *log.Logger
-	OPLogger *log.Logger
+type Loggers struct {
+	DBLogger  log.Logger
+	AppLogger SerenLogger
 }
 
-func BuildAppLogger(c Config) (*AppLogger, error) {
+type logWriters struct {
+	dbW  io.Writer
+	appW io.Writer
+}
+
+func BuildAppLoggers(c Config) (*Loggers, error) {
 
 	// create log directory if it doesn't exist
 	logDirPath := JoinFilepathToSlash(projectpath.Root, "log")
 
+	logWriters, err := getLogWriters(c, logDirPath)
+
+	if err != nil {
+		return nil, fault.Wrap(err, fmsg.With("Error getting log writers"))
+	}
+
+	// create loggers
+	dbLogger := newLogger(
+		logWriters.dbW,
+		log.JSONFormatter,
+		"DB",
+	)
+
+	appLogger := newLogger(
+		logWriters.appW,
+		log.TextFormatter,
+		"APP",
+	)
+
+	return &Loggers{
+		DBLogger: *dbLogger,
+		AppLogger: SerenLogger{
+			*appLogger,
+		},
+	}, nil
+}
+
+func getLogWriters(c Config, logDirPath string) (logWriters, error) {
+
 	// open db log file
-	dbF, err := os.OpenFile(
+	dbW, err := os.OpenFile(
 		JoinFilepathToSlash(logDirPath, "db.jsonl"),
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644,
 	)
 
 	if err != nil {
-		return nil, fault.Wrap(err, fmsg.With("Error opening database log file"))
+		return logWriters{}, fault.Wrap(err, fmsg.With("Error opening database log file"))
 	}
 
-	defer dbF.Close()
+	// open app log writer
+	// this will be stderr in development, or a file
+	var appW io.Writer
+	if c.Development {
+		appW = os.Stderr
+	} else {
+		appW, err = os.OpenFile(
+			JoinFilepathToSlash(logDirPath, "app.log"),
+			os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644,
+		)
 
-	// open ui log file
-	uiF, err := os.OpenFile(
-		JoinFilepathToSlash(logDirPath, "ui.log"),
-		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644,
-	)
-
-	if err != nil {
-		return nil, fault.Wrap(err, fmsg.With("Error opening UI log file"))
+		if err != nil {
+			return logWriters{}, fault.Wrap(err, fmsg.With("Error opening app log file"))
+		}
 	}
 
-	defer uiF.Close()
-
-	// open op log file
-	opF, err := os.OpenFile(
-		JoinFilepathToSlash(logDirPath, "op.log"),
-		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644,
-	)
-
-	if err != nil {
-		return nil, fault.Wrap(err, fmsg.With("Error opening OP log file"))
-	}
-
-	// create loggers
-
-	dbLogger := newLogger(
-		dbF,
-		log.JSONFormatter,
-		"DB",
-	)
-
-	uiLogger := newLogger(
-		io.MultiWriter(
-			os.Stderr,
-			uiF,
-		),
-		log.TextFormatter,
-		"UI",
-	)
-
-	opLogger := newLogger(
-		io.MultiWriter(
-			os.Stderr,
-			opF,
-		),
-		log.TextFormatter,
-		"OP",
-	)
-
-	defer opF.Close()
-
-	return &AppLogger{
-		DBLogger: dbLogger,
-		UILogger: uiLogger,
-		OPLogger: opLogger,
+	return logWriters{
+		dbW:  dbW,
+		appW: appW,
 	}, nil
 }
 
@@ -122,4 +119,40 @@ func (c *CharmLogAdapter) Log(_ context.Context, level sqldblogger.Level, msg st
 	default:
 		c.Logger.Debug(msg, data)
 	}
+}
+
+type SerenLogger struct {
+	log.Logger
+}
+
+func (s SerenLogger) NonFatalError(err error) {
+	// get err chain
+	chain := fault.Flatten(err)
+
+	// get err context
+	ectx := fctx.Unwrap(err)
+
+	s.Error(
+		chain[0].Message,
+		"caller", chain[0].Location,
+		"error context", ectx,
+		"error chain", chain,
+	)
+}
+
+func (s SerenLogger) FatalError(err error) {
+	// get err chain
+	chain := fault.Flatten(err)
+
+	// get err context
+	ectx := fctx.Unwrap(err)
+
+	s.Fatal(
+		chain[0].Message,
+		"caller", chain[0].Location,
+		"error context", ectx,
+		"error chain", chain,
+	)
+
+	os.Exit(1)
 }

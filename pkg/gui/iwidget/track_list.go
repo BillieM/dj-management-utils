@@ -318,6 +318,12 @@ func (i *TrackListBinding) Set(p []*streaming.SoundCloudTrack) {
 	i.Tracks = p
 }
 
+/*
+ApplyFilterSort applies the current filter and sort settings to the list of tracks
+
+This uses the list of tracks (i.Tracks) attached to the widget, placing the filtered and sorted
+tracks into i.VisibleTracks
+*/
 func (i *TrackListBinding) ApplyFilterSort() {
 	i.Lock()
 	defer i.Unlock()

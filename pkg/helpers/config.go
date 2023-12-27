@@ -136,6 +136,10 @@ loadEnvConfig loads config values stored in environment variables
 Such as API keys/secrets
 */
 func (c *Config) loadEnvConfig() {
+
+	_, isDev := os.LookupEnv("DEVELOPMENT")
+
+	c.Development = isDev
 	c.SoundCloudClientID = os.Getenv("SOUNDCLOUD_CLIENT_ID")
 	c.SoundCloudSecretToken = os.Getenv("SOUNDCLOUD_SECRET_TOKEN")
 }

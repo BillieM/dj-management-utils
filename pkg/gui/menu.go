@@ -28,7 +28,7 @@ func (e *guiEnv) makeNavMenu(contentStack *fyne.Container) *widget.Tree {
 		UpdateNode: func(uid string, branch bool, node fyne.CanvasObject) {
 			op, ok := e.views[uid]
 			if !ok {
-				helpers.HandleFatalError(helpers.ErrOperationNotFound)
+				e.logger.FatalError(helpers.ErrOperationNotFound)
 				return
 			}
 			node.(*widget.Label).SetText(op.name)
@@ -36,11 +36,11 @@ func (e *guiEnv) makeNavMenu(contentStack *fyne.Container) *widget.Tree {
 		OnSelected: func(uid string) {
 			op, ok := e.views[uid]
 			if !ok {
-				helpers.HandleFatalError(helpers.ErrOperationNotFound)
+				e.logger.FatalError(helpers.ErrOperationNotFound)
 				return
 			}
 			if e.busy {
-				e.showErrorDialog(helpers.ErrBusyPleaseFinishFirst)
+				e.displayErrorDialog(helpers.ErrBusyPleaseFinishFirst)
 				return
 			}
 			e.setMainContent(contentStack, op)
