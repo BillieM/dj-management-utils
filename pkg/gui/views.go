@@ -5,7 +5,10 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/widget"
+	"github.com/billiem/seren-management/pkg/gui/iwidget"
+	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/billiem/seren-management/pkg/operations"
+	"github.com/billiem/seren-management/pkg/streaming"
 )
 
 /*
@@ -319,39 +322,57 @@ func (e *guiEnv) syncView() fyne.CanvasObject {
 
 func (e *guiEnv) syncSoundCloudView() fyne.CanvasObject {
 
-	playlistBindVals := playlistBindingList{
-		Items: []*playlistBindingItem{},
+	playlistBindVals := iwidget.PlaylistBindingList{
+		Base:  e.getWidgetBase(),
+		Items: []*iwidget.PlaylistBindingItem{},
 	}
 
 	playlistsList := widget.NewListWithData(
 		&playlistBindVals,
 		func() fyne.CanvasObject {
-			return newPlaylistWidget()
+			return iwidget.NewPlaylist(
+				func(playlistData streaming.SoundCloudPlaylist) {
+					if e.guiState.busy {
+						e.showErrorDialog(helpers.ErrBusyPleaseFinishFirst)
+						return
+					}
+					e.openPlaylistPopup(playlistData)
+				},
+			)
 		},
 		func(i binding.DataItem, o fyne.CanvasObject) {
 
-			playlistWidget := o.(*playlistWidget)
-			playlistBindingItem := i.(*playlistBindingItem)
+			playlistWidget := o.(*iwidget.Playlist)
+			playlistBindingItem := i.(*iwidget.PlaylistBindingItem)
 
-			e.updatePlaylistsList(playlistWidget, playlistBindingItem)
+			playlistWidget.UpdateFromData(playlistBindingItem)
 		},
 	)
 
 	loading := newViewLoading("Loading SoundCloud playlists...")
 
 	go func() {
-		playlistBindVals.load(e.SerenDB)
+		err := e.loadSoundCloudPlaylists(&playlistBindVals)
+
+		if err != nil {
+			e.displayErrorDialog(err)
+			return
+		}
+
 		playlistsList.Refresh()
 		loading.Hide()
 	}()
 
 	// Function to call when the add playlist button is clicked
-	addPlaylistCanvas := newAddPlaylistWidget(e.getAddPlaylistCallback(
-		&playlistBindVals, func() {
-			playlistsList.Refresh()
-			playlistsList.ScrollToBottom()
-		},
-	))
+	addPlaylistCanvas := iwidget.NewAddPlaylist(
+		e.getAddPlaylistCallback(
+			&playlistBindVals,
+			func() {
+				playlistsList.Refresh()
+				playlistsList.ScrollToBottom()
+			},
+		),
+	)
 
 	return container.NewStack(
 		container.NewBorder(

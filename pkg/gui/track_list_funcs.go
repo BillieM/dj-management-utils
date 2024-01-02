@@ -16,7 +16,7 @@ import (
 /*
 Provides functions used to generate the functions used to interface with the track_list of a given playlist
 
-These functions are called to generate functions that are passed to the track_list widget constructor
+These functions are called to generate functions that are passed through to widget constructors
 */
 
 /*
@@ -70,17 +70,18 @@ func (e *guiEnv) getDownloadSoundCloudTrackFunc(selectedTrack *iwidget.SelectedT
 
 func (e *guiEnv) getSaveSoundCloudTrackFunc(selectedTrack *iwidget.SelectedTrackBinding) func() {
 
-	track := selectedTrack.TrackBinding.Track
-
-	ctx := context.Background()
-	ctx = fctx.WithMeta(ctx,
-		"track_name", track.Name,
-		"track_permalink", track.Permalink,
-		"track_external_id", fmt.Sprintf("%d", track.ExternalID),
-		"track_local_path", track.LocalPath,
-	)
-
 	return func() {
+
+		track := selectedTrack.TrackBinding.Track
+
+		ctx := context.Background()
+		ctx = fctx.WithMeta(ctx,
+			"track_name", track.Name,
+			"track_permalink", track.Permalink,
+			"track_external_id", fmt.Sprintf("%d", track.ExternalID),
+			"track_local_path", track.LocalPath,
+		)
+
 		err := e.SerenDB.TxUpsertSoundCloudTracks([]data.SoundcloudTrack{track.ToDB()})
 		if err != nil {
 			e.displayErrorDialog(

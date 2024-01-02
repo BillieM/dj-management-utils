@@ -45,6 +45,14 @@ type SoundCloudPlaylist struct {
 	NumTracks int
 }
 
+func (p SoundCloudPlaylist) String() string {
+	return fmt.Sprintf(
+		"%v: %s",
+		p.ExternalID,
+		p.Name,
+	)
+}
+
 func (p *SoundCloudPlaylist) loadFromHydratable(hp HydratableSoundCloudPlaylist) {
 
 	tracks := []SoundCloudTrack{}
@@ -61,6 +69,10 @@ func (p *SoundCloudPlaylist) loadFromHydratable(hp HydratableSoundCloudPlaylist)
 	p.Tracks = tracks
 }
 
+/*
+LoadFromDB loads a SoundCloudPlaylist from a data.SoundcloudPlaylist and a slice of data.SoundcloudTrack,
+this exists in order to properly map fields between the database and the struct
+*/
 func (p *SoundCloudPlaylist) LoadFromDB(dp data.SoundcloudPlaylist, tracks []data.SoundcloudTrack) {
 
 	for _, track := range tracks {
@@ -111,6 +123,14 @@ type SoundCloudTrack struct {
 	Playlists []SoundCloudPlaylist `gorm:"many2many:playlist_tracks;"`
 }
 
+func (t SoundCloudTrack) String() string {
+	return fmt.Sprintf(
+		"%v: %s",
+		t.ExternalID,
+		t.Name,
+	)
+}
+
 func (t *SoundCloudTrack) loadFromHydratable(ht HydratableSoundCloudTrack) {
 
 	t.ExternalID = ht.ID
@@ -126,6 +146,10 @@ func (t *SoundCloudTrack) loadFromHydratable(ht HydratableSoundCloudTrack) {
 	t.SoundCloudUser = ht.User.Username
 }
 
+/*
+LoadFromDB loads a SoundCloudTrack from a data.SoundcloudTrack,
+this exists in order to properly map fields between the database and the struct
+*/
 func (t *SoundCloudTrack) LoadFromDB(dt data.SoundcloudTrack) {
 	t.ExternalID = dt.ExternalID.Int64
 	t.Name = dt.Name.String

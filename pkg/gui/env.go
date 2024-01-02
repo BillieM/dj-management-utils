@@ -5,6 +5,7 @@ import (
 	"github.com/Southclaws/fault"
 	"github.com/Southclaws/fault/fmsg"
 	"github.com/billiem/seren-management/pkg/data"
+	"github.com/billiem/seren-management/pkg/gui/iwidget"
 	"github.com/billiem/seren-management/pkg/gui/uihelpers"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/billiem/seren-management/pkg/operations"
@@ -26,11 +27,21 @@ type guiEnv struct {
 	resizeEvents *uihelpers.ResizeEvents
 }
 
+/*
+opEnv returns an OpEnv struct for use in operations,
+this is generated from the guiEnv struct
+*/
 func (e *guiEnv) opEnv() *operations.OpEnv {
 	return &operations.OpEnv{
 		Config:  *e.Config,
 		Logger:  e.logger,
 		SerenDB: e.SerenDB,
+	}
+}
+
+func (e *guiEnv) getWidgetBase() *iwidget.Base {
+	return &iwidget.Base{
+		Logger: e.logger,
 	}
 }
 
