@@ -1,6 +1,7 @@
 package iwidget
 
 import (
+	"context"
 	"fmt"
 
 	"fyne.io/fyne/v2"
@@ -9,6 +10,9 @@ import (
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"github.com/Southclaws/fault"
+	"github.com/Southclaws/fault/fctx"
+	"github.com/Southclaws/fault/fmsg"
 	"github.com/billiem/seren-management/pkg/helpers"
 )
 
@@ -20,9 +24,8 @@ const (
 )
 
 type OpenPath struct {
+	*Base
 	widget.BaseWidget
-
-	parentWindow fyne.Window
 
 	Type PathType
 
@@ -41,48 +44,78 @@ type OpenPath struct {
 	Dialog *dialog.FileDialog
 }
 
-func NewOpenPath(w fyne.Window, startingPath string, pathType PathType) *OpenPath {
+func NewOpenPath(widgetBase *Base, startingPath string, pathType PathType) *OpenPath {
 
 	openPath := &OpenPath{
-		PathCard:     NewClickablePathCard("", theme.FolderOpenIcon(), func() {}),
-		Type:         pathType,
-		parentWindow: w,
+		Base:     widgetBase,
+		PathCard: NewClickablePathCard(widgetBase, "", theme.FolderOpenIcon(), func() {}),
+		Type:     pathType,
 	}
 
 	if startingPath != "" {
 		URI, err := storage.ParseURI(startingPath)
 		if err != nil {
-			fmt.Println("Failed to parse starting path", err)
+			openPath.Logger.NonFatalError(fault.Wrap(
+				err,
+				fctx.With(fctx.WithMeta(
+					context.Background(),
+					"starting_path", startingPath,
+				)),
+				fmsg.With("error parsing starting path"),
+			))
 		}
 		openPath.URI = URI
+	} else {
+		openPath.URI = storage.NewFileURI("")
 	}
 
-	openPath.BaseDir = "/"
+	openPath.SetBaseDir(openPath.Config.BaseDir)
 
 	openPath.setDialog()
 
 	openPath.PathCard.OnTapped = func() {
 
+		listableURI, err := getListableURI(openPath.URI.Path(), openPath.BaseDir)
+
+		if err != nil {
+			ctx := fctx.WithMeta(
+				context.Background(),
+				"path", openPath.URI.Path(),
+				"base_dir", openPath.BaseDir,
+				"listable_uri_path", listableURI.Path(),
+			)
+
+			openPath.Logger.NonFatalError(
+				fault.Wrap(
+					err,
+					fctx.With(ctx),
+					fmsg.With("error getting listable URI"),
+				),
+			)
+			return
+		}
+
 		func() {
-			fmt.Println("Opening dialog")
+			openPath.Logger.Debug(
+				"Opening path dialog",
+				"path", openPath.URI.Path(),
+				"listable_uri_path", listableURI.Path(),
+			)
 			if openPath.onOpen != nil {
 				openPath.onOpen()
 			}
 		}()
 
 		defer func() {
-			fmt.Println("Closing dialog")
+			openPath.Logger.Debug(
+				"Closing path dialog",
+				"path", openPath.URI.Path(),
+				"listable_uri_path", listableURI.Path(),
+			)
 			if openPath.onClose != nil {
 				openPath.onClose()
 			}
 		}()
-
-		listableURI, err := getListableURI(openPath.URI.Path(), openPath.BaseDir)
-
-		if err != nil {
-			fmt.Println("Failed to get listable URI", err)
-			return
-		}
 
 		if openPath.Type == File && len(openPath.ExtensionFilter) > 0 {
 			openPath.SetExtensionFilter(openPath.ExtensionFilter)
@@ -103,7 +136,7 @@ func (i *OpenPath) SetBaseDir(dir string) {
 }
 
 /*
-Sets the path of the OpenPath widget from a string
+SetURIFromPathString sets the path of the OpenPath widget from a string
 
 Automatically adds the file:// prefix if it is not present
 */
@@ -127,7 +160,7 @@ func (i *OpenPath) SetExtensionFilter(filter []string) {
 }
 
 /*
-Callback for when a valid file or directory is selected
+SetOnValid sets the callback for when a valid file or directory is selected
 
 The path is passed to the callback as a string
 */
@@ -137,7 +170,7 @@ func (i *OpenPath) SetOnValid(callback func(string)) {
 }
 
 /*
-Callback for when an error occurs
+SetOnError sets the callback for when an error occurs
 
 The error is passed to the callback
 */
@@ -177,7 +210,7 @@ func (i *OpenPath) setDialog() {
 			if i.onValid != nil {
 				i.onValid(reader.URI().Path())
 			}
-		}, i.parentWindow)
+		}, i.MainWindow)
 	case Directory:
 		i.Dialog = dialog.NewFolderOpen(func(reader fyne.ListableURI, err error) {
 			if err != nil {
@@ -192,7 +225,7 @@ func (i *OpenPath) setDialog() {
 			if i.onValid != nil {
 				i.onValid(reader.Path())
 			}
-		}, i.parentWindow)
+		}, i.MainWindow)
 	}
 }
 
@@ -212,15 +245,17 @@ func getListableURI(path string, baseDir string) (fyne.ListableURI, error) {
 }
 
 type ClickablePathCard struct {
+	*Base
 	ClickableCard
 
 	PathLabel *widget.Label
 	Icon      *widget.Icon
 }
 
-func NewClickablePathCard(text string, icon fyne.Resource, onTapped func()) *ClickablePathCard {
+func NewClickablePathCard(widgetBase *Base, text string, icon fyne.Resource, onTapped func()) *ClickablePathCard {
 
 	clickablePathCard := &ClickablePathCard{
+		Base:      widgetBase,
 		PathLabel: widget.NewLabel(text),
 		Icon:      widget.NewIcon(icon),
 	}

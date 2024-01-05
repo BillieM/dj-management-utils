@@ -36,6 +36,13 @@ func (e *OpEnv) CheckLocalPaths() {
 		fileExists := helpers.DoesFileExist(t.LocalPath)
 
 		if fileExists == t.LocalPathBroken {
+
+			// if no local path and not broken, skip it
+			// as it's not a broken path
+			if t.LocalPath == "" && !t.LocalPathBroken {
+				continue
+			}
+
 			t.LocalPathBroken = !fileExists
 
 			brokenPathChanged = append(brokenPathChanged, t)
@@ -43,11 +50,11 @@ func (e *OpEnv) CheckLocalPaths() {
 	}
 
 	if len(brokenPathChanged) == 0 {
-		e.Logger.Info("no tracks with changed broken status")
+		e.Logger.Debug("no tracks with changed broken status")
 		return
 	}
 
-	e.Logger.Info(fmt.Sprintf(
+	e.Logger.Debugf(fmt.Sprintf(
 		"found %d tracks with changed broken status\n",
 		len(brokenPathChanged),
 	))
@@ -61,12 +68,12 @@ func (e *OpEnv) CheckLocalPaths() {
 	err = e.SerenDB.TxUpsertSoundCloudTracks(dataT)
 
 	if err != nil {
-		e.Logger.Error(fault.Flatten(fault.Wrap(
+		e.Logger.NonFatalError(fault.Wrap(
 			err,
 			fmsg.With(
 				"error updating tracks in db",
 			),
-		)))
+		))
 		return
 	}
 }

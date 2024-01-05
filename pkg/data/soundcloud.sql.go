@@ -265,7 +265,12 @@ INSERT INTO soundcloud_playlists (
     ?3,
     ?4
 ) ON CONFLICT (external_id) DO UPDATE SET
-    updated_at = CURRENT_TIMESTAMP
+    updated_at = CURRENT_TIMESTAMP,
+
+    name = coalesce(?2, name),
+    search_url = coalesce(?3, search_url),
+    permalink = coalesce(?4, permalink)
+
 RETURNING id, created_at, updated_at, external_id, name, search_url, permalink
 `
 
@@ -357,7 +362,20 @@ INSERT INTO soundcloud_tracks (
 ) ON CONFLICT (external_id) DO UPDATE SET
     updated_at = CURRENT_TIMESTAMP,
 
-    name = coalesce(?1, name)
+    name = coalesce(?2, name),
+    permalink = coalesce(?3, permalink),
+    purchase_title = coalesce(?4, purchase_title),
+    purchase_url = coalesce(?5, purchase_url),
+    has_downloads_left = coalesce(?6, has_downloads_left),
+    genre = coalesce(?7, genre),
+    artwork_url = coalesce(?8, artwork_url),
+    tag_list = coalesce(?9, tag_list),
+    publisher_artist = coalesce(?10, publisher_artist),
+    sound_cloud_user = coalesce(?11, sound_cloud_user),
+    local_path = coalesce(?12, local_path),
+    local_path_broken = coalesce(?13, local_path_broken),
+    removed_from_playlist = coalesce(?14, removed_from_playlist)
+
 RETURNING id, created_at, updated_at, external_id, name, permalink, purchase_title, purchase_url, has_downloads_left, genre, artwork_url, tag_list, publisher_artist, sound_cloud_user, local_path, local_path_broken, removed_from_playlist
 `
 

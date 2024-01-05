@@ -39,9 +39,17 @@ func (e *guiEnv) opEnv() *operations.OpEnv {
 	}
 }
 
+/*
+getWidgetBase returns a *iwidget.Base struct for use in custom widgets,
+this is generated from the guiEnv struct
+*/
 func (e *guiEnv) getWidgetBase() *iwidget.Base {
 	return &iwidget.Base{
-		Logger: e.logger,
+		Logger:       e.logger,
+		Config:       *e.Config,
+		MainWindow:   e.mainWindow,
+		App:          e.app,
+		ResizeEvents: e.resizeEvents,
 	}
 }
 

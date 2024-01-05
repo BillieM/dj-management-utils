@@ -63,7 +63,7 @@ INSERT INTO soundcloud_playlists (
     sqlc.narg('search_url'),
     sqlc.narg('permalink')
 ) ON CONFLICT (external_id) DO UPDATE SET
-    updated_at = CURRENT_TIMESTAMP
+    updated_at = CURRENT_TIMESTAMP,
 
     name = coalesce(?2, name),
     search_url = coalesce(?3, search_url),

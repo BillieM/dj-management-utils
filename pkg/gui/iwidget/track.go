@@ -14,17 +14,19 @@ import (
 )
 
 type TrackSection struct {
+	*Base
 	widget.BaseWidget
 
 	Track       *Track
 	Placeholder *widget.Label
 }
 
-func NewTrackSection(w fyne.Window, trackFuncs TrackFuncs, resizeEvents *uihelpers.ResizeEvents) *TrackSection {
+func NewTrackSection(widgetBase *Base, trackFuncs TrackFuncs) *TrackSection {
 
-	track := NewTrack(w, trackFuncs, resizeEvents)
+	track := NewTrack(widgetBase, trackFuncs)
 
 	i := &TrackSection{
+		Base:        widgetBase,
 		Track:       track,
 		Placeholder: widget.NewLabel("Please select a track..."),
 	}
@@ -77,6 +79,7 @@ Track is the main widget used for displaying a track selected from the track lis
 inside of a playlist view
 */
 type Track struct {
+	*Base
 	widget.BaseWidget
 
 	// track info
@@ -89,16 +92,21 @@ type Track struct {
 	LinkTrack *LinkTrack
 }
 
-func NewTrack(w fyne.Window, trackFuncs TrackFuncs, resizeEvents *uihelpers.ResizeEvents) *Track {
+func NewTrack(widgetBase *Base, trackFuncs TrackFuncs) *Track {
 
 	i := &Track{
-		TrackInfo: NewTrackInfo(w),
-		GetTrack:  NewGetTrack(w, trackFuncs.DownloadSoundCloudTrack),
+		Base: widgetBase,
+		TrackInfo: NewTrackInfo(
+			widgetBase,
+		),
+		GetTrack: NewGetTrack(
+			widgetBase,
+			trackFuncs.DownloadSoundCloudTrack,
+		),
 		LinkTrack: NewLinkTrack(
-			w,
+			widgetBase,
 			trackFuncs.SaveSoundCloudTrackToDB,
 			trackFuncs.OnError,
-			resizeEvents,
 		),
 	}
 
@@ -186,6 +194,7 @@ TrackInfo displays the track name, link to the track, and track properties
 (i.e. genre, tags, publisher, soundcloud user)
 */
 type TrackInfo struct {
+	*Base
 	widget.BaseWidget
 
 	TrackNameLink   *widget.Hyperlink
@@ -193,10 +202,10 @@ type TrackInfo struct {
 	TrackProperties *TrackProperties
 }
 
-func NewTrackInfo(w fyne.Window) *TrackInfo {
+func NewTrackInfo(widgetBase *Base) *TrackInfo {
 
 	trackNameLink := widget.NewHyperlink("", nil)
-	trackLinkButton := NewOpenInBrowserButton("Open in browser", "")
+	trackLinkButton := NewOpenInBrowserButton(widgetBase, "Open in browser", "")
 
 	if trackLinkButton.URL != nil {
 		err := fyne.CurrentApp().OpenURL(trackLinkButton.URL)
@@ -206,6 +215,7 @@ func NewTrackInfo(w fyne.Window) *TrackInfo {
 	}
 
 	i := &TrackInfo{
+		Base:            widgetBase,
 		TrackNameLink:   trackNameLink,
 		TrackLinkButton: trackLinkButton,
 		TrackProperties: NewTrackProperties(),
@@ -338,16 +348,18 @@ func (i *TrackNameLink) SetNameLinkFromString(name string, url string) {
 /*
  */
 type GetTrack struct {
+	*Base
 	widget.BaseWidget
 
 	TrackDownload *TrackDownload
 	TrackPurchase *TrackPurchase
 }
 
-func NewGetTrack(w fyne.Window, downloadFunc func()) *GetTrack {
+func NewGetTrack(widgetBase *Base, downloadFunc func()) *GetTrack {
 	i := &GetTrack{
-		TrackDownload: NewTrackDownload(downloadFunc),
-		TrackPurchase: NewTrackPurchase(),
+		Base:          widgetBase,
+		TrackDownload: NewTrackDownload(widgetBase, downloadFunc),
+		TrackPurchase: NewTrackPurchase(widgetBase),
 	}
 
 	i.ExtendBaseWidget(i)
@@ -385,14 +397,16 @@ func (i *GetTrack) updateFromData(t streaming.SoundCloudTrack) {
 TrackPurchase widget handles purchase/ free links visible on SoundCloud
 */
 type TrackPurchase struct {
+	*Base
 	widget.BaseWidget
 
 	TrackPurchaseButton *OpenInBrowserButton
 }
 
-func NewTrackPurchase() *TrackPurchase {
+func NewTrackPurchase(widgetBase *Base) *TrackPurchase {
 	i := &TrackPurchase{
-		TrackPurchaseButton: NewOpenInBrowserButton("Purchase Track", ""),
+		Base:                widgetBase,
+		TrackPurchaseButton: NewOpenInBrowserButton(widgetBase, "Purchase Track", ""),
 	}
 
 	i.ExtendBaseWidget(i)
@@ -422,13 +436,14 @@ handled by 'TrackPurchase'
 */
 
 type TrackDownload struct {
+	*Base
 	widget.BaseWidget
 
 	TrackDownloadButton   *widget.Button
 	TrackDownloadProgress *widget.ProgressBarInfinite
 }
 
-func NewTrackDownload(downloadFunc func()) *TrackDownload {
+func NewTrackDownload(widgetBase *Base, downloadFunc func()) *TrackDownload {
 	trackDownloadProgress := widget.NewProgressBarInfinite()
 	trackDownloadProgress.Hide()
 
@@ -442,6 +457,7 @@ func NewTrackDownload(downloadFunc func()) *TrackDownload {
 		})
 
 	i := &TrackDownload{
+		Base:                  widgetBase,
 		TrackDownloadButton:   trackDownloadButton,
 		TrackDownloadProgress: trackDownloadProgress,
 	}
@@ -470,17 +486,16 @@ LinkTrack allows for the user to establish a link between a SoundCloud track and
 a track within their DJ libary/ local filesystem.
 */
 type LinkTrack struct {
+	*Base
 	widget.BaseWidget
-
-	parentWindow fyne.Window
 
 	LinkTrackFileSelect *LinkTrackFileSelect
 }
 
-func NewLinkTrack(w fyne.Window, saveSoundCloudTrackFunc func(), onError func(error), resizeEvents *uihelpers.ResizeEvents) *LinkTrack {
+func NewLinkTrack(widgetBase *Base, saveSoundCloudTrackFunc func(), onError func(error)) *LinkTrack {
 	i := &LinkTrack{
-		parentWindow:        w,
-		LinkTrackFileSelect: NewLinkTrackFileSelect(w, saveSoundCloudTrackFunc, onError, resizeEvents),
+		Base:                widgetBase,
+		LinkTrackFileSelect: NewLinkTrackFileSelect(widgetBase, saveSoundCloudTrackFunc, onError),
 	}
 
 	i.ExtendBaseWidget(i)
@@ -505,41 +520,38 @@ LinkTrackFileSelect allows for the user to link a SoundCloud track to a file
 on their local file system via a file selection dialog
 */
 type LinkTrackFileSelect struct {
+	*Base
 	widget.BaseWidget
 
-	parentWindow fyne.Window
-
-	resizeEvents            *uihelpers.ResizeEvents
 	saveSoundCloudTrackFunc func()
 
 	OpenPath *OpenPath
 }
 
-func NewLinkTrackFileSelect(w fyne.Window, saveSoundCloudTrackFunc func(), onError func(error), resizeEvents *uihelpers.ResizeEvents) *LinkTrackFileSelect {
+func NewLinkTrackFileSelect(widgetBase *Base, saveSoundCloudTrackFunc func(), onError func(error)) *LinkTrackFileSelect {
 
-	openPath := NewOpenPath(w, "", File)
+	openPath := NewOpenPath(widgetBase, "", File)
 
 	openPath.SetExtensionFilter(helpers.GetAudioExtensions())
 	openPath.SetOnError(onError)
 
 	resizeFunc := func() {
-		openPath.Dialog.Resize(uihelpers.CanvasPercentSize(w, 0.75, 0.75, fyne.NewSize(480, 320), fyne.NewSize(1280, 0)))
+		openPath.Dialog.Resize(uihelpers.CanvasPercentSize(widgetBase.MainWindow, 0.75, 0.75, fyne.NewSize(480, 320), fyne.NewSize(1280, 0)))
 	}
 
 	var key string
 
 	openPath.SetOnOpen(func() {
 		resizeFunc()
-		key = resizeEvents.Add(resizeFunc)
+		key = openPath.ResizeEvents.Add(resizeFunc)
 	})
 	openPath.SetOnClose(func() {
-		resizeEvents.Remove(key)
+		openPath.ResizeEvents.Remove(key)
 	})
 
 	i := &LinkTrackFileSelect{
-		parentWindow:            w,
+		Base:                    widgetBase,
 		OpenPath:                openPath,
-		resizeEvents:            resizeEvents,
 		saveSoundCloudTrackFunc: saveSoundCloudTrackFunc,
 	}
 
@@ -561,13 +573,16 @@ func (i *LinkTrackFileSelect) CreateRenderer() fyne.WidgetRenderer {
 	)
 }
 
+/*
+updateFromData updates the LinkTrackFileSelect widget (used to link a SoundCloud track
+to a local file) to the information of a given loaded in SoundCloud track (passed in
+via the SelectedTrackBinding on update)
+*/
 func (i *LinkTrackFileSelect) updateFromData(t *SelectedTrackBinding) {
 	scTrack := *t.TrackBinding.Track
 
 	if scTrack.LocalPath != "" {
 		i.OpenPath.SetURIFromPathString(scTrack.LocalPath)
-	} else {
-		i.OpenPath.SetURIFromPathString("/")
 	}
 
 	i.OpenPath.SetOnValid(func(uri string) {

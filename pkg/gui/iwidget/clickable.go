@@ -20,14 +20,17 @@ If the 'SEREN_USE_CHROME flag is set, then the url will be opened in Chrome.
 This flag is not set by default, and is only used for testing purposes.
 */
 type OpenInBrowserButton struct {
+	*Base
 	widget.Button
 
 	URL *url.URL
 }
 
-func NewOpenInBrowserButton(text string, urlString string) *OpenInBrowserButton {
+func NewOpenInBrowserButton(widgetBase *Base, text string, urlString string) *OpenInBrowserButton {
 
-	openInBrowserBtn := &OpenInBrowserButton{}
+	openInBrowserBtn := &OpenInBrowserButton{
+		Base: widgetBase,
+	}
 
 	if urlString != "" {
 		openInBrowserBtn.SetContent(text, urlString)

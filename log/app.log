@@ -1,0 +1,23 @@
+2024-01-04 21:55:07 INFO <operations/load_app.go:50> APP: found 18 tracks with changed broken status
+
+2024-01-04 21:55:22 INFO <gui/playlists_funcs.go:118> APP: successfully got 1 playlists from db, loading into gui
+2024-01-04 21:55:22 INFO <iwidget/playlist.go:154> APP: set playlist to found: 1716437886: DRUMMERS BASSERS LEANING ON THE LIQUIDY SIDE
+2024-01-04 21:57:15 INFO <operations/load_app.go:50> APP: found 18 tracks with changed broken status
+
+2024-01-04 21:57:17 INFO <gui/playlists_funcs.go:118> APP: successfully got 1 playlists from db, loading into gui
+2024-01-04 21:57:17 INFO <iwidget/playlist.go:154> APP: set playlist to found: 1716437886: DRUMMERS BASSERS LEANING ON THE LIQUIDY SIDE
+2024-01-04 22:01:06 INFO <operations/load_app.go:50> APP: found 18 tracks with changed broken status
+
+2024-01-04 22:01:07 INFO <gui/playlists_funcs.go:118> APP: successfully got 1 playlists from db, loading into gui
+2024-01-04 22:01:07 INFO <iwidget/playlist.go:154> APP: set playlist to found: 1716437886: DRUMMERS BASSERS LEANING ON THE LIQUIDY SIDE
+2024-01-04 22:01:24 INFO <operations/load_app.go:50> APP: found 18 tracks with changed broken status
+
+2024-01-04 22:01:25 INFO <gui/playlists_funcs.go:118> APP: successfully got 1 playlists from db, loading into gui
+2024-01-04 22:01:25 INFO <iwidget/playlist.go:154> APP: set playlist to found: 1716437886: DRUMMERS BASSERS LEANING ON THE LIQUIDY SIDE
+2024-01-04 22:05:31 INFO <operations/load_app.go:50> APP: found 18 tracks with changed broken status
+
+2024-01-04 22:05:34 INFO <gui/playlists_funcs.go:120> APP: successfully got 1 playlists from db, loading into gui
+2024-01-04 22:05:34 INFO <iwidget/playlist.go:154> APP: set playlist to found: 1716437886: DRUMMERS BASSERS LEANING ON THE LIQUIDY SIDE
+2024-01-04 22:05:35 INFO <iwidget/playlist.go:144> APP: set playlist to finding: 0: 
+2024-01-04 22:05:36 INFO <iwidget/playlist.go:164> APP: set playlist to failed: 0: , with err error getting playlist: error getting playlist info from SoundCloud: Error getting remaining tracks: Error making batch requests for remaining tracks: Error making SoundCloud tracks request: Error making request to get SoundCloud tracks, status code 401
+2024-01-04 22:05:36 ERRO <helpers/logging.go:135> APP: Error making request to get SoundCloud tracks, status code 401 <C:/Users/billi/Documents/programming/seren-management/pkg/streaming/soundcloud.go:356> error context="map[parsed_url:https://soundcloud.com/serrene/sets/groov/s-OsKSdYfcVuM url_raw:https://soundcloud.com/serrene/sets/groov/s-OsKSdYfcVuM?si=9d13067763f44a689e7e1459a0861c62&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing]" error chain="[{Location:C:/Users/billi/Documents/programming/seren-management/pkg/streaming/soundcloud.go:356 Message:Error making request to get SoundCloud tracks, status code 401} {Location:C:/Users/billi/Documents/programming/seren-management/pkg/streaming/soundcloud.go:298 Message:Error making SoundCloud tracks request} {Location:C:/Users/billi/Documents/programming/seren-management/pkg/streaming/soundcloud.go:317 Message:Error making batch requests for remaining tracks} {Location:C:/Users/billi/Documents/programming/seren-management/pkg/streaming/soundcloud.go:264 Message:Error getting remaining tracks} {Location:C:/Users/billi/Documents/programming/seren-management/pkg/operations/operations.go:231 Message:error getting playlist info from SoundCloud} {Location:C:/Users/billi/Documents/programming/seren-management/pkg/gui/playlists_funcs.go:86 Message:<fctx>} {Location:C:/Users/billi/Documents/programming/seren-management/pkg/gui/playlists_funcs.go:86 Message:error getting playlist}]"

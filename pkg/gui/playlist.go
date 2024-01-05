@@ -24,7 +24,7 @@ func (e *guiEnv) openPlaylistPopup(playlist streaming.SoundCloudPlaylist) {
 
 	// Build the track list widget (displays list of tracks to select)
 	trackListSection := iwidget.NewTrackListSection(
-		e.mainWindow,
+		e.getWidgetBase(),
 		&trackListBinding,
 		selectedTrack,
 		iwidget.TrackListFuncs{
@@ -34,13 +34,12 @@ func (e *guiEnv) openPlaylistPopup(playlist streaming.SoundCloudPlaylist) {
 
 	// Build the track section widget (displays info about selected track)
 	trackSection := iwidget.NewTrackSection(
-		e.mainWindow,
+		e.getWidgetBase(),
 		iwidget.TrackFuncs{
 			DownloadSoundCloudTrack: e.getDownloadSoundCloudTrackFunc(selectedTrack, playlist.Name),
 			SaveSoundCloudTrackToDB: e.getSaveSoundCloudTrackFunc(selectedTrack),
 			OnError:                 e.displayErrorDialog,
 		},
-		e.resizeEvents,
 	)
 	trackSection.Bind(selectedTrack)
 

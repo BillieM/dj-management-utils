@@ -96,6 +96,7 @@ func newLogger(w io.Writer, formatter log.Formatter, prefix string) *log.Logger 
 		ReportTimestamp: true,
 		TimeFormat:      time.DateTime,
 		Formatter:       formatter,
+		Level:           log.DebugLevel,
 	})
 	if prefix != "" {
 		logger.SetPrefix(prefix)

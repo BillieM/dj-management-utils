@@ -20,24 +20,23 @@ along with filter and sort controls for viewing that list, it also contains
 controls to export the tracks to a playlist
 */
 type TrackListSection struct {
+	*Base
 	widget.BaseWidget
-
-	parentWindow fyne.Window
 
 	List                    *widget.List
 	TrackListControls       *TrackListControls
 	TrackListExportControls *TrackListImportExportControls
 }
 
-func NewTrackListSection(w fyne.Window, tlb *TrackListBinding, selectedTrack *SelectedTrackBinding, trackListFuncs TrackListFuncs) *TrackListSection {
+func NewTrackListSection(widgetBase *Base, tlb *TrackListBinding, selectedTrack *SelectedTrackBinding, trackListFuncs TrackListFuncs) *TrackListSection {
 
 	tlb.FilterSortInfo = &FilterSortInfo{}
 
 	trackListSection := &TrackListSection{
-		parentWindow:            w,
-		List:                    NewTrackList(w, tlb, selectedTrack),
-		TrackListControls:       NewTrackListControls(tlb),
-		TrackListExportControls: NewTrackListImportExportControls(trackListFuncs),
+		Base:                    widgetBase,
+		List:                    NewTrackList(widgetBase, tlb, selectedTrack),
+		TrackListControls:       NewTrackListControls(widgetBase, tlb),
+		TrackListExportControls: NewTrackListImportExportControls(widgetBase, trackListFuncs),
 	}
 
 	trackListSection.ExtendBaseWidget(trackListSection)
@@ -64,6 +63,7 @@ type FilterSortInfo struct {
 TrackListControls contains controls for filtering and sorting a TrackList
 */
 type TrackListControls struct {
+	*Base
 	widget.BaseWidget
 
 	trackListBinding *TrackListBinding
@@ -72,15 +72,16 @@ type TrackListControls struct {
 	TrackFilterControls *TrackListFilterControls
 }
 
-func NewTrackListControls(tlb *TrackListBinding) *TrackListControls {
+func NewTrackListControls(widgetBase *Base, tlb *TrackListBinding) *TrackListControls {
 
 	applyFilterSortCallback := func() {
 		tlb.ApplyFilterSort()
 	}
 
 	tlc := &TrackListControls{
-		TrackSortControls:   NewTrackSortControls(tlb.FilterSortInfo, applyFilterSortCallback),
-		TrackFilterControls: NewTrackListFilterControls(tlb.FilterSortInfo, applyFilterSortCallback),
+		Base:                widgetBase,
+		TrackSortControls:   NewTrackSortControls(widgetBase, tlb.FilterSortInfo, applyFilterSortCallback),
+		TrackFilterControls: NewTrackListFilterControls(widgetBase, tlb.FilterSortInfo, applyFilterSortCallback),
 
 		trackListBinding: tlb,
 	}
@@ -109,14 +110,16 @@ func (i *TrackListControls) CreateRenderer() fyne.WidgetRenderer {
 }
 
 type TrackListSortControls struct {
+	*Base
 	widget.BaseWidget
 
 	SortBy *widget.Select
 	Desc   *widget.Check
 }
 
-func NewTrackSortControls(fsi *FilterSortInfo, callback func()) *TrackListSortControls {
+func NewTrackSortControls(widgetBase *Base, fsi *FilterSortInfo, callback func()) *TrackListSortControls {
 	tlsc := &TrackListSortControls{
+		Base:   widgetBase,
 		SortBy: widget.NewSelect([]string{"Default", "Name", "Genre", "Tags", "Publisher", "SoundCloud User"}, nil),
 		Desc:   widget.NewCheck("Descending", nil),
 	}
@@ -136,13 +139,15 @@ func (i *TrackListSortControls) CreateRenderer() fyne.WidgetRenderer {
 }
 
 type TrackListFilterControls struct {
+	*Base
 	widget.BaseWidget
 
 	ShowLinked *widget.Check
 }
 
-func NewTrackListFilterControls(fsi *FilterSortInfo, callback func()) *TrackListFilterControls {
+func NewTrackListFilterControls(widgetBase *Base, fsi *FilterSortInfo, callback func()) *TrackListFilterControls {
 	tlfc := &TrackListFilterControls{
+		Base:       widgetBase,
 		ShowLinked: widget.NewCheck("Show Linked", nil),
 	}
 
@@ -164,6 +169,7 @@ TrackListExportControls contains controls for exporting a TrackList to a playlis
 within DJ software
 */
 type TrackListImportExportControls struct {
+	*Base
 	widget.BaseWidget
 
 	refreshButton *widget.Button
@@ -171,8 +177,9 @@ type TrackListImportExportControls struct {
 	lTemp *widget.Label
 }
 
-func NewTrackListImportExportControls(trackListFuncs TrackListFuncs) *TrackListImportExportControls {
+func NewTrackListImportExportControls(widgetBase *Base, trackListFuncs TrackListFuncs) *TrackListImportExportControls {
 	tliec := &TrackListImportExportControls{
+		Base:  widgetBase,
 		lTemp: widget.NewLabel("TrackListImportExportControls"),
 		refreshButton: widget.NewButtonWithIcon("Refresh playlist", theme.ViewRefreshIcon(), func() {
 			trackListFuncs.RefreshSoundCloudPlaylist()
@@ -193,7 +200,7 @@ func (i *TrackListImportExportControls) CreateRenderer() fyne.WidgetRenderer {
 	)
 }
 
-func NewTrackList(w fyne.Window, tlb *TrackListBinding, selectedTrack *SelectedTrackBinding) *widget.List {
+func NewTrackList(widgetBase *Base, tlb *TrackListBinding, selectedTrack *SelectedTrackBinding) *widget.List {
 
 	trackList := widget.NewListWithData(
 		tlb,
@@ -216,7 +223,7 @@ func NewTrackList(w fyne.Window, tlb *TrackListBinding, selectedTrack *SelectedT
 	trackList.OnSelected = func(id widget.ListItemID) {
 		if selectedTrack.Locked {
 			trackList.Select(selectedTrack.ListID)
-			dialog.ShowError(helpers.ErrPleaseWaitForDownload, w)
+			dialog.ShowError(helpers.ErrPleaseWaitForDownload, widgetBase.MainWindow)
 			return
 		}
 

@@ -164,13 +164,18 @@ func GetClosestDir(path string, baseDirPath string, rCnt *int) (string, error) {
 	*rCnt++
 	fi, err := os.Stat(path)
 
+	if path == "" {
+		// if the path is empty, we may aswell just check with baseDirPath/ projectpath.Root
+		*rCnt = 5
+	}
+
 	if err != nil {
 		if *rCnt <= 4 {
 			return GetClosestDir(JoinFilepathToSlash(path, ".."), baseDirPath, rCnt)
 		} else if *rCnt == 5 {
 			return GetClosestDir(baseDirPath, baseDirPath, rCnt)
 		} else if *rCnt == 6 {
-			return GetClosestDir(JoinFilepathToSlash("/"), baseDirPath, rCnt)
+			return GetClosestDir(projectpath.Root, baseDirPath, rCnt)
 		} else {
 			return "", GenErrClosestDirUnknown(path, err)
 		}

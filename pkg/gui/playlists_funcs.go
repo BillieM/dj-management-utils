@@ -40,7 +40,9 @@ func (e *guiEnv) getAddPlaylistCallback(playlistBindVals *iwidget.PlaylistBindin
 			"url_raw", urlRaw,
 		)
 
-		pbi := &iwidget.PlaylistBindingItem{}
+		pbi := iwidget.PlaylistBindingItem{
+			Base: e.getWidgetBase(),
+		}
 
 		netUrl, err := url.Parse(urlRaw)
 
@@ -57,7 +59,7 @@ func (e *guiEnv) getAddPlaylistCallback(playlistBindVals *iwidget.PlaylistBindin
 			e.logger.NonFatalError(err)
 			pbi.SetFailed(err)
 
-			playlistBindVals.Append(pbi)
+			playlistBindVals.Append(&pbi)
 			onAdd()
 			return
 		}
@@ -74,7 +76,7 @@ func (e *guiEnv) getAddPlaylistCallback(playlistBindVals *iwidget.PlaylistBindin
 				SearchUrl: netUrl.String(),
 			},
 		)
-		playlistBindVals.Append(pbi)
+		playlistBindVals.Append(&pbi)
 		onAdd()
 
 		go opEnv.GetSoundCloudPlaylist(ctx, operations.GetSoundCloudPlaylistOpts{
@@ -115,7 +117,7 @@ func (e *guiEnv) loadSoundCloudPlaylists(playlistBindingList *iwidget.PlaylistBi
 		)
 	}
 
-	e.logger.Infof("successfully got %v playlists from db, loading into gui", len(playlists))
+	e.logger.Debugf("successfully got %v playlists from db, loading into gui", len(playlists))
 
 	playlistBindingList.Load(playlists)
 

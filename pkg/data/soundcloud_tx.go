@@ -42,6 +42,7 @@ func (sDB *SerenDB) TxUpsertSoundCloudPlaylistAndTracks(p SoundcloudPlaylist, tr
 	}
 
 	for _, t := range tracks {
+
 		insertedT, err := qtx.UpsertSoundCloudTrack(context.Background(), UpsertSoundCloudTrackParams{
 			ExternalID:          t.ExternalID,
 			Name:                t.Name,

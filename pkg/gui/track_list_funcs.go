@@ -133,6 +133,13 @@ func (e *guiEnv) getRefreshSoundCloudPlaylistFunc(playlist streaming.SoundCloudP
 
 		var tracksToSave []streaming.SoundCloudTrack
 
+		/*
+			store all tracks prior to updating inside the existingTracksMap,
+				we can use this to figure out which tracks are new
+
+			we also set the RemovedFromPlaylist flag to true if a track is no longer in the playlist,
+				and then add to the tracksToSave slice to be updated in the database
+		*/
 		for _, t := range trackListBinding.Tracks {
 			existingTracksMap[t.ExternalID] = *t
 			v, ok := currentTracksMap[t.ExternalID]
@@ -143,6 +150,13 @@ func (e *guiEnv) getRefreshSoundCloudPlaylistFunc(playlist streaming.SoundCloudP
 			*t = v
 		}
 
+		/*
+			iterate through the tracks in the playlist,
+				if the track does not exist in the existingTracksMap,
+				it is new, so we add it to the trackListBinding list (to be displayed in the UI)
+				we do not save it to the database, as this was already done inside operations.go
+					(though i may want to change this, but it will require changing the refresh playlist func too)
+		*/
 		for _, t := range p.Tracks {
 			_, ok := existingTracksMap[t.ExternalID]
 			if !ok {
@@ -150,6 +164,7 @@ func (e *guiEnv) getRefreshSoundCloudPlaylistFunc(playlist streaming.SoundCloudP
 				t.Playlists = append(t.Playlists, playlist)
 				newT := t
 				trackListBinding.Tracks = append(trackListBinding.Tracks, &newT)
+				tracksToSave = append(tracksToSave, newT)
 			}
 		}
 

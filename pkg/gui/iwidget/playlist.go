@@ -141,7 +141,7 @@ func (i *PlaylistBindingItem) SetFinding(playlist streaming.SoundCloudPlaylist) 
 	i.playlist = playlist
 	i.state = Finding
 
-	i.Logger.Infof("set playlist to finding: %s", i.playlist)
+	i.Logger.Debugf("set playlist to finding: %s", i.playlist)
 }
 
 func (i *PlaylistBindingItem) SetFound(playlist streaming.SoundCloudPlaylist) {
@@ -151,7 +151,7 @@ func (i *PlaylistBindingItem) SetFound(playlist streaming.SoundCloudPlaylist) {
 	i.playlist = playlist
 	i.state = Found
 
-	i.Logger.Infof("set playlist to found: %s", i.playlist)
+	i.Logger.Debugf("set playlist to found: %s", i.playlist)
 }
 
 func (i *PlaylistBindingItem) SetFailed(err error) {
@@ -161,7 +161,7 @@ func (i *PlaylistBindingItem) SetFailed(err error) {
 	i.err = err
 	i.state = Failed
 
-	i.Logger.Infof("set playlist to failed: %s, with err %s", i.playlist, err)
+	i.Logger.Debugf("set playlist to failed: %s, with err %s", i.playlist, err)
 }
 
 /*
