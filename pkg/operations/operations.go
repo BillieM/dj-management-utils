@@ -9,6 +9,7 @@ import (
 	"github.com/Southclaws/fault"
 	"github.com/Southclaws/fault/fmsg"
 	"github.com/billiem/seren-management/pkg/collection"
+	"github.com/billiem/seren-management/pkg/data"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/billiem/seren-management/pkg/streaming"
 )
@@ -233,8 +234,7 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 				fmsg.WithDesc(
 					"error getting playlist info from SoundCloud",
 					"Error getting playlist information from SoundCloud",
-				),
-			),
+				)),
 		)
 		return
 	}
@@ -297,7 +297,9 @@ playlistName is optional and is used to create a folder for the playlist within 
 func (e *OpEnv) DownloadSoundCloudFile(track streaming.SoundCloudTrack, playlistName string) {
 
 	if e.Config.SoundCloudClientID == "" {
-		e.finishedNew(newFinishedError(helpers.ErrSoundCloudClientIDNotSet))
+		e.finishError(
+			fault.New("SoundCloud Client ID not set"),
+		)
 		return
 	}
 
@@ -317,15 +319,31 @@ func (e *OpEnv) DownloadSoundCloudFile(track streaming.SoundCloudTrack, playlist
 	)
 
 	if err != nil {
-		e.finishedNew(newFinishedError(err))
+		e.finishError(
+			fault.Wrap(
+				err,
+				fmsg.With("error downloading file from SoundCloud"),
+			),
+		)
 		return
 	}
 
-	e.finishedNew(newFinishedSuccess(
+	err = e.SerenDB.TxUpsertSoundCloudTracks([]data.SoundcloudTrack{track.ToDB()})
+	if err != nil {
+		e.finishError(
+			fault.Wrap(
+				err,
+				fmsg.With("error saving track to database"),
+			),
+		)
+		return
+	}
+
+	e.finishSuccess(
 		map[string]any{
 			"filepath": filePath,
 		},
-	))
+	)
 }
 
 /*

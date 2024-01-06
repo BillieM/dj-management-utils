@@ -30,41 +30,44 @@ func (e *guiEnv) getDownloadSoundCloudTrackFunc(selectedTrack *iwidget.SelectedT
 	return func() {
 
 		selectedTrack.LockSelected()
+		defer selectedTrack.UnlockSelected()
 
 		track := selectedTrack.TrackBinding.Track
 
 		opEnv := e.opEnv()
-		opEnv.RegisterStepHandlerNew(
-			streamingStepHandlerNew{
-				stepCallback: func(i operations.StepInfoNew) {},
-				finishedCallback: func(i operations.FinishedInfo) {
-					if i.Err != nil {
-						e.showErrorDialog(i.Err)
-					} else {
-						path, ok := i.Data["filepath"].(string)
-						if !ok {
-							e.showErrorDialog(fmt.Errorf("filepath not found in finished data"))
-							return
-						}
-						track.LocalPath = path
-
-						err := e.SerenDB.TxUpsertSoundCloudTracks([]data.SoundcloudTrack{track.ToDB()})
-						if err != nil {
-							e.showErrorDialog(err)
-							return
-						}
-
-						e.showInfoDialog(
-							"Download Successful",
-							fmt.Sprintf("Downloaded %s to %s", track.Name, track.LocalPath),
-						)
-					}
-				},
+		opEnv.RegisterOperationHandler(
+			func(i operations.OperationProgressInfo) {},
+			func(i operations.OperationFinishedInfo) {
+				if i.Err != nil {
+					e.displayErrorDialog(fault.Wrap(
+						i.Err,
+						fmsg.WithDesc(
+							"error downloading soundcloud track",
+							"Error downloading SoundCloud track",
+						),
+					))
+					return
+				}
+				filePath, ok := i.Data["filepath"].(string)
+				if !ok {
+					e.showErrorDialog(fault.Wrap(
+						fault.New("error casting filepath to string"),
+						fmsg.WithDesc(
+							"error parsing filepath from operation data",
+							"Error parsing track download results",
+						),
+					))
+					return
+				}
+				track.LocalPath = filePath
+				e.showInfoDialog(
+					"Download Successful",
+					fmt.Sprintf("Downloaded %s to %s", track.Name, track.LocalPath),
+				)
 			},
 		)
-		opEnv.DownloadSoundCloudFile(*track, playlistName)
 
-		selectedTrack.UnlockSelected()
+		opEnv.DownloadSoundCloudFile(*track, playlistName)
 	}
 }
 
@@ -196,10 +199,10 @@ func (e *guiEnv) getRefreshSoundCloudPlaylistFunc(playlist streaming.SoundCloudP
 	return func() {
 
 		opEnv := e.opEnv()
-		opEnv.RegisterStepHandler(streamingStepHandler{
-			stepFunc:     func() {},
-			finishedFunc: func() {},
-		})
+		opEnv.RegisterOperationHandler(
+			func(i operations.OperationProgressInfo) {},
+			func(i operations.OperationFinishedInfo) {},
+		)
 
 		opts := operations.GetSoundCloudPlaylistOpts{
 			PlaylistURL: playlist.Permalink,

@@ -68,20 +68,13 @@ func getLogWriters(c Config, logDirPath string) (logWriters, error) {
 		return logWriters{}, fault.Wrap(err, fmsg.With("Error opening database log file"))
 	}
 
-	// open app log writer
-	// this will be stderr in development, or a file
-	var appW io.Writer
-	if c.Development {
-		appW = os.Stderr
-	} else {
-		appW, err = os.OpenFile(
-			JoinFilepathToSlash(logDirPath, "app.log"),
-			os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644,
-		)
+	appW, err := os.OpenFile(
+		JoinFilepathToSlash(logDirPath, "app.jsonl"),
+		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644,
+	)
 
-		if err != nil {
-			return logWriters{}, fault.Wrap(err, fmsg.With("Error opening app log file"))
-		}
+	if err != nil {
+		return logWriters{}, fault.Wrap(err, fmsg.With("Error opening app log file"))
 	}
 
 	return logWriters{

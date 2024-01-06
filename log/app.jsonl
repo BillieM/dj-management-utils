@@ -1,0 +1,11 @@
+2024-01-05 01:39:40 DEBU <operations/load_app.go:53> APP: no tracks with changed broken status
+2024-01-05 01:40:35 DEBU <gui/playlists_funcs.go:120> APP: successfully got 1 playlists from db, loading into gui
+2024-01-05 01:40:35 DEBU <iwidget/playlist.go:154> APP: set playlist to found: 1706537817: mid NRGD TUNES
+2024-01-05 01:40:42 ERRO <helpers/logging.go:129> APP: unsupported protocol scheme "" <> error context="map[playlist_external_id:1706537817 playlist_name:mid NRGD TUNES]" error chain="[{Location: Message:unsupported protocol scheme \"\"} {Location: Message:Get \"not-chill-but-u-know\": unsupported protocol scheme \"\"} {Location:C:/Users/billi/Documents/programming/seren-management/pkg/operations/operations.go:231 Message:error getting playlist info from SoundCloud} {Location:C:/Users/billi/Documents/programming/seren-management/pkg/gui/track_list_funcs.go:116 Message:<fctx>} {Location:C:/Users/billi/Documents/programming/seren-management/pkg/gui/track_list_funcs.go:116 Message:err refreshing SoundCloud playlist}]"
+2024-01-06 21:09:53 DEBU <operations/load_app.go:53> APP: no tracks with changed broken status
+2024-01-06 21:10:55 DEBU <gui/playlists_funcs.go:120> APP: successfully got 1 playlists from db, loading into gui
+2024-01-06 21:10:55 DEBU <iwidget/playlist.go:154> APP: set playlist to found: 1706537817: mid NRGD TUNES
+2024-01-06 21:11:13 ERRO <helpers/logging.go:129> APP: SoundCloud Client ID not set <C:/Users/billi/Documents/programming/seren-management/pkg/operations/operations.go:301> error context=map[] error chain="[{Location:C:/Users/billi/Documents/programming/seren-management/pkg/operations/operations.go:301 Message:SoundCloud Client ID not set} {Location:C:/Users/billi/Documents/programming/seren-management/pkg/gui/track_list_funcs.go:42 Message:error downloading soundcloud track}]"
+2024-01-06 21:21:36 DEBU <operations/load_app.go:53> APP: no tracks with changed broken status
+2024-01-06 21:21:38 DEBU <gui/playlists_funcs.go:120> APP: successfully got 1 playlists from db, loading into gui
+2024-01-06 21:21:38 DEBU <iwidget/playlist.go:154> APP: set playlist to found: 1706537817: mid NRGD TUNES

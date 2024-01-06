@@ -28,10 +28,12 @@ func (e *guiEnv) getAddPlaylistCallback(playlistBindVals *iwidget.PlaylistBindin
 	ctx := context.Background()
 	ctx, ctxClose := context.WithCancel(ctx)
 	opEnv := e.opEnv()
-	opEnv.RegisterStepHandler(streamingStepHandler{
-		stepFunc:     func() {},
-		finishedFunc: func() { ctxClose() },
-	})
+	opEnv.RegisterOperationHandler(
+		func(i operations.OperationProgressInfo) {},
+		func(i operations.OperationFinishedInfo) {
+			ctxClose()
+		},
+	)
 
 	return func(urlRaw string) {
 

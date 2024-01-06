@@ -8,6 +8,7 @@ import (
 type OpEnv struct {
 	helpers.Config
 	Logger helpers.SerenLogger
+	operationHandler
 	*data.SerenDB
 	*stepHandler
 	*stepHandlerNew
@@ -33,12 +34,4 @@ func (e *OpEnv) step(stepInfo StepInfo) {
 
 func (e *OpEnv) exit() {
 	e.stepHandler.exitCallback()
-}
-
-func (e *OpEnv) stepNew(stepInfo StepInfoNew) {
-	e.stepHandlerNew.stepCallback(stepInfo)
-}
-
-func (e *OpEnv) finishedNew(finishedInfo FinishedInfo) {
-	e.stepHandlerNew.finishedCallback(finishedInfo)
 }

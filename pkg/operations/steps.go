@@ -125,19 +125,3 @@ func progressOnlyStepInfo(progress float64) StepInfo {
 		SkipLog:  true,
 	}
 }
-
-/*
-New StepInfo / FinishedInfo helpers
-*/
-
-func newFinishedSuccess(data map[string]any) FinishedInfo {
-	return FinishedInfo{
-		Data: data,
-	}
-}
-
-func newFinishedError(err error) FinishedInfo {
-	return FinishedInfo{
-		Err: err,
-	}
-}
