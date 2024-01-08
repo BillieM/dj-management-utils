@@ -34,3 +34,6 @@ dist/
 # *.xsd
 
 *.db
+
+# app logs (will probably be moved elsewhere anyway)
+log/

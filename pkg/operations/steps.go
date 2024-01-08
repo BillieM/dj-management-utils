@@ -12,24 +12,11 @@ type stepHandler struct {
 }
 
 /*
-Experiment to replace the existing stepHandler with a more generic one
-*/
-type stepHandlerNew struct {
-	stepCallback     func(StepInfoNew)
-	finishedCallback func(FinishedInfo)
-}
-
-/*
 StepHandler is used to provide callbacks to the operations package
 */
 type StepHandler interface {
 	StepCallback(StepInfo)
 	ExitCallback()
-}
-
-type StepHandlerNew interface {
-	StepCallback(StepInfoNew)
-	FinishedCallback(FinishedInfo)
 }
 
 /*
@@ -43,19 +30,6 @@ type StepInfo struct {
 	Message    string
 	Error      error
 	Importance helpers.Importance
-}
-
-type StepInfoNew struct {
-	SkipLog    bool
-	Err        error
-	Progress   float64 // value between 0 and 1
-	Message    string
-	Importance helpers.Importance
-}
-
-type FinishedInfo struct {
-	Data map[string]any // TODO: consider changing this to an interface
-	Err  error
 }
 
 /*

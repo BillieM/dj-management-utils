@@ -17,7 +17,7 @@ This is called when a user clicks the 'open playlist' button on a playlist
 */
 func (e *guiEnv) openPlaylistPopup(playlist streaming.SoundCloudPlaylist) {
 
-	loading := newViewLoading(fmt.Sprintf("Loading tracks for %s...", playlist.Name))
+	loading := iwidget.NewViewLoading(fmt.Sprintf("Loading tracks for %s...", playlist.Name))
 
 	var trackListBinding iwidget.TrackListBinding
 	selectedTrack := &iwidget.SelectedTrackBinding{}

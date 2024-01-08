@@ -327,6 +327,8 @@ func (e *guiEnv) syncSoundCloudView() fyne.CanvasObject {
 		Items: []*iwidget.PlaylistBindingItem{},
 	}
 
+	// Create the list widget that will display the playlists, and bind it to the playlistBindVals
+	// this will cause the list to be updated when the bind value changes (i.e. when the playlists are loaded)
 	playlistsList := widget.NewListWithData(
 		&playlistBindVals,
 		func() fyne.CanvasObject {
@@ -349,8 +351,10 @@ func (e *guiEnv) syncSoundCloudView() fyne.CanvasObject {
 		},
 	)
 
-	loading := newViewLoading("Loading SoundCloud playlists...")
-
+	// Load the playlists into the view in the background
+	// This should be quick as it only requires a database query
+	// Also show a loading screen, which will be hidden when the playlists are loaded
+	loading := iwidget.NewViewLoading("Loading SoundCloud playlists...")
 	go func() {
 		err := e.loadSoundCloudPlaylists(&playlistBindVals)
 

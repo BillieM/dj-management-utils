@@ -24,6 +24,9 @@ type logWriters struct {
 	appW io.Writer
 }
 
+/*
+BuildAppLoggers returns a Loggers struct containing loggers for the application, and a database logger
+*/
 func BuildAppLoggers(c Config) (*Loggers, error) {
 
 	// create log directory if it doesn't exist
@@ -56,6 +59,11 @@ func BuildAppLoggers(c Config) (*Loggers, error) {
 	}, nil
 }
 
+/*
+getLogWriters returns io.Writers for the various logs of the application
+
+This just serves as a helper function to reduce the size of BuildAppLoggers
+*/
 func getLogWriters(c Config, logDirPath string) (logWriters, error) {
 
 	// open db log file

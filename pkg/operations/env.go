@@ -11,20 +11,12 @@ type OpEnv struct {
 	operationHandler
 	*data.SerenDB
 	*stepHandler
-	*stepHandlerNew
 }
 
 func (e *OpEnv) RegisterStepHandler(sh StepHandler) {
 	e.stepHandler = &stepHandler{
 		stepCallback: sh.StepCallback,
 		exitCallback: sh.ExitCallback,
-	}
-}
-
-func (e *OpEnv) RegisterStepHandlerNew(sh StepHandlerNew) {
-	e.stepHandlerNew = &stepHandlerNew{
-		stepCallback:     sh.StepCallback,
-		finishedCallback: sh.FinishedCallback,
 	}
 }
 

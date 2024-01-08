@@ -9,3 +9,9 @@
 2024-01-06 21:21:36 DEBU <operations/load_app.go:53> APP: no tracks with changed broken status
 2024-01-06 21:21:38 DEBU <gui/playlists_funcs.go:120> APP: successfully got 1 playlists from db, loading into gui
 2024-01-06 21:21:38 DEBU <iwidget/playlist.go:154> APP: set playlist to found: 1706537817: mid NRGD TUNES
+2024-01-06 22:14:27 DEBU <operations/load_app.go:53> APP: no tracks with changed broken status
+2024-01-06 22:14:30 DEBU <gui/playlists_funcs.go:122> APP: successfully got 1 playlists from db, loading into gui
+2024-01-06 22:14:30 DEBU <iwidget/playlist.go:154> APP: set playlist to found: 1706537817: mid NRGD TUNES
+2024-01-06 22:17:02 DEBU <gui/playlists_funcs.go:122> APP: successfully got 1 playlists from db, loading into gui
+2024-01-06 22:17:02 DEBU <iwidget/playlist.go:154> APP: set playlist to found: 1706537817: mid NRGD TUNES
+2024-01-08 18:34:07 DEBU <operations/load_app.go:53> APP: no tracks with changed broken status

@@ -328,6 +328,8 @@ func (e *OpEnv) DownloadSoundCloudFile(track streaming.SoundCloudTrack, playlist
 		return
 	}
 
+	track.LocalPath = filePath
+
 	err = e.SerenDB.TxUpsertSoundCloudTracks([]data.SoundcloudTrack{track.ToDB()})
 	if err != nil {
 		e.finishError(
