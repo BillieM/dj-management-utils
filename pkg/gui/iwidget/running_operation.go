@@ -30,11 +30,12 @@ type RunningOperation struct {
 	Log         *terminal.Terminal
 }
 
-func NewRunningOperation(widgetBase *Base) *RunningOperation {
+func NewRunningOperation(widgetBase *Base, cancelFunc func()) *RunningOperation {
 
 	runningOperation := &RunningOperation{
 		Base:        widgetBase,
 		ProgressBar: widget.NewProgressBar(),
+		StopButton:  widget.NewButton("Stop", cancelFunc),
 		Log:         terminal.New(),
 	}
 

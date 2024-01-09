@@ -8,6 +8,9 @@ import (
 
 	b64 "encoding/base64"
 
+	"github.com/Southclaws/fault"
+	"github.com/Southclaws/fault/fctx"
+	"github.com/Southclaws/fault/fmsg"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/deliveryhero/pipeline/v2"
 )
@@ -76,13 +79,13 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 		return
 	}
 
-	numSteps := 3
+	// numSteps := 3
 
-	if tracks[0].StemsOnly {
-		numSteps = 1
-	}
+	// if tracks[0].StemsOnly {
+	// 	numSteps = 1
+	// }
 
-	p := buildProgress(len(tracks), numSteps)
+	// p := buildProgress(len(tracks), numSteps)
 
 	tracksChan := pipeline.Emit(tracks...)
 
@@ -92,25 +95,33 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 		}
 
 		if t.SkipDemucs {
-			e.step(stepFinishedStepInfo(fmt.Sprintf("Skipping demucs seperation for: %s", t.Name), p.step(t.ID)))
+			e.Logger.Info(fmt.Sprintf("Skipping demucs separation for: %s", t.Name))
 			return t, nil
 		}
 
-		e.step(stepStartedStepInfo(fmt.Sprintf("Performing demucs separation for: %s", t.Name)))
+		e.Logger.Info(fmt.Sprintf("Performing demucs separation for: %s", t.Name))
 		t, err := e.demucsSeparate(t)
 
 		if err != nil {
 			return t, err
 		}
 
-		e.step(stepFinishedStepInfo("Finished demucs separation for "+t.Name, p.step(t.ID)))
+		e.Logger.Info(fmt.Sprintf("Finished demucs separation for: %s", t.Name))
 
 		return t, nil
 	}, func(t StemTrack, err error) {
+
+		ctx = fctx.WithMeta(
+			ctx,
+			"name", t.Name,
+		)
+
 		if !strings.Contains(err.Error(), "context canceled") {
-			e.step(
-				warningStepInfo(helpers.GenErrDemucsSepStep(t.Name, err)),
-			)
+			e.Logger.NonFatalError(fault.Wrap(
+				err,
+				fctx.With(ctx),
+				fmsg.With("error demucs separating file"),
+			))
 		}
 	}), tracksChan)
 
@@ -123,7 +134,7 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 			return t, nil
 		}
 
-		e.step(stepStartedStepInfo(fmt.Sprintf("Merging files to Traktor stem file for: %s", t.Name)))
+		e.Logger.Info(fmt.Sprintf("Merging files to Traktor stem file for: %s", t.Name))
 
 		t, err := e.mergeToM4a(t)
 
@@ -131,14 +142,22 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 			return t, err
 		}
 
-		e.step(stepFinishedStepInfo("Finished merging files for: "+t.Name, p.step(t.ID)))
+		e.Logger.Info(fmt.Sprintf("Finished merging files for: %s", t.Name))
 
 		return t, nil
 	}, func(t StemTrack, err error) {
+
+		ctx = fctx.WithMeta(
+			ctx,
+			"name", t.Name,
+		)
+
 		if !strings.Contains(err.Error(), "context canceled") {
-			e.step(
-				warningStepInfo(helpers.GenErrMergeM4AStep(t.Name, err)),
-			)
+			e.Logger.NonFatalError(fault.Wrap(
+				err,
+				fctx.With(ctx),
+				fmsg.With("error merging files"),
+			))
 		}
 	}), demucsOut)
 
@@ -151,21 +170,29 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 			return t, nil
 		}
 
-		e.step(stepStartedStepInfo(fmt.Sprintf("Adding metadata to Traktor stem file for: %s", t.Name)))
+		e.Logger.Info(fmt.Sprintf("Adding metadata to Traktor stem file for: %s", t.Name))
 		t, err := e.addMetadata(t)
 
 		if err != nil {
 			return t, err
 		}
 
-		e.step(stepFinishedStepInfo("Finished adding metadata for: "+t.Name, p.step(t.ID)))
+		e.Logger.Info(fmt.Sprintf("Finished adding metadata for: %s", t.Name))
 
 		return t, nil
 	}, func(t StemTrack, err error) {
+
+		ctx = fctx.WithMeta(
+			ctx,
+			"name", t.Name,
+		)
+
 		if !strings.Contains(err.Error(), "context canceled") {
-			e.step(
-				warningStepInfo(helpers.GenErrAddMetadataStep(t.Name, err)),
-			)
+			e.Logger.NonFatalError(fault.Wrap(
+				err,
+				fctx.With(ctx),
+				fmsg.With("error adding metadata"),
+			))
 		}
 	}), mergeM4aOut)
 
@@ -183,16 +210,24 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 		return t, nil
 
 	}, func(t StemTrack, err error) {
+
+		ctx = fctx.WithMeta(
+			ctx,
+			"name", t.Name,
+		)
+
 		if !strings.Contains(err.Error(), "context canceled") {
-			e.step(
-				warningStepInfo(helpers.GenErrCleanupStep(t.Name, err)),
-			)
+			e.Logger.NonFatalError(fault.Wrap(
+				err,
+				fctx.With(ctx),
+				fmsg.With("error cleaning up"),
+			))
 		}
 	}), addMetadataOut)
 
 	for range cleanupOut {
 		t := <-cleanupOut
-		e.step(trackFinishedStepInfo(fmt.Sprintf("Finished processing: %s", t.Name), p.complete(t.ID)))
+		e.Logger.Info(fmt.Sprintf("Finished processing: %s", t.Name))
 	}
 }
 

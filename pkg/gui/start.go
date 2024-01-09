@@ -2,9 +2,13 @@ package gui
 
 import (
 	"context"
+	"io"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/data/binding"
+	"github.com/Southclaws/fault"
+	"github.com/Southclaws/fault/fmsg"
+	"github.com/billiem/seren-management/pkg/gui/iwidget"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/billiem/seren-management/pkg/operations"
 )
@@ -59,15 +63,46 @@ startSeparateSingleStem is the entrypoint for the SeperateSingleStem operation f
 */
 func (e *guiEnv) startSeparateSingleStem(processContainerOuter *fyne.Container, opts operations.SeparateSingleStemOpts) {
 
-	ctx, sh, err := e.sharedStartBuild(processContainerOuter)
+	ctx := context.Background()
+	ctx, ctxClose := context.WithCancel(ctx)
 
-	if err != nil {
-		e.showErrorDialog(err)
-		return
-	}
+	// build the running operation widget, which will be used to display the progress of the operation & allow it to be cancelled
+	runningOperation := iwidget.NewRunningOperation(e.getWidgetBase(), ctxClose)
 
 	opEnv := e.opEnv()
-	opEnv.RegisterStepHandler(sh)
+	opEnv.RegisterOperationHandler(
+		func(i operations.OperationProgressInfo) {
+			runningOperation.ProgressBar.SetValue(i.Progress)
+		},
+		func(i operations.OperationFinishedInfo) {
+			if i.Err != nil {
+				e.displayErrorDialog(i.Err)
+				return
+			}
+			e.showInfoDialog("Finished", "Process finished")
+		},
+	)
+
+	pr, pw := io.Pipe()
+
+	// add the terminal writer to the logger
+	opEnv.Logger.AddWriter(
+		helpers.NewJSONUnmarshallWriter(pw),
+	)
+
+	go func() {
+		err := runningOperation.Log.RunWithConnection(nil, pr)
+
+		if err != nil {
+			e.logger.NonFatalError(fault.Wrap(
+				err,
+				fmsg.With("error running terminal"),
+			))
+		}
+	}()
+
+	// temp until i refactor this function (probably just into views?)
+	processContainerOuter.Add(runningOperation)
 
 	go opEnv.SeparateSingleStem(
 		ctx,

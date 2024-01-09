@@ -32,7 +32,7 @@ func buildCliEnv(configPath string) (*cliEnv, error) {
 		)
 	}
 
-	loggers, err := helpers.BuildAppLoggers(cfg)
+	loggers, err := helpers.BuildAppLoggers()
 
 	if err != nil {
 		return nil, fault.Wrap(

@@ -20,33 +20,41 @@ SeperateSingleStem separates stems from a single file
 func (e *OpEnv) SeparateSingleStem(ctx context.Context, opts SeparateSingleStemOpts) {
 
 	defer func() {
-		e.step(progressOnlyStepInfo(1))
-		e.exit()
+		// e.step(progressOnlyStepInfo(1))
+		// e.exit()
 	}()
 
 	_, err := opts.Check()
 
 	if err != nil {
-		e.step(dangerStepInfo(err))
+		e.Logger.NonFatalError(fault.Wrap(
+			err,
+			fmsg.With("error checking opts"),
+		))
 		return
 	}
 
-	e.step(stageStepInfo("Checking file to separate"))
+	e.Logger.Info("Checking file to separate")
 	stemTrackArray, alreadyExistsCnt, errs := buildStemTrackArray([]string{opts.InFilePath}, opts.OutDirPath, opts.Type)
 
 	if len(errs) > 0 {
-		e.step(warningStepInfo(errs[0]))
+		e.Logger.NonFatalError(fault.Wrap(
+			errs[0],
+			fmsg.With("error building stem track array"),
+		))
 		return
 	}
 
 	if alreadyExistsCnt > 0 {
-		e.step(warningStepInfo(helpers.ErrConvertedFileExists))
+		e.Logger.NonFatalError(fault.New(
+			helpers.ErrConvertedFileExists.Error(),
+		))
 		return
 	}
 
-	e.step(stageStepInfo("Converting file to stems"))
+	e.Logger.Info("Converting file to stems")
 	e.parallelProcessStemTrackArray(ctx, stemTrackArray)
-	e.step(processFinishedStepInfo("Finished"))
+	e.Logger.Info("Finished")
 }
 
 /*

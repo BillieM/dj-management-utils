@@ -12,7 +12,11 @@ import (
 )
 
 /*
-guiEnv holds the environment for the GUI
+guiEnv serves as the environment for the GUI, and is passed around much of the graphical
+code in the application.
+
+We do not pass this directly to other packages, instead we generate a subset of this environment,
+containing only relevant fields for the package.
 */
 type guiEnv struct {
 	*helpers.Config
@@ -34,7 +38,7 @@ this is generated from the guiEnv struct
 func (e *guiEnv) opEnv() *operations.OpEnv {
 	return &operations.OpEnv{
 		Config:  *e.Config,
-		Logger:  e.logger,
+		Logger:  helpers.BuildOperationLogger(),
 		SerenDB: e.SerenDB,
 	}
 }
@@ -54,7 +58,8 @@ func (e *guiEnv) getWidgetBase() *iwidget.Base {
 }
 
 /*
-buildGuiEnv builds the *guiEnv struct
+buildGuiEnv returns a pointer to an instance of the guiEnv struct with
+the environment loaded.
 */
 func buildGuiEnv(a fyne.App, w fyne.Window) (*guiEnv, error) {
 
@@ -64,7 +69,7 @@ func buildGuiEnv(a fyne.App, w fyne.Window) (*guiEnv, error) {
 		return nil, fault.Wrap(err, fmsg.With("Error loading GUI config"))
 	}
 
-	loggers, err := helpers.BuildAppLoggers(*cfg)
+	loggers, err := helpers.BuildAppLoggers()
 
 	if err != nil {
 		return nil, fault.Wrap(err, fmsg.With("Error building logger"))

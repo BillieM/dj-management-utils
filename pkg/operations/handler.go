@@ -1,7 +1,5 @@
 package operations
 
-import "github.com/billiem/seren-management/pkg/helpers"
-
 /*
 Provides functionality surrounding the operation 'handler'
 
@@ -28,11 +26,11 @@ OperationProgressInfo provides a format for passing information about the progre
 back to the interface that triggered it
 */
 type OperationProgressInfo struct {
-	SkipLog    bool
-	Err        error
-	Progress   float64 // value between 0 and 1
-	Message    string
-	Importance helpers.Importance
+	// SkipLog    bool
+	// Err        error
+	Progress float64 // value between 0 and 1
+	// Message    string
+	// Importance helpers.Importance
 }
 
 /*
@@ -104,9 +102,9 @@ func newOperationFinishedInfoSuccess(data map[string]any) OperationFinishedInfo 
 
 /*
  */
-func newOperationProgressInfo(msg string) OperationProgressInfo {
-	return OperationProgressInfo{
-		Message:    msg,
-		Importance: helpers.HighImportance,
-	}
-}
+// func newOperationProgressInfo(msg string) OperationProgressInfo {
+// 	return OperationProgressInfo{
+// 		Message:    msg,
+// 		Importance: helpers.HighImportance,
+// 	}
+// }

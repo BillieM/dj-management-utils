@@ -20,6 +20,10 @@ func (e *OpEnv) RegisterStepHandler(sh StepHandler) {
 	}
 }
 
+func (e *OpEnv) RegisterLogWriter() {
+
+}
+
 func (e *OpEnv) step(stepInfo StepInfo) {
 	e.stepHandler.stepCallback(stepInfo)
 }
