@@ -2,7 +2,6 @@ package gui
 
 import (
 	"context"
-	"fmt"
 	"io"
 
 	"fyne.io/fyne/v2"
@@ -72,12 +71,15 @@ func (e *guiEnv) startSeparateSingleStem(processContainerOuter *fyne.Container, 
 
 	processContainerOuter.Add(runningOperation)
 
+	pr, pw := io.Pipe()
+
 	opEnv := e.opEnv()
 	opEnv.RegisterOperationHandler(
 		func(i operations.OperationProgressInfo) {
 			runningOperation.ProgressBar.SetValue(i.Progress)
 		},
 		func(i operations.OperationFinishedInfo) {
+			pw.Close()
 			if i.Err != nil {
 				e.displayErrorDialog(i.Err)
 				return
@@ -86,23 +88,12 @@ func (e *guiEnv) startSeparateSingleStem(processContainerOuter *fyne.Container, 
 		},
 	)
 
-	pr, pw := io.Pipe()
-
-	// defer pw.Close()
-
 	// add the terminal writer to the logger
-	opEnv.Logger.AddTermCore(pw, func() {
-		fmt.Println("weeeeeeeeeeeeeeeeeeeeeeeee")
-		runningOperation.Log.Refresh()
-	})
+	opEnv.Logger.AddTermCore(pw)
 
 	go func() {
 
-		e.logger.Info("starting terminal")
-
 		err := runningOperation.Log.RunWithConnection(nil, pr)
-
-		pw.Write([]byte("closing terminal"))
 
 		if err != nil {
 			e.logger.NonFatalError(fault.Wrap(
@@ -110,8 +101,6 @@ func (e *guiEnv) startSeparateSingleStem(processContainerOuter *fyne.Container, 
 				fmsg.With("error running terminal"),
 			))
 		}
-
-		e.logger.Info("closing terminal")
 	}()
 
 	go opEnv.SeparateSingleStem(

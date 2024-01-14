@@ -217,7 +217,7 @@ func (s SerenLogger) FatalError(err error) {
 /*
 AddTermCore adds a terminal writer to the logger
 */
-func (s *SerenLogger) AddTermCore(w io.Writer, writeCallback func()) error {
+func (s *SerenLogger) AddTermCore(w io.Writer) error {
 
 	l, err := newTerminalConfig(w).Build()
 
@@ -229,14 +229,8 @@ func (s *SerenLogger) AddTermCore(w io.Writer, writeCallback func()) error {
 		return zapcore.NewTee(core, l.Core())
 	})
 
-	hookOpt := zap.Hooks(func(entry zapcore.Entry) error {
-		writeCallback()
-		return nil
-	})
-
 	s.SugaredLogger = s.WithOptions(
 		coreOpt,
-		hookOpt,
 	)
 
 	return nil
