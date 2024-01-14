@@ -50,7 +50,7 @@ func (r *RunningOperation) CreateRenderer() fyne.WidgetRenderer {
 		container.NewBorder(
 			container.NewBorder(nil, nil, nil, r.StopButton, r.ProgressBar),
 			nil, nil, nil,
-			r.Log,
+			container.NewVScroll(r.Log),
 		),
 	)
 }

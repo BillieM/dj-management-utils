@@ -152,7 +152,12 @@ func (e *guiEnv) separateSingleStemView() fyne.CanvasObject {
 	opts := operations.SeparateSingleStemOpts{}
 
 	startFunc := func() {
-		e.startSeparateSingleStem(processContainerOuter, opts)
+		trackOperation := e.prepareTrackOperation()
+		processContainerOuter.Add(trackOperation.runningOperation)
+		go trackOperation.opEnv.SeparateSingleStem(
+			trackOperation.ctx,
+			opts,
+		)
 	}
 
 	startButton := widget.NewButton("Separate stem", startFunc)
@@ -185,7 +190,12 @@ func (e *guiEnv) separateFolderStemView() fyne.CanvasObject {
 	opts := operations.SeparateFolderStemOpts{}
 
 	startFunc := func() {
-		e.startSeparateFolderStem(processContainerOuter, opts)
+		trackOperation := e.prepareTrackOperation()
+		processContainerOuter.Add(trackOperation.runningOperation)
+		go trackOperation.opEnv.SeparateFolderStem(
+			trackOperation.ctx,
+			opts,
+		)
 	}
 
 	startButton := widget.NewButton("Separate folder", startFunc)
@@ -232,7 +242,12 @@ func (e *guiEnv) convertSingleMp3View() fyne.CanvasObject {
 	opts := operations.ConvertSingleMp3Opts{}
 
 	startFunc := func() {
-		e.startConvertSingleMp3(processContainerOuter, opts)
+		trackOperation := e.prepareTrackOperation()
+		processContainerOuter.Add(trackOperation.runningOperation)
+		go trackOperation.opEnv.ConvertSingleMp3(
+			trackOperation.ctx,
+			opts,
+		)
 	}
 
 	startButton := widget.NewButton("Convert to mp3", startFunc)
@@ -264,7 +279,12 @@ func (e *guiEnv) convertFolderMp3View() fyne.CanvasObject {
 	opts := operations.ConvertFolderMp3Opts{}
 
 	startFunc := func() {
-		e.startConvertFolderMp3(processContainerOuter, opts)
+		trackOperation := e.prepareTrackOperation()
+		processContainerOuter.Add(trackOperation.runningOperation)
+		go trackOperation.opEnv.ConvertFolderMp3(
+			trackOperation.ctx,
+			opts,
+		)
 	}
 
 	startButton := widget.NewButton("Convert folder to mp3", startFunc)
@@ -359,7 +379,7 @@ func (e *guiEnv) syncSoundCloudView() fyne.CanvasObject {
 		err := e.loadSoundCloudPlaylists(&playlistBindVals)
 
 		if err != nil {
-			e.displayErrorDialog(err)
+			e.showErrorDialog(err)
 			return
 		}
 

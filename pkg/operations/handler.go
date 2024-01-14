@@ -17,20 +17,8 @@ failure, success, or just to provide progress updates
 OperationHandler is used to provide callbacks to the operations package
 */
 type operationHandler struct {
-	StepCallback     func(OperationProgressInfo)
+	StepCallback     func(float64)
 	FinishedCallback func(OperationFinishedInfo)
-}
-
-/*
-OperationProgressInfo provides a format for passing information about the progress of an operation
-back to the interface that triggered it
-*/
-type OperationProgressInfo struct {
-	// SkipLog    bool
-	// Err        error
-	Progress float64 // value between 0 and 1
-	// Message    string
-	// Importance helpers.Importance
 }
 
 /*
@@ -45,7 +33,7 @@ type OperationFinishedInfo struct {
 /*
 RegisterOperationHandler registers an OperationHandler with the OpEnv
 */
-func (e *OpEnv) RegisterOperationHandler(stepCallback func(OperationProgressInfo), finishedCallback func(OperationFinishedInfo)) {
+func (e *OpEnv) RegisterOperationHandler(stepCallback func(float64), finishedCallback func(OperationFinishedInfo)) {
 	e.operationHandler = operationHandler{
 		StepCallback:     stepCallback,
 		FinishedCallback: finishedCallback,
@@ -55,7 +43,7 @@ func (e *OpEnv) RegisterOperationHandler(stepCallback func(OperationProgressInfo
 /*
 progress is called by an operation, it calls the StepCallback assigned to the OpEnv
 */
-func (e *OpEnv) progress(stepInfo OperationProgressInfo) {
+func (e *OpEnv) progress(stepInfo float64) {
 	e.operationHandler.StepCallback(stepInfo)
 }
 

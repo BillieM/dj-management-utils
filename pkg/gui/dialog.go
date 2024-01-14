@@ -8,7 +8,7 @@ import (
 	"github.com/Southclaws/fault/fmsg"
 )
 
-func (e *guiEnv) displayErrorDialog(err error) {
+func (e *guiEnv) showErrorDialog(err error) {
 
 	e.logger.NonFatalError(err)
 
@@ -21,8 +21,4 @@ func (e *guiEnv) displayErrorDialog(err error) {
 
 func (e *guiEnv) showInfoDialog(title, message string) {
 	dialog.ShowInformation(title, message, e.mainWindow)
-}
-
-func (e *guiEnv) showErrorDialog(err error) {
-	dialog.ShowError(err, e.mainWindow)
 }

@@ -38,7 +38,7 @@ func (e *guiEnv) openPlaylistPopup(playlist streaming.SoundCloudPlaylist) {
 		iwidget.TrackFuncs{
 			DownloadSoundCloudTrack: e.getDownloadSoundCloudTrackFunc(selectedTrack, playlist.Name),
 			SaveSoundCloudTrackToDB: e.getSaveSoundCloudTrackFunc(selectedTrack),
-			OnError:                 e.displayErrorDialog,
+			OnError:                 e.showErrorDialog,
 		},
 	)
 	trackSection.Bind(selectedTrack)
@@ -72,7 +72,7 @@ func (e *guiEnv) openPlaylistPopup(playlist streaming.SoundCloudPlaylist) {
 		err := e.loadSoundCloudPlaylistTracks(playlist.ExternalID, tlb)
 		if err != nil {
 			playlistPopup.Hide()
-			e.displayErrorDialog(err)
+			e.showErrorDialog(err)
 			return
 		}
 		loading.Hide()

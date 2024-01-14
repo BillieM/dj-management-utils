@@ -40,7 +40,7 @@ func (e *guiEnv) makeNavMenu(contentStack *fyne.Container) *widget.Tree {
 				return
 			}
 			if e.busy {
-				e.displayErrorDialog(helpers.ErrBusyPleaseFinishFirst)
+				e.showErrorDialog(helpers.ErrBusyPleaseFinishFirst)
 				return
 			}
 			e.setMainContent(contentStack, op)

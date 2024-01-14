@@ -19,11 +19,6 @@ SeperateSingleStem separates stems from a single file
 */
 func (e *OpEnv) SeparateSingleStem(ctx context.Context, opts SeparateSingleStemOpts) {
 
-	defer func() {
-		// e.step(progressOnlyStepInfo(1))
-		// e.exit()
-	}()
-
 	_, err := opts.Check()
 
 	if err != nil {
@@ -31,6 +26,7 @@ func (e *OpEnv) SeparateSingleStem(ctx context.Context, opts SeparateSingleStemO
 			err,
 			fmsg.With("error checking opts"),
 		))
+		e.finishError(fault.New("Error separating stems"))
 		return
 	}
 
@@ -42,6 +38,7 @@ func (e *OpEnv) SeparateSingleStem(ctx context.Context, opts SeparateSingleStemO
 			errs[0],
 			fmsg.With("error building stem track array"),
 		))
+		e.finishError(fault.New("Error separating stems"))
 		return
 	}
 
@@ -49,12 +46,15 @@ func (e *OpEnv) SeparateSingleStem(ctx context.Context, opts SeparateSingleStemO
 		e.Logger.NonFatalError(fault.New(
 			helpers.ErrConvertedFileExists.Error(),
 		))
+		e.finishError(fault.New("Error separating stems"))
 		return
 	}
 
 	e.Logger.Info("Converting file to stems")
 	e.parallelProcessStemTrackArray(ctx, stemTrackArray)
 	e.Logger.Info("Finished")
+
+	e.finishSuccess(nil)
 }
 
 /*
@@ -62,38 +62,52 @@ SeparateFolderStem separates stems from all files in a folder
 */
 func (e *OpEnv) SeparateFolderStem(ctx context.Context, opts SeparateFolderStemOpts) {
 
-	defer func() {
-		e.step(progressOnlyStepInfo(1))
-		e.exit()
-	}()
-
 	_, err := opts.Check()
 
 	if err != nil {
-		e.step(dangerStepInfo(err))
+		e.Logger.NonFatalError(fault.Wrap(
+			err,
+			fmsg.With("error checking opts"),
+		))
+		e.finishError(fault.New("Error separating stems"))
 		return
 	}
 
-	e.step(stageStepInfo("Finding files to convert"))
+	e.Logger.Info("Finding files to convert")
 	stemFilePaths, err := e.getStemPaths(opts.InDirPath, opts.Recursion)
-	e.step(stageStepInfo(fmt.Sprintf("Found %v potential files to convert", len(stemFilePaths))))
 
 	if err != nil {
-		e.step(dangerStepInfo(err))
+		e.Logger.NonFatalError(fault.Wrap(
+			err,
+			fmsg.With("error getting stem paths"),
+		))
+		e.finishError(fault.New("Error separating stems"))
 		return
 	}
 
-	e.step(stageStepInfo("Checking found files"))
+	e.Logger.Infof("Found %v potential files to convert", len(stemFilePaths))
+
+	e.Logger.Info("Checking found files")
 	stemTrackArray, alreadyExistsCnt, errs := buildStemTrackArray(stemFilePaths, opts.OutDirPath, opts.Type)
-	e.step(stageStepInfo(fmt.Sprintf("%v files already exist, %v left to convert", alreadyExistsCnt, len(stemTrackArray))))
+	e.Logger.Infof("%v files already exist, %v left to convert", alreadyExistsCnt, len(stemTrackArray))
 
 	for _, err := range errs {
-		e.step(warningStepInfo(err))
+		e.Logger.NonFatalError(fault.Wrap(
+			err,
+			fmsg.With("error building stem track array"),
+		))
 	}
 
-	e.step(stageStepInfo("Converting files to stems"))
+	if len(stemTrackArray) == 0 {
+		e.finishError(fault.New("Error separating stems"))
+		return
+	}
+
+	e.Logger.Info("Converting files to stems")
 	e.parallelProcessStemTrackArray(ctx, stemTrackArray)
-	e.step(processFinishedStepInfo("Finished"))
+	e.Logger.Info("Finished")
+
+	e.finishSuccess(nil)
 }
 
 /*

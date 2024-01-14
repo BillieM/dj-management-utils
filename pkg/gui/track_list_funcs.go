@@ -36,10 +36,10 @@ func (e *guiEnv) getDownloadSoundCloudTrackFunc(selectedTrack *iwidget.SelectedT
 
 		opEnv := e.opEnv()
 		opEnv.RegisterOperationHandler(
-			func(i operations.OperationProgressInfo) {},
+			func(i float64) {},
 			func(i operations.OperationFinishedInfo) {
 				if i.Err != nil {
-					e.displayErrorDialog(fault.Wrap(
+					e.showErrorDialog(fault.Wrap(
 						i.Err,
 						fmsg.WithDesc(
 							"error downloading soundcloud track",
@@ -87,7 +87,7 @@ func (e *guiEnv) getSaveSoundCloudTrackFunc(selectedTrack *iwidget.SelectedTrack
 
 		err := e.SerenDB.TxUpsertSoundCloudTracks([]data.SoundcloudTrack{track.ToDB()})
 		if err != nil {
-			e.displayErrorDialog(
+			e.showErrorDialog(
 				fault.Wrap(
 					err,
 					fctx.With(ctx),
@@ -116,7 +116,7 @@ func (e *guiEnv) getRefreshSoundCloudPlaylistFunc(playlist streaming.SoundCloudP
 	processResultsFunc := func(p streaming.SoundCloudPlaylist, err error) {
 
 		if err != nil {
-			e.displayErrorDialog(fault.Wrap(
+			e.showErrorDialog(fault.Wrap(
 				err,
 				fctx.With(ctx),
 				fmsg.WithDesc(
@@ -181,7 +181,7 @@ func (e *guiEnv) getRefreshSoundCloudPlaylistFunc(playlist streaming.SoundCloudP
 			err = e.SerenDB.TxUpsertSoundCloudTracks(dataT)
 
 			if err != nil {
-				e.displayErrorDialog(fault.Wrap(
+				e.showErrorDialog(fault.Wrap(
 					err,
 					fctx.With(ctx),
 					fmsg.WithDesc(
@@ -200,7 +200,7 @@ func (e *guiEnv) getRefreshSoundCloudPlaylistFunc(playlist streaming.SoundCloudP
 
 		opEnv := e.opEnv()
 		opEnv.RegisterOperationHandler(
-			func(i operations.OperationProgressInfo) {},
+			func(i float64) {},
 			func(i operations.OperationFinishedInfo) {},
 		)
 

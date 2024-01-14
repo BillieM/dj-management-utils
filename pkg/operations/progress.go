@@ -1,39 +1,39 @@
 package operations
 
 type progress struct {
-	completedTracks int
-	totalTracks     int
+	completed int
+	total     int
 
-	numSteps int
+	stepsPer int
 
 	inProcess map[int]int
 }
 
 func (p *progress) step(id int) float64 {
 	p.inProcess[id]++
-	return p.progress()
+	return p.value()
 }
 
 func (p *progress) complete(id int) float64 {
 	delete(p.inProcess, id)
-	p.completedTracks++
-	return p.progress()
+	p.completed++
+	return p.value()
 }
 
-func (p *progress) progress() float64 {
+func (p *progress) value() float64 {
 	totalProgress := 0.0
-	totalProgress += float64(p.completedTracks) / float64(p.totalTracks)
+	totalProgress += float64(p.completed) / float64(p.total)
 	for _, v := range p.inProcess {
-		totalProgress += (float64(v) / float64(p.numSteps) / float64(p.totalTracks))
+		totalProgress += (float64(v) / float64(p.stepsPer) / float64(p.total))
 	}
 	return totalProgress
 }
 
-func buildProgress(totalTracks int, numSteps int) progress {
+func buildProgress(total int, stepsPer int) progress {
 	return progress{
-		completedTracks: 0,
-		totalTracks:     totalTracks,
-		numSteps:        numSteps,
-		inProcess:       make(map[int]int),
+		completed: 0,
+		total:     total,
+		stepsPer:  stepsPer,
+		inProcess: make(map[int]int),
 	}
 }

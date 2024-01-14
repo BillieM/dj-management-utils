@@ -79,13 +79,13 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 		return
 	}
 
-	// numSteps := 3
+	numSteps := 3
 
-	// if tracks[0].StemsOnly {
-	// 	numSteps = 1
-	// }
+	if tracks[0].StemsOnly {
+		numSteps = 1
+	}
 
-	// p := buildProgress(len(tracks), numSteps)
+	p := buildProgress(len(tracks), numSteps)
 
 	tracksChan := pipeline.Emit(tracks...)
 
@@ -107,6 +107,7 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 		}
 
 		e.Logger.Info(fmt.Sprintf("Finished demucs separation for: %s", t.Name))
+		p.step(t.ID)
 
 		return t, nil
 	}, func(t StemTrack, err error) {
@@ -120,9 +121,14 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 			e.Logger.NonFatalError(fault.Wrap(
 				err,
 				fctx.With(ctx),
-				fmsg.With("error demucs separating file"),
+				fmsg.WithDesc(
+					"demucs separation error",
+					"There was an error calling demucs to separate the stems",
+				),
 			))
 		}
+
+		p.complete(t.ID)
 	}), tracksChan)
 
 	mergeM4aOut := pipeline.ProcessConcurrently(ctx, 2, pipeline.NewProcessor(func(ctx context.Context, t StemTrack) (StemTrack, error) {
@@ -143,6 +149,7 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 		}
 
 		e.Logger.Info(fmt.Sprintf("Finished merging files for: %s", t.Name))
+		p.step(t.ID)
 
 		return t, nil
 	}, func(t StemTrack, err error) {
@@ -156,9 +163,14 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 			e.Logger.NonFatalError(fault.Wrap(
 				err,
 				fctx.With(ctx),
-				fmsg.With("error merging files"),
+				fmsg.WithDesc(
+					"error merging files",
+					"There was an error merging the stems into a single file",
+				),
 			))
 		}
+
+		p.complete(t.ID)
 	}), demucsOut)
 
 	addMetadataOut := pipeline.ProcessConcurrently(ctx, 4, pipeline.NewProcessor(func(ctx context.Context, t StemTrack) (StemTrack, error) {
@@ -178,6 +190,7 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 		}
 
 		e.Logger.Info(fmt.Sprintf("Finished adding metadata for: %s", t.Name))
+		p.step(t.ID)
 
 		return t, nil
 	}, func(t StemTrack, err error) {
@@ -191,9 +204,14 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 			e.Logger.NonFatalError(fault.Wrap(
 				err,
 				fctx.With(ctx),
-				fmsg.With("error adding metadata"),
+				fmsg.WithDesc(
+					"error adding metadata",
+					"There was an error adding Traktor metadata to the stem file",
+				),
 			))
 		}
+
+		p.complete(t.ID)
 	}), mergeM4aOut)
 
 	cleanupOut := pipeline.ProcessConcurrently(ctx, 4, pipeline.NewProcessor(func(ctx context.Context, t StemTrack) (StemTrack, error) {
@@ -220,7 +238,10 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 			e.Logger.NonFatalError(fault.Wrap(
 				err,
 				fctx.With(ctx),
-				fmsg.With("error cleaning up"),
+				fmsg.WithDesc(
+					"error cleaning up",
+					"There was an error cleaning up the stem files",
+				),
 			))
 		}
 	}), addMetadataOut)
@@ -254,11 +275,12 @@ func (e *OpEnv) demucsSeparate(track StemTrack) (StemTrack, error) {
 	}
 
 	// run demucs
-	_, err := helpers.CmdExec(
+	out, err := helpers.CmdExec(
 		demucsArgs...,
 	)
 
 	if err != nil {
+		e.Logger.Debug(out)
 		return track, err
 	}
 
@@ -271,7 +293,7 @@ func (e *OpEnv) mergeToM4a(track StemTrack) (StemTrack, error) {
 	os.MkdirAll(track.OutFile.FileInfo.DirPath, os.ModePerm)
 
 	// convert stems to m4a
-	_, err := helpers.CmdExec(
+	out, err := helpers.CmdExec(
 		"ffmpeg",
 		"-i", track.OriginalFile.FileInfo.FullPath,
 		"-i", track.DrumsFile.AudioFile.FileInfo.FullPath,
@@ -279,10 +301,12 @@ func (e *OpEnv) mergeToM4a(track StemTrack) (StemTrack, error) {
 		"-i", track.OtherFile.AudioFile.FileInfo.FullPath,
 		"-i", track.VocalsFile.AudioFile.FileInfo.FullPath,
 		"-map", "0", "-map", "1", "-map", "2", "-map", "3", "-map", "4",
+		"-vn",
 		track.OutFile.FileInfo.FullPath,
 	)
 
 	if err != nil {
+		e.Logger.Debug(out)
 		return track, err
 	}
 
@@ -292,12 +316,13 @@ func (e *OpEnv) mergeToM4a(track StemTrack) (StemTrack, error) {
 func (e *OpEnv) addMetadata(track StemTrack) (StemTrack, error) {
 
 	// add metadata to m4a
-	_, err := helpers.CmdExec(
+	out, err := helpers.CmdExec(
 		"MP4Box",
 		track.OutFile.FileInfo.FullPath,
 		"-udta", fmt.Sprintf("0:type=stem:src=base64,%s", e.getTraktorMetadata()),
 	)
 	if err != nil {
+		e.Logger.Debug(out)
 		return track, err
 	}
 

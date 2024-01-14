@@ -66,14 +66,6 @@ func stepFinishedStepInfo(msg string, progress float64) StepInfo {
 	}
 }
 
-func trackFinishedStepInfo(msg string, progress float64) StepInfo {
-	return StepInfo{
-		Message:    msg,
-		Progress:   progress,
-		Importance: helpers.SuccessImportance,
-	}
-}
-
 func stepWarningStepInfo(err error, progress float64) StepInfo {
 	return StepInfo{
 		Error:      err,
