@@ -3,7 +3,7 @@ package data
 import (
 	"database/sql"
 
-	"github.com/charmbracelet/log"
+	"go.uber.org/zap"
 
 	"github.com/billiem/seren-management/pkg/helpers"
 	_ "github.com/mattn/go-sqlite3"
@@ -15,7 +15,7 @@ type SerenDB struct {
 	*Queries
 }
 
-func Connect(c helpers.Config, l log.Logger) (*SerenDB, error) {
+func Connect(c helpers.Config, l zap.SugaredLogger) (*SerenDB, error) {
 
 	dsn := "file:seren.db?cache=shared&mode=rwc"
 
@@ -28,9 +28,7 @@ func Connect(c helpers.Config, l log.Logger) (*SerenDB, error) {
 	db = sqldblogger.OpenDriver(
 		dsn,
 		db.Driver(),
-		&helpers.CharmLogAdapter{
-			Logger: l,
-		},
+		NewZapAdapter(l.Desugar()),
 	)
 
 	queries := New(db)

@@ -2,6 +2,7 @@ package gui
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"fyne.io/fyne/v2"
@@ -69,6 +70,8 @@ func (e *guiEnv) startSeparateSingleStem(processContainerOuter *fyne.Container, 
 	// build the running operation widget, which will be used to display the progress of the operation & allow it to be cancelled
 	runningOperation := iwidget.NewRunningOperation(e.getWidgetBase(), ctxClose)
 
+	processContainerOuter.Add(runningOperation)
+
 	opEnv := e.opEnv()
 	opEnv.RegisterOperationHandler(
 		func(i operations.OperationProgressInfo) {
@@ -85,13 +88,21 @@ func (e *guiEnv) startSeparateSingleStem(processContainerOuter *fyne.Container, 
 
 	pr, pw := io.Pipe()
 
+	// defer pw.Close()
+
 	// add the terminal writer to the logger
-	opEnv.Logger.AddWriter(
-		helpers.NewJSONUnmarshallWriter(pw),
-	)
+	opEnv.Logger.AddTermCore(pw, func() {
+		fmt.Println("weeeeeeeeeeeeeeeeeeeeeeeee")
+		runningOperation.Log.Refresh()
+	})
 
 	go func() {
+
+		e.logger.Info("starting terminal")
+
 		err := runningOperation.Log.RunWithConnection(nil, pr)
+
+		pw.Write([]byte("closing terminal"))
 
 		if err != nil {
 			e.logger.NonFatalError(fault.Wrap(
@@ -99,10 +110,9 @@ func (e *guiEnv) startSeparateSingleStem(processContainerOuter *fyne.Container, 
 				fmsg.With("error running terminal"),
 			))
 		}
-	}()
 
-	// temp until i refactor this function (probably just into views?)
-	processContainerOuter.Add(runningOperation)
+		e.logger.Info("closing terminal")
+	}()
 
 	go opEnv.SeparateSingleStem(
 		ctx,

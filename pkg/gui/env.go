@@ -38,7 +38,7 @@ this is generated from the guiEnv struct
 func (e *guiEnv) opEnv() *operations.OpEnv {
 	return &operations.OpEnv{
 		Config:  *e.Config,
-		Logger:  helpers.BuildOperationLogger(),
+		Logger:  helpers.BuildOperationLogger(*e.Config),
 		SerenDB: e.SerenDB,
 	}
 }
@@ -69,7 +69,7 @@ func buildGuiEnv(a fyne.App, w fyne.Window) (*guiEnv, error) {
 		return nil, fault.Wrap(err, fmsg.With("Error loading GUI config"))
 	}
 
-	loggers, err := helpers.BuildAppLoggers()
+	loggers, err := helpers.BuildAppLoggers(*cfg)
 
 	if err != nil {
 		return nil, fault.Wrap(err, fmsg.With("Error building logger"))
