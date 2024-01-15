@@ -13,7 +13,7 @@ ffmpeg ( [ffmpeg.org](https://ffmpeg.org/) )
 
 fyne ( [developer.fyne.io](https://developer.fyne.io/) / [github.com/fyne-io/fyne](https://github.com/fyne-io/fyne) )
 - UI framework
-- requires golang/ a compatible c compiler/ graphics drivers on some platforms (macOS should work out of the box)
+- requires a compatible c compiler/ graphics drivers on some platforms (macOS should work out of the box)
 - detailed installation instructions available at `https://developer.fyne.io/started/`
 
 demucs ( [github.com/facebookresearch/demucs](https://github.com/facebookresearch/demucs) )
