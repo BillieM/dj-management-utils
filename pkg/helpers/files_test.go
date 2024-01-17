@@ -484,8 +484,8 @@ func TestGetAbsOrWdPath(t *testing.T) {
 	}{
 		{
 			name: "absolute path",
-			path: "H:/Music/processed/funky cool song.mp3",
-			want: "H:/Music/processed/funky cool song.mp3",
+			path: helpers.JoinFilepathToSlash(projectpath.Root, "funky cool song.mp3"),
+			want: helpers.JoinFilepathToSlash(projectpath.Root, "funky cool song.mp3"),
 		},
 		{
 			name: "relative path",
@@ -524,8 +524,8 @@ func TestGetAbsOrProjPath(t *testing.T) {
 	}{
 		{
 			name: "absolute path",
-			path: "H:/Music/processed/funky cool song.mp3",
-			want: "H:/Music/processed/funky cool song.mp3",
+			path: helpers.JoinFilepathToSlash(projectpath.Root, "funky cool song.mp3"),
+			want: helpers.JoinFilepathToSlash(projectpath.Root, "funky cool song.mp3"),
 		},
 		{
 			name: "relative path",
