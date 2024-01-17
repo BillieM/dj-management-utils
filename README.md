@@ -13,7 +13,7 @@ ffmpeg ( [ffmpeg.org](https://ffmpeg.org/) )
 
 fyne ( [developer.fyne.io](https://developer.fyne.io/) / [github.com/fyne-io/fyne](https://github.com/fyne-io/fyne) )
 - UI framework
-- requires golang/ a compatible c compiler/ graphics drivers on some platforms (macOS should work out of the box)
+- requires a compatible c compiler/ graphics drivers on some platforms (macOS should work out of the box)
 - detailed installation instructions available at `https://developer.fyne.io/started/`
 
 demucs ( [github.com/facebookresearch/demucs](https://github.com/facebookresearch/demucs) )
@@ -47,7 +47,7 @@ We also use sqlc to generate go code from queries inside `./db/queries`. This is
 
 DJ library integration is reliant on using generated go code from XSD schemas. We use xgen for this.
 
-The results of this are not perfect for our usecase (likely a consequence of dodgy schema autogeneration due to the high complexity of the collection XMLs, particularly in the case of Traktor). But with some manual tweaking they seem to do the job. These generated go schema files are stored inside of `./pkg/collection`
+The results of this are not perfect for our usecase (likely a consequence of dodgy schema autogeneration due to the high complexity of the collection XMLs, particularly in the case of Traktor). But with some manual tweaking they seem to do the job. These generated go schema files are stored inside of `./pkg/collection`. As a result of the requirement for manual tweaking, we generate these once as part of the development process, not as part of CI/CD, should you need to regenerate the schema for any reason, an example is as follows:
 
 xgen examples:
 - `xgen -i ${xsd_schema_infile} -o ${go_schema_outfile} -l Go -p collection`
