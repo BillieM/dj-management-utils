@@ -7,56 +7,45 @@ import (
 	"github.com/Southclaws/fault"
 	"github.com/Southclaws/fault/fmsg"
 	"github.com/billiem/seren-management/pkg/gui/iwidget"
+	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/billiem/seren-management/pkg/operations"
 )
-
-type trackOperation struct {
-	ctx              context.Context
-	opEnv            *operations.OpEnv
-	runningOperation *iwidget.RunningOperation
-}
 
 /*
 prepareTrackOperation prepares a track operation, trackOperations are used for stem separation and mp3 conversion
 */
-func (e *guiEnv) prepareTrackOperation() trackOperation {
-	e.guiState.busy = true
-
-	ctx := context.Background()
-	ctx, ctxClose := context.WithCancel(ctx)
+func (e *guiEnv) prepareTrackOperation() (*operations.OpEnv, *iwidget.RunningOperation) {
 
 	opEnv := e.opEnv()
 
-	// build the running operation widget, which will be used to display the progress of the operation & allow it to be cancelled
-	runningOperation := iwidget.NewRunningOperation(e.getWidgetBase(), func() {
-		ctxClose()
-		opEnv.Logger.Info("Cancelled operation, finishing up running tasks, please wait...")
-	})
+	runningOperation := iwidget.NewRunningOperation(e.getWidgetBase())
+	runningOperation.ProgressBar.Hide()
+	runningOperation.StopButton.Hide()
 
-	pr, pw := io.Pipe()
+	e.termSink.SetIO(io.Pipe())
 
 	opEnv.RegisterOperationHandler(
 		func(i float64) {
 			runningOperation.ProgressBar.SetValue(i)
 		},
 		func(i operations.OperationFinishedInfo) {
-			// pw.Close()
 			runningOperation.ProgressBar.SetValue(1)
+			runningOperation.StopButton.Disable()
 			e.guiState.busy = false
 			if i.Err != nil {
-				e.showErrorDialog(i.Err)
+				e.showErrorDialog(i.Err, true)
 				return
 			}
 			e.showInfoDialog("Finished", "Process finished")
 		},
 	)
 
-	// add the terminal writer to the logger
-	opEnv.Logger.AddTermCore(pw)
-
 	go func() {
 
-		err := runningOperation.Log.RunWithConnection(nil, pr)
+		err := runningOperation.Log.RunWithConnection(
+			helpers.NewDiscardCloser(),
+			e.termSink.Reader,
+		)
 
 		if err != nil {
 			e.logger.NonFatalError(fault.Wrap(
@@ -66,9 +55,36 @@ func (e *guiEnv) prepareTrackOperation() trackOperation {
 		}
 	}()
 
-	return trackOperation{
-		ctx:              ctx,
-		opEnv:            opEnv,
-		runningOperation: runningOperation,
+	return opEnv, runningOperation
+}
+
+type execTrackOperationOpts struct {
+	execFunc         func(context.Context)
+	runningOperation *iwidget.RunningOperation
+	opEnv            *operations.OpEnv
+}
+
+func (e *guiEnv) executeTrackOperation(opts *execTrackOperationOpts) {
+	if e.isBusy() {
+		return
 	}
+
+	e.guiState.busy = true
+
+	ctx, ctxClose := context.WithCancel(context.Background())
+
+	opts.runningOperation.SetCancelFunc(func() {
+		opts.opEnv.Logger.Info("Cancelled operation, finishing up running tasks, please wait...")
+		ctxClose()
+	})
+
+	opts.runningOperation.StopButton.Show()
+	opts.runningOperation.StopButton.Enable()
+
+	opts.runningOperation.ProgressBar.Show()
+	opts.runningOperation.ProgressBar.SetValue(0)
+
+	go func() {
+		opts.execFunc(ctx)
+	}()
 }

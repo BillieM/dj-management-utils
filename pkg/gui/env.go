@@ -1,6 +1,8 @@
 package gui
 
 import (
+	"io"
+
 	"fyne.io/fyne/v2"
 	"github.com/Southclaws/fault"
 	"github.com/Southclaws/fault/fmsg"
@@ -29,6 +31,7 @@ type guiEnv struct {
 	mainWindow   fyne.Window
 	app          fyne.App
 	resizeEvents *uihelpers.ResizeEvents
+	termSink     *helpers.TermSink
 }
 
 /*
@@ -38,7 +41,7 @@ this is generated from the guiEnv struct
 func (e *guiEnv) opEnv() *operations.OpEnv {
 	return &operations.OpEnv{
 		Config:  *e.Config,
-		Logger:  helpers.BuildOperationLogger(*e.Config),
+		Logger:  helpers.BuildOperationLogger(*e.Config, e.termSink),
 		SerenDB: e.SerenDB,
 	}
 }
@@ -81,12 +84,14 @@ func buildGuiEnv(a fyne.App, w fyne.Window) (*guiEnv, error) {
 		return nil, fault.Wrap(err, fmsg.With("Error connecting to database"))
 	}
 
-	e := &guiEnv{cfg, queries, loggers.AppLogger, nil, nil, nil, nil, w, a, nil}
+	termSink := helpers.BuildTermSink(io.Discard)
+
+	e := &guiEnv{cfg, queries, loggers.AppLogger, nil, nil, nil, nil, w, a, nil, termSink}
 
 	s := &guiState{}
 	operations := e.getViewList()
 	operationIndex := e.getViewIndex()
-	resizeEvents := uihelpers.NewResizeEvents()
+	resizeEvents := uihelpers.BuildResizeEvents()
 
 	e.guiState = s
 	e.views = operations
@@ -99,4 +104,23 @@ func buildGuiEnv(a fyne.App, w fyne.Window) (*guiEnv, error) {
 type guiState struct {
 	settingsAlreadyOpen bool
 	busy                bool
+}
+
+/*
+isBusy returns true if the GUI is currently busy with an operation
+
+It also displays an error dialog to the user if the GUI is busy
+*/
+func (e *guiEnv) isBusy() bool {
+	if e.guiState.busy {
+		e.showErrorDialog(fault.Wrap(
+			fault.New("gui state busy"),
+			fmsg.WithDesc(
+				"wait for current operation to finish",
+				"Busy, please wait for the current operation to finish",
+			),
+		), false)
+		return true
+	}
+	return false
 }

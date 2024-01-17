@@ -72,7 +72,7 @@ func (e *guiEnv) openPlaylistPopup(playlist streaming.SoundCloudPlaylist) {
 		err := e.loadSoundCloudPlaylistTracks(playlist.ExternalID, tlb)
 		if err != nil {
 			playlistPopup.Hide()
-			e.showErrorDialog(err)
+			e.showErrorDialog(err, true)
 			return
 		}
 		loading.Hide()

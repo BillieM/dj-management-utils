@@ -22,11 +22,13 @@ func (e *OpEnv) SeparateSingleStem(ctx context.Context, opts SeparateSingleStemO
 	_, err := opts.Check()
 
 	if err != nil {
-		e.Logger.NonFatalError(fault.Wrap(
+		e.finishError(fault.Wrap(
 			err,
-			fmsg.With("error checking opts"),
+			fmsg.WithDesc(
+				"error checking opts",
+				"There was an error whilst checking the options for the operation",
+			),
 		))
-		e.finishError(fault.New("Error separating stems"))
 		return
 	}
 
@@ -34,19 +36,19 @@ func (e *OpEnv) SeparateSingleStem(ctx context.Context, opts SeparateSingleStemO
 	stemTrackArray, alreadyExistsCnt, errs := buildStemTrackArray([]string{opts.InFilePath}, opts.OutDirPath, opts.Type)
 
 	if len(errs) > 0 {
-		e.Logger.NonFatalError(fault.Wrap(
+		e.finishError(fault.Wrap(
 			errs[0],
-			fmsg.With("error building stem track array"),
+			fmsg.WithDesc(
+				"error building stem track array",
+				"There was an error processing the given file",
+			),
 		))
-		e.finishError(fault.New("Error separating stems"))
 		return
 	}
 
 	if alreadyExistsCnt > 0 {
-		e.Logger.NonFatalError(fault.New(
-			helpers.ErrConvertedFileExists.Error(),
-		))
-		e.finishError(fault.New("Error separating stems"))
+		e.Logger.Info("Output file(s) already exist(s)")
+		e.finishSuccess(nil)
 		return
 	}
 
@@ -65,11 +67,13 @@ func (e *OpEnv) SeparateFolderStem(ctx context.Context, opts SeparateFolderStemO
 	_, err := opts.Check()
 
 	if err != nil {
-		e.Logger.NonFatalError(fault.Wrap(
+		e.finishError(fault.Wrap(
 			err,
-			fmsg.With("error checking opts"),
+			fmsg.WithDesc(
+				"error checking opts",
+				"There was an error whilst checking the options for the operation",
+			),
 		))
-		e.finishError(fault.New("Error separating stems"))
 		return
 	}
 
@@ -77,11 +81,13 @@ func (e *OpEnv) SeparateFolderStem(ctx context.Context, opts SeparateFolderStemO
 	stemFilePaths, err := e.getStemPaths(opts.InDirPath, opts.Recursion)
 
 	if err != nil {
-		e.Logger.NonFatalError(fault.Wrap(
+		e.finishError(fault.Wrap(
 			err,
-			fmsg.With("error getting stem paths"),
+			fmsg.WithDesc(
+				"error getting stem paths",
+				"There was an error getting the paths of the files to convert",
+			),
 		))
-		e.finishError(fault.New("Error separating stems"))
 		return
 	}
 
@@ -99,7 +105,8 @@ func (e *OpEnv) SeparateFolderStem(ctx context.Context, opts SeparateFolderStemO
 	}
 
 	if len(stemTrackArray) == 0 {
-		e.finishError(fault.New("Error separating stems"))
+		e.Logger.Info("No files to convert")
+		e.finishSuccess(nil)
 		return
 	}
 
@@ -114,35 +121,44 @@ func (e *OpEnv) SeparateFolderStem(ctx context.Context, opts SeparateFolderStemO
 ConvertSingleMp3 converts a single file to mp3
 */
 func (e *OpEnv) ConvertSingleMp3(ctx context.Context, opts ConvertSingleMp3Opts) {
-
-	defer func() {
-		e.step(progressOnlyStepInfo(1))
-		e.exit()
-	}()
-
 	_, err := opts.Check()
 
 	if err != nil {
-		e.step(dangerStepInfo(err))
+		e.finishError(fault.Wrap(
+			err,
+			fmsg.WithDesc(
+				"error checking opts",
+				"There was an error whilst checking the options for the operation",
+			),
+		))
 		return
 	}
 
-	e.step(stageStepInfo("Checking file to convert"))
+	e.Logger.Info("Checking file to convert")
 	convertTrackArray, alreadyExistsCnt, errs := buildConvertTrackArray([]string{opts.InFilePath}, opts.OutDirPath)
 
 	if len(errs) > 0 {
-		e.step(warningStepInfo(errs[0]))
+		e.finishError(fault.Wrap(
+			errs[0],
+			fmsg.WithDesc(
+				"error building convert track array",
+				"There was an error processing the given file",
+			),
+		))
 		return
 	}
 
 	if alreadyExistsCnt > 0 {
-		e.step(warningStepInfo(helpers.ErrConvertedFileExists))
+		e.Logger.Info("Output file(s) already exist(s)")
+		e.finishSuccess(nil)
 		return
 	}
 
-	e.step(stageStepInfo("Converting file to mp3"))
+	e.Logger.Info("Converting file to mp3")
 	e.parallelProcessConvertTrackArray(ctx, convertTrackArray)
-	e.step(processFinishedStepInfo("Finished"))
+	e.Logger.Info("Finished")
+
+	e.finishSuccess(nil)
 }
 
 /*
@@ -150,38 +166,56 @@ ConvertFolderMp3 converts all files in a folder to mp3
 */
 func (e *OpEnv) ConvertFolderMp3(ctx context.Context, opts ConvertFolderMp3Opts) {
 
-	defer func() {
-		e.step(progressOnlyStepInfo(1))
-		e.exit()
-	}()
-
 	_, err := opts.Check()
 
 	if err != nil {
-		e.step(dangerStepInfo(err))
+		e.finishError(fault.Wrap(
+			err,
+			fmsg.WithDesc(
+				"error checking opts",
+				"There was an error whilst checking the options for the operation",
+			),
+		))
 		return
 	}
 
-	e.step(stageStepInfo("Finding files to convert"))
+	e.Logger.Info("Finding files to convert")
 	convertFilePaths, err := e.getConvertPaths(opts.InDirPath, opts.Recursion)
-	e.step(stageStepInfo(fmt.Sprintf("Found %v potential files to convert", len(convertFilePaths))))
+	e.Logger.Infof("Found %v potential files to convert", len(convertFilePaths))
 
 	if err != nil {
-		e.step(dangerStepInfo(err))
+		e.finishError(fault.Wrap(
+			err,
+			fmsg.WithDesc(
+				"error getting convert paths",
+				"There was an error getting the paths of the files to convert",
+			),
+		))
 		return
 	}
 
-	e.step(stageStepInfo("Checking found files"))
+	e.Logger.Info("Checking found files")
 	convertTrackArray, alreadyExistsCnt, errs := buildConvertTrackArray(convertFilePaths, opts.OutDirPath)
-	e.step(stageStepInfo(fmt.Sprintf("%v files already exist, %v left to convert", alreadyExistsCnt, len(convertTrackArray))))
+	e.Logger.Infof("%v files already exist, %v left to convert", alreadyExistsCnt, len(convertTrackArray))
 
 	for _, err := range errs {
-		e.step(warningStepInfo(err))
+		e.Logger.NonFatalError(fault.Wrap(
+			err,
+			fmsg.With("error building convert track array"),
+		))
 	}
 
-	e.step(stageStepInfo("Converting files to mp3"))
+	if len(convertTrackArray) == 0 {
+		e.Logger.Info("No files to convert")
+		e.finishSuccess(nil)
+		return
+	}
+
+	e.Logger.Info("Converting files to mp3")
 	e.parallelProcessConvertTrackArray(ctx, convertTrackArray)
-	e.step(processFinishedStepInfo("Finished"))
+	e.Logger.Info("Finished")
+
+	e.finishSuccess(nil)
 }
 
 /*
@@ -194,7 +228,13 @@ func (e *OpEnv) ReadCollection(ctx context.Context, opts collection.ReadCollecti
 	err := collection.ReadCollection()
 
 	if err != nil {
-		e.step(dangerStepInfo(err))
+		e.finishError(fault.Wrap(
+			err,
+			fmsg.WithDesc(
+				"error reading collection",
+				"There was an error reading the collection",
+			),
+		))
 		return
 	}
 }

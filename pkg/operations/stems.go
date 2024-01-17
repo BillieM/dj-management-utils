@@ -75,17 +75,13 @@ func (e *OpEnv) getStemPaths(inDirPath string, recursion bool) ([]string, error)
 
 func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []StemTrack) {
 
-	if len(tracks) == 0 {
-		return
-	}
-
 	numSteps := 3
 
 	if tracks[0].StemsOnly {
 		numSteps = 1
 	}
 
-	p := buildProgress(len(tracks), numSteps)
+	p := BuildProgress(len(tracks), numSteps)
 
 	tracksChan := pipeline.Emit(tracks...)
 
@@ -107,20 +103,18 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 		}
 
 		e.Logger.Info(fmt.Sprintf("Finished demucs separation for: %s", t.Name))
-		p.step(t.ID)
+		e.progress(p.Step(t.ID))
 
 		return t, nil
 	}, func(t StemTrack, err error) {
 
-		ctx = fctx.WithMeta(
-			ctx,
-			"name", t.Name,
-		)
-
 		if !strings.Contains(err.Error(), "context canceled") {
 			e.Logger.NonFatalError(fault.Wrap(
 				err,
-				fctx.With(ctx),
+				fctx.With(fctx.WithMeta(
+					ctx,
+					"name", t.Name,
+				)),
 				fmsg.WithDesc(
 					"demucs separation error",
 					"There was an error calling demucs to separate the stems",
@@ -128,7 +122,7 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 			))
 		}
 
-		p.complete(t.ID)
+		e.progress(p.Complete(t.ID))
 	}), tracksChan)
 
 	mergeM4aOut := pipeline.ProcessConcurrently(ctx, 2, pipeline.NewProcessor(func(ctx context.Context, t StemTrack) (StemTrack, error) {
@@ -149,20 +143,18 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 		}
 
 		e.Logger.Info(fmt.Sprintf("Finished merging files for: %s", t.Name))
-		p.step(t.ID)
+		e.progress(p.Step(t.ID))
 
 		return t, nil
 	}, func(t StemTrack, err error) {
 
-		ctx = fctx.WithMeta(
-			ctx,
-			"name", t.Name,
-		)
-
 		if !strings.Contains(err.Error(), "context canceled") {
 			e.Logger.NonFatalError(fault.Wrap(
 				err,
-				fctx.With(ctx),
+				fctx.With(fctx.WithMeta(
+					ctx,
+					"name", t.Name,
+				)),
 				fmsg.WithDesc(
 					"error merging files",
 					"There was an error merging the stems into a single file",
@@ -170,7 +162,7 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 			))
 		}
 
-		p.complete(t.ID)
+		e.progress(p.Complete(t.ID))
 	}), demucsOut)
 
 	addMetadataOut := pipeline.ProcessConcurrently(ctx, 4, pipeline.NewProcessor(func(ctx context.Context, t StemTrack) (StemTrack, error) {
@@ -190,20 +182,17 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 		}
 
 		e.Logger.Info(fmt.Sprintf("Finished adding metadata for: %s", t.Name))
-		p.step(t.ID)
+		e.progress(p.Step(t.ID))
 
 		return t, nil
 	}, func(t StemTrack, err error) {
-
-		ctx = fctx.WithMeta(
-			ctx,
-			"name", t.Name,
-		)
-
 		if !strings.Contains(err.Error(), "context canceled") {
 			e.Logger.NonFatalError(fault.Wrap(
 				err,
-				fctx.With(ctx),
+				fctx.With(fctx.WithMeta(
+					ctx,
+					"name", t.Name,
+				)),
 				fmsg.WithDesc(
 					"error adding metadata",
 					"There was an error adding Traktor metadata to the stem file",
@@ -211,7 +200,7 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 			))
 		}
 
-		p.complete(t.ID)
+		e.progress(p.Complete(t.ID))
 	}), mergeM4aOut)
 
 	cleanupOut := pipeline.ProcessConcurrently(ctx, 4, pipeline.NewProcessor(func(ctx context.Context, t StemTrack) (StemTrack, error) {
@@ -228,16 +217,13 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 		return t, nil
 
 	}, func(t StemTrack, err error) {
-
-		ctx = fctx.WithMeta(
-			ctx,
-			"name", t.Name,
-		)
-
 		if !strings.Contains(err.Error(), "context canceled") {
 			e.Logger.NonFatalError(fault.Wrap(
 				err,
-				fctx.With(ctx),
+				fctx.With(fctx.WithMeta(
+					ctx,
+					"name", t.Name,
+				)),
 				fmsg.WithDesc(
 					"error cleaning up",
 					"There was an error cleaning up the stem files",

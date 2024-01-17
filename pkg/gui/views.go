@@ -1,12 +1,13 @@
 package gui
 
 import (
+	"context"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/widget"
 	"github.com/billiem/seren-management/pkg/gui/iwidget"
-	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/billiem/seren-management/pkg/operations"
 	"github.com/billiem/seren-management/pkg/streaming"
 )
@@ -147,20 +148,19 @@ func (e *guiEnv) separateSingleStemView() fyne.CanvasObject {
 		return canvas
 	}
 
-	processContainerOuter := container.NewStack()
-
 	opts := operations.SeparateSingleStemOpts{}
 
-	startFunc := func() {
-		trackOperation := e.prepareTrackOperation()
-		processContainerOuter.Add(trackOperation.runningOperation)
-		go trackOperation.opEnv.SeparateSingleStem(
-			trackOperation.ctx,
-			opts,
-		)
-	}
+	opEnv, runningOperation := e.prepareTrackOperation()
 
-	startButton := widget.NewButton("Separate stem", startFunc)
+	startButton := widget.NewButton("Separate stem", func() {
+		e.executeTrackOperation(&execTrackOperationOpts{
+			opEnv:            opEnv,
+			runningOperation: runningOperation,
+			execFunc: func(ctx context.Context) {
+				opEnv.SeparateSingleStem(ctx, opts)
+			},
+		})
+	})
 	startButton.Disable()
 
 	trackPathCanvas := e.openFileCanvas("Track Path", &opts.InFilePath, []string{".wav", ".mp3"}, func() { enableBtnIfOptsOkay(opts, startButton) })
@@ -174,7 +174,7 @@ func (e *guiEnv) separateSingleStemView() fyne.CanvasObject {
 			),
 			startButton,
 		), nil, nil, nil,
-		processContainerOuter,
+		runningOperation,
 	)
 }
 
@@ -185,20 +185,19 @@ func (e *guiEnv) separateFolderStemView() fyne.CanvasObject {
 		return canvas
 	}
 
-	processContainerOuter := container.NewStack()
-
 	opts := operations.SeparateFolderStemOpts{}
 
-	startFunc := func() {
-		trackOperation := e.prepareTrackOperation()
-		processContainerOuter.Add(trackOperation.runningOperation)
-		go trackOperation.opEnv.SeparateFolderStem(
-			trackOperation.ctx,
-			opts,
-		)
-	}
+	opEnv, runningOperation := e.prepareTrackOperation()
 
-	startButton := widget.NewButton("Separate folder", startFunc)
+	startButton := widget.NewButton("Separate folder", func() {
+		e.executeTrackOperation(&execTrackOperationOpts{
+			opEnv:            opEnv,
+			runningOperation: runningOperation,
+			execFunc: func(ctx context.Context) {
+				opEnv.SeparateFolderStem(ctx, opts)
+			},
+		})
+	})
 	startButton.Disable()
 
 	trackPathCanvas := e.openDirCanvas("Folder Path", &opts.InDirPath, func() { enableBtnIfOptsOkay(opts, startButton) })
@@ -212,7 +211,7 @@ func (e *guiEnv) separateFolderStemView() fyne.CanvasObject {
 			),
 			startButton,
 		), nil, nil, nil,
-		processContainerOuter,
+		runningOperation,
 	)
 }
 
@@ -237,20 +236,19 @@ func (e *guiEnv) convertSingleMp3View() fyne.CanvasObject {
 		return canvas
 	}
 
-	processContainerOuter := container.NewStack()
-
 	opts := operations.ConvertSingleMp3Opts{}
 
-	startFunc := func() {
-		trackOperation := e.prepareTrackOperation()
-		processContainerOuter.Add(trackOperation.runningOperation)
-		go trackOperation.opEnv.ConvertSingleMp3(
-			trackOperation.ctx,
-			opts,
-		)
-	}
+	opEnv, runningOperation := e.prepareTrackOperation()
 
-	startButton := widget.NewButton("Convert to mp3", startFunc)
+	startButton := widget.NewButton("Convert to mp3", func() {
+		e.executeTrackOperation(&execTrackOperationOpts{
+			opEnv:            opEnv,
+			runningOperation: runningOperation,
+			execFunc: func(ctx context.Context) {
+				opEnv.ConvertSingleMp3(ctx, opts)
+			},
+		})
+	})
 	startButton.Disable()
 
 	trackPathCanvas := e.openFileCanvas("Track Path", &opts.InFilePath, []string{".wav", ".flac"}, func() { startButton.Enable() })
@@ -262,7 +260,7 @@ func (e *guiEnv) convertSingleMp3View() fyne.CanvasObject {
 			),
 			startButton,
 		), nil, nil, nil,
-		processContainerOuter,
+		runningOperation,
 	)
 }
 
@@ -274,20 +272,20 @@ func (e *guiEnv) convertFolderMp3View() fyne.CanvasObject {
 		return canvas
 	}
 
-	processContainerOuter := container.NewStack()
-
 	opts := operations.ConvertFolderMp3Opts{}
 
-	startFunc := func() {
-		trackOperation := e.prepareTrackOperation()
-		processContainerOuter.Add(trackOperation.runningOperation)
-		go trackOperation.opEnv.ConvertFolderMp3(
-			trackOperation.ctx,
-			opts,
-		)
-	}
+	opEnv, runningOperation := e.prepareTrackOperation()
 
-	startButton := widget.NewButton("Convert folder to mp3", startFunc)
+	startButton := widget.NewButton("Convert folder to mp3", func() {
+		e.executeTrackOperation(&execTrackOperationOpts{
+			opEnv:            opEnv,
+			runningOperation: runningOperation,
+			execFunc: func(ctx context.Context) {
+				opEnv.ConvertFolderMp3(ctx, opts)
+			},
+		})
+	})
+
 	startButton.Disable()
 
 	trackPathCanvas := e.openDirCanvas("Folder Path", &opts.InDirPath, func() { startButton.Enable() })
@@ -299,7 +297,7 @@ func (e *guiEnv) convertFolderMp3View() fyne.CanvasObject {
 			),
 			startButton,
 		), nil, nil, nil,
-		processContainerOuter,
+		runningOperation,
 	)
 }
 
@@ -354,8 +352,7 @@ func (e *guiEnv) syncSoundCloudView() fyne.CanvasObject {
 		func() fyne.CanvasObject {
 			return iwidget.NewPlaylist(
 				func(playlistData streaming.SoundCloudPlaylist) {
-					if e.guiState.busy {
-						e.showErrorDialog(helpers.ErrBusyPleaseFinishFirst)
+					if e.isBusy() {
 						return
 					}
 					e.openPlaylistPopup(playlistData)
@@ -379,7 +376,7 @@ func (e *guiEnv) syncSoundCloudView() fyne.CanvasObject {
 		err := e.loadSoundCloudPlaylists(&playlistBindVals)
 
 		if err != nil {
-			e.showErrorDialog(err)
+			e.showErrorDialog(err, true)
 			return
 		}
 

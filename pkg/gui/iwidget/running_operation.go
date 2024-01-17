@@ -25,18 +25,25 @@ type RunningOperation struct {
 	*Base
 	widget.BaseWidget
 
+	cancelFunc func()
+
 	ProgressBar *widget.ProgressBar
 	StopButton  *widget.Button
 	Log         *terminal.Terminal
 }
 
-func NewRunningOperation(widgetBase *Base, cancelFunc func()) *RunningOperation {
+func NewRunningOperation(widgetBase *Base) *RunningOperation {
 
 	runningOperation := &RunningOperation{
 		Base:        widgetBase,
 		ProgressBar: widget.NewProgressBar(),
-		StopButton:  widget.NewButton("Stop", cancelFunc),
+		StopButton:  widget.NewButton("Stop", func() {}),
 		Log:         terminal.New(),
+	}
+
+	runningOperation.StopButton.OnTapped = func() {
+		runningOperation.StopButton.Disable()
+		runningOperation.cancelFunc()
 	}
 
 	runningOperation.ExtendBaseWidget(runningOperation)
@@ -54,3 +61,12 @@ func (r *RunningOperation) CreateRenderer() fyne.WidgetRenderer {
 		),
 	)
 }
+
+func (r *RunningOperation) SetCancelFunc(f func()) {
+	r.cancelFunc = f
+}
+
+// TODO: custom layout method
+// terminal is set as visible whereas progress bar and stop button are set as invisible
+// this is a workaround to the terminal widget taking more time to render than the other widgets
+// may aswell render the terminal where it should be and make the other widgets visible later

@@ -5,11 +5,14 @@ import (
 	"github.com/google/uuid"
 )
 
+/*
+ResizeEvents allows widgets to register callbacks which are called when the main window is resized
+*/
 type ResizeEvents struct {
 	resizeCallbacks map[string]func()
 }
 
-func NewResizeEvents() *ResizeEvents {
+func BuildResizeEvents() *ResizeEvents {
 	return &ResizeEvents{
 		resizeCallbacks: make(map[string]func()),
 	}

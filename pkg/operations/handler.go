@@ -41,13 +41,6 @@ func (e *OpEnv) RegisterOperationHandler(stepCallback func(float64), finishedCal
 }
 
 /*
-progress is called by an operation, it calls the StepCallback assigned to the OpEnv
-*/
-func (e *OpEnv) progress(stepInfo float64) {
-	e.operationHandler.StepCallback(stepInfo)
-}
-
-/*
 finish is called by an operation, it calls the FinishedCallback assigned to the OpEnv
 */
 func (e *OpEnv) finish(finishedInfo OperationFinishedInfo) {
@@ -88,11 +81,6 @@ func newOperationFinishedInfoSuccess(data map[string]any) OperationFinishedInfo 
 	}
 }
 
-/*
- */
-// func newOperationProgressInfo(msg string) OperationProgressInfo {
-// 	return OperationProgressInfo{
-// 		Message:    msg,
-// 		Importance: helpers.HighImportance,
-// 	}
-// }
+func (e *OpEnv) progress(i float64) {
+	e.operationHandler.StepCallback(i)
+}

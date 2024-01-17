@@ -34,35 +34,35 @@ type Loggers struct {
 BuildAppLoggers returns a Loggers struct containing loggers for the interface of the application,
 and a database logger
 
-These are build upon application startup
+These are built upon application startup
 */
 func BuildAppLoggers(cfg Config) (*Loggers, error) {
 
 	// create log directory if it doesn't exist
 	logDirPath := JoinFilepathToSlash(projectpath.Root, "log")
 
-	dbLogger, err := newLogger(
+	dbLogger, err := newLogEnvConfig(
 		cfg,
 		JoinFilepathToSlash(logDirPath, "db.log"),
-	)
+	).Build()
 
 	if err != nil {
 		return nil, fault.Wrap(err, fmsg.With("Error creating database logger"))
 	}
 
-	appLogger, err := newLogger(
+	appLogger, err := newLogEnvConfig(
 		cfg,
 		JoinFilepathToSlash(logDirPath, "app.log"),
-	)
+	).Build()
 
 	if err != nil {
 		return nil, fault.Wrap(err, fmsg.With("Error creating application logger"))
 	}
 
 	return &Loggers{
-		DBLogger: *dbLogger,
+		DBLogger: *dbLogger.Sugar(),
 		AppLogger: SerenLogger{
-			appLogger,
+			appLogger.Sugar(),
 		},
 	}, nil
 }
@@ -72,43 +72,55 @@ BuildOperationLogger returns a logger for use in operations
 
 This is built before each operation is started
 */
-func BuildOperationLogger(cfg Config) SerenLogger {
+func BuildOperationLogger(cfg Config, termSink *TermSink) SerenLogger {
 
 	// create log directory if it doesn't exist
 	logDirPath := JoinFilepathToSlash(projectpath.Root, "log")
+	CreateDirIfNotExists(logDirPath)
 
-	opLogger, err := newLogger(
+	opLogger, err := newLogEnvConfig(
 		cfg,
 		JoinFilepathToSlash(logDirPath, "op.log"),
-	)
+	).Build()
 
 	if err != nil {
 		panic(fault.Wrap(err, fmsg.With("Error creating operation logger")))
 	}
 
+	termLogger, err := newTerminalConfig(termSink).Build()
+
+	if err != nil {
+		panic(fault.Wrap(err, fmsg.With("Error building terminal logger")))
+	}
+
+	coreOpt := zap.WrapCore(func(core zapcore.Core) zapcore.Core {
+		return zapcore.NewTee(core, termLogger.Core())
+	})
+
+	defer opLogger.Sync()
+	defer termLogger.Sync()
+
 	return SerenLogger{
-		opLogger,
+		opLogger.Sugar().WithOptions(
+			coreOpt,
+		),
 	}
 }
 
-func newLogger(cfg Config, logPaths ...string) (*zap.SugaredLogger, error) {
-
-	var logger *zap.Logger
-	var err error
-
+/*
+newLogEnvConfig returns a zap.Config that writes to the provided log paths,
+depending on the development flag, this will use a development or production config
+*/
+func newLogEnvConfig(cfg Config, logPaths ...string) zap.Config {
 	if cfg.Development {
-		logger, err = newDevelopmentConfig(logPaths...).Build()
+		return newDevelopmentConfig(
+			JoinFilepathToSlash(logPaths...),
+		)
 	} else {
-		logger, err = newProductionConfig(logPaths...).Build()
+		return newProductionConfig(
+			JoinFilepathToSlash(logPaths...),
+		)
 	}
-
-	defer logger.Sync()
-
-	if err != nil {
-		return nil, fault.Wrap(err, fmsg.With("Error building logger"))
-	}
-
-	return logger.Sugar(), nil
 }
 
 /*
@@ -146,12 +158,10 @@ newTerminalConfig returns a zap.Config that writes to the provided io.Writer
 We use this to add the terminal as an additional display for logs, this also
 allows us to provide a custom zap Config for the terminal
 */
-func newTerminalConfig(w io.Writer) zap.Config {
+func newTerminalConfig(s *TermSink) zap.Config {
 
 	zap.RegisterSink("termsink", func(u *url.URL) (zap.Sink, error) {
-		return TermSink{
-			w,
-		}, nil
+		return s, nil
 	})
 
 	cfg := zap.NewProductionConfig()
@@ -205,7 +215,6 @@ func (s SerenLogger) NonFatalError(err error) {
 
 	s.Errorw(
 		chain[0].Message,
-		"caller", chain[0].Location,
 		"ctx", ectx,
 		"chain", chain,
 		"issues", issues,
@@ -224,35 +233,12 @@ func (s SerenLogger) FatalError(err error) {
 
 	s.Fatalw(
 		chain[0].Message,
-		"caller", chain[0].Location,
 		"context", ectx,
 		"chain", chain,
 		"issues", issues,
 	)
 
 	os.Exit(1)
-}
-
-/*
-AddTermCore adds a terminal writer to the logger
-*/
-func (s *SerenLogger) AddTermCore(w io.Writer) error {
-
-	l, err := newTerminalConfig(w).Build()
-
-	if err != nil {
-		return fault.Wrap(err, fmsg.With("Error building terminal logger"))
-	}
-
-	coreOpt := zap.WrapCore(func(core zapcore.Core) zapcore.Core {
-		return zapcore.NewTee(core, l.Core())
-	})
-
-	s.SugaredLogger = s.WithOptions(
-		coreOpt,
-	)
-
-	return nil
 }
 
 /*
@@ -263,32 +249,63 @@ logs via registering it as a custom sink with zap
 */
 
 type TermSink struct {
-	w io.Writer
+	Writer io.Writer
+	Reader io.Reader
 }
 
-func (t TermSink) Sync() error  { return nil }
-func (t TermSink) Close() error { return nil }
-func (t TermSink) Write(p []byte) (int, error) {
+func (t *TermSink) Sync() error  { return nil }
+func (t *TermSink) Close() error { return nil }
+func (t *TermSink) Write(p []byte) (int, error) {
+
+	// TODO: only write if the terminal is visible??
+	// possibly by checking reflect.TypeOf(t.Writer) == reflect.TypeOf(*io.PipeWriter) ?? (pseudo code)
+
 	// unmarshal the bytes into JSON
 	var data termData
 	var i int
 	err := json.Unmarshal(p, &data)
 	if err != nil {
 		// If unmarshaling fails, write the bytes to the terminal
-		i, err = t.w.Write(p)
+		i, err = t.Writer.Write(p)
 		if err != nil {
 			return 0, err
 		}
 	} else {
 		// If unmarshaling succeeds, write the formatted entry to the terminal
 		encoded := []byte(data.String())
-		i, err = t.w.Write(encoded)
+		i, err = t.Writer.Write(encoded)
 		if err != nil {
 			return 0, err
 		}
 	}
 
 	return i, nil
+}
+
+func (t *TermSink) Register() error {
+	err := zap.RegisterSink("termsink", func(u *url.URL) (zap.Sink, error) {
+		return t, nil
+	})
+	if err != nil {
+		return fault.Wrap(err, fmsg.With("Error registering terminal sink"))
+	}
+	return nil
+}
+
+func (t *TermSink) SetIO(r io.Reader, w io.Writer) {
+	t.Reader = r
+	t.Writer = w
+}
+
+func (t *TermSink) SetDiscard() {
+	t.Writer = NewDiscardCloser()
+	t.Reader = io.NopCloser(nil)
+}
+
+func BuildTermSink(w io.Writer) *TermSink {
+	return &TermSink{
+		Writer: w,
+	}
 }
 
 type termData struct {
@@ -331,5 +348,25 @@ func formatLevel(level zapcore.Level) string {
 		return fmt.Sprintf("\u001b[37m%-5s\u001b[0m", level.CapitalString())
 	default:
 		return "UNKNOWN"
+	}
+}
+
+/*
+DiscardCloser is a wrapper around io.Discard that implements the io.Closer interface
+
+This serves as an io.Writer that can be used in place of io.Discard, but also implements
+the io.Closer interface
+*/
+type DiscardCloser struct {
+	io.Writer
+}
+
+func (d DiscardCloser) Close() error {
+	return nil
+}
+
+func NewDiscardCloser() *DiscardCloser {
+	return &DiscardCloser{
+		Writer: io.Discard,
 	}
 }

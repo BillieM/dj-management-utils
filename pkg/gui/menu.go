@@ -39,10 +39,11 @@ func (e *guiEnv) makeNavMenu(contentStack *fyne.Container) *widget.Tree {
 				e.logger.FatalError(helpers.ErrOperationNotFound)
 				return
 			}
-			if e.busy {
-				e.showErrorDialog(helpers.ErrBusyPleaseFinishFirst)
+			if e.isBusy() {
 				return
 			}
+			// if changing view, clear the external writer
+			e.termSink.SetDiscard()
 			e.setMainContent(contentStack, op)
 		},
 	}

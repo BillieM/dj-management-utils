@@ -492,7 +492,7 @@ type LinkTrack struct {
 	LinkTrackFileSelect *LinkTrackFileSelect
 }
 
-func NewLinkTrack(widgetBase *Base, saveSoundCloudTrackFunc func(), onError func(error)) *LinkTrack {
+func NewLinkTrack(widgetBase *Base, saveSoundCloudTrackFunc func(), onError func(error, bool)) *LinkTrack {
 	i := &LinkTrack{
 		Base:                widgetBase,
 		LinkTrackFileSelect: NewLinkTrackFileSelect(widgetBase, saveSoundCloudTrackFunc, onError),
@@ -528,7 +528,7 @@ type LinkTrackFileSelect struct {
 	OpenPath *OpenPath
 }
 
-func NewLinkTrackFileSelect(widgetBase *Base, saveSoundCloudTrackFunc func(), onError func(error)) *LinkTrackFileSelect {
+func NewLinkTrackFileSelect(widgetBase *Base, saveSoundCloudTrackFunc func(), onError func(error, bool)) *LinkTrackFileSelect {
 
 	openPath := NewOpenPath(widgetBase, "", File)
 
@@ -595,5 +595,5 @@ func (i *LinkTrackFileSelect) updateFromData(t *SelectedTrackBinding) {
 type TrackFuncs struct {
 	DownloadSoundCloudTrack func()
 	SaveSoundCloudTrackToDB func()
-	OnError                 func(error)
+	OnError                 func(error, bool)
 }

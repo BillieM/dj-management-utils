@@ -45,7 +45,7 @@ func (e *guiEnv) getDownloadSoundCloudTrackFunc(selectedTrack *iwidget.SelectedT
 							"error downloading soundcloud track",
 							"Error downloading SoundCloud track",
 						),
-					))
+					), true)
 					return
 				}
 				filePath, ok := i.Data["filepath"].(string)
@@ -56,7 +56,7 @@ func (e *guiEnv) getDownloadSoundCloudTrackFunc(selectedTrack *iwidget.SelectedT
 							"error parsing filepath from operation data",
 							"Error parsing track download results",
 						),
-					))
+					), true)
 					return
 				}
 				track.LocalPath = filePath
@@ -93,6 +93,7 @@ func (e *guiEnv) getSaveSoundCloudTrackFunc(selectedTrack *iwidget.SelectedTrack
 					fctx.With(ctx),
 					fmsg.With("error saving track to database"),
 				),
+				true,
 			)
 			return
 		}
@@ -123,7 +124,7 @@ func (e *guiEnv) getRefreshSoundCloudPlaylistFunc(playlist streaming.SoundCloudP
 					"err refreshing SoundCloud playlist",
 					"Error refreshing SoundCloud playlist",
 				),
-			))
+			), true)
 			return
 		}
 
@@ -188,7 +189,7 @@ func (e *guiEnv) getRefreshSoundCloudPlaylistFunc(playlist streaming.SoundCloudP
 						"error saving tracks to database",
 						"Error saving tracks to database",
 					),
-				))
+				), true)
 				return
 			}
 		}

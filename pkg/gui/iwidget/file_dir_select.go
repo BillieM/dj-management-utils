@@ -35,7 +35,7 @@ type OpenPath struct {
 	ExtensionFilter []string
 
 	onValid func(string)
-	onError func(error)
+	onError func(error, bool)
 	onOpen  func()
 	onClose func()
 
@@ -174,7 +174,7 @@ SetOnError sets the callback for when an error occurs
 
 The error is passed to the callback
 */
-func (i *OpenPath) SetOnError(callback func(error)) {
+func (i *OpenPath) SetOnError(callback func(error, bool)) {
 	i.onError = callback
 }
 
@@ -199,7 +199,7 @@ func (i *OpenPath) setDialog() {
 	case File:
 		i.Dialog = dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err != nil {
-				i.onError(err)
+				i.onError(err, true)
 				return
 			}
 			if reader == nil {
@@ -214,7 +214,7 @@ func (i *OpenPath) setDialog() {
 	case Directory:
 		i.Dialog = dialog.NewFolderOpen(func(reader fyne.ListableURI, err error) {
 			if err != nil {
-				i.onError(err)
+				i.onError(err, true)
 				return
 			}
 			if reader == nil {

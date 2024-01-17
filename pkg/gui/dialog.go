@@ -8,9 +8,11 @@ import (
 	"github.com/Southclaws/fault/fmsg"
 )
 
-func (e *guiEnv) showErrorDialog(err error) {
+func (e *guiEnv) showErrorDialog(err error, logError bool) {
 
-	e.logger.NonFatalError(err)
+	if logError {
+		e.logger.NonFatalError(err)
+	}
 
 	// user readable error messages (description of fmsg.withDesc())
 	issues := fmsg.GetIssues(err)

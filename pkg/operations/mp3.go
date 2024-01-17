@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Southclaws/fault"
+	"github.com/Southclaws/fault/fmsg"
 	"github.com/billiem/seren-management/pkg/helpers"
 	"github.com/deliveryhero/pipeline/v2"
 )
@@ -34,8 +36,7 @@ func (e *OpEnv) parallelProcessConvertTrackArray(ctx context.Context, tracks []C
 		return
 	}
 
-	var completedTracks int
-	var totalTracks = len(tracks)
+	p := BuildProgress(len(tracks), 1)
 
 	tracksChan := pipeline.Emit(tracks...)
 
@@ -45,32 +46,27 @@ func (e *OpEnv) parallelProcessConvertTrackArray(ctx context.Context, tracks []C
 			return t, helpers.ErrConvertTrackEmpty
 		}
 
-		e.step(stepStartedStepInfo(fmt.Sprintf("Converting: %s", t.Name)))
+		e.Logger.Info(fmt.Sprintf("Converting: %s", t.Name))
 
 		t, err := e.convertTrack(t)
 		if err != nil {
 			return t, err
 		}
-		completedTracks++
 
-		e.step(stepFinishedStepInfo(
-			fmt.Sprintf("Converted: %s", t.Name),
-			float64(completedTracks)/float64(totalTracks),
-		))
+		e.Logger.Info(fmt.Sprintf("Finished converting: %s", t.Name))
+
+		e.progress(p.Complete(t.ID))
 
 		return t, nil
 	}, func(t ConvertTrack, err error) {
-		completedTracks++
-		if strings.Contains(err.Error(), "context canceled") {
-			e.step(
-				progressOnlyStepInfo(float64(completedTracks) / float64(totalTracks)),
-			)
-		} else {
-			e.step(stepWarningStepInfo(
-				helpers.GenErrConvertTrack(t.Name, err),
-				float64(completedTracks)/float64(totalTracks),
+
+		if !strings.Contains(err.Error(), "context canceled") {
+			e.Logger.NonFatalError(fault.Wrap(
+				err,
+				fmsg.With("error processing convert track"),
 			))
 		}
+		e.progress(p.Complete(t.ID))
 	}), tracksChan)
 
 	for range convertOut {

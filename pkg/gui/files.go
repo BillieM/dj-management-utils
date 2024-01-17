@@ -17,14 +17,13 @@ func (e *guiEnv) openFileCanvas(title string, updateVal *string, fileFilter []st
 	pathCard := buildPathCard(*updateVal, "file")
 
 	buttonWidget := widget.NewButtonWithIcon("Open", theme.FolderOpenIcon(), func() {
-		if e.guiState.busy {
-			e.showErrorDialog(helpers.ErrBusyPleaseFinishFirst)
+		if e.isBusy() {
 			return
 		}
 
 		f := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err != nil {
-				e.showErrorDialog(err)
+				e.showErrorDialog(err, true)
 				return
 			}
 			if reader == nil {
@@ -38,7 +37,7 @@ func (e *guiEnv) openFileCanvas(title string, updateVal *string, fileFilter []st
 		// Set properties of the file open dialog
 		location, err := e.getListableURI(*updateVal)
 		if err != nil {
-			e.showErrorDialog(err)
+			e.showErrorDialog(err, true)
 			return
 		}
 		f.SetLocation(location)
@@ -56,14 +55,13 @@ func (e *guiEnv) openDirCanvas(title string, updateVal *string, callbackFn func(
 
 	buttonWidget := widget.NewButtonWithIcon("Open", theme.FolderOpenIcon(), func() {
 
-		if e.guiState.busy {
-			e.showErrorDialog(helpers.ErrBusyPleaseFinishFirst)
+		if e.isBusy() {
 			return
 		}
 
 		f := dialog.NewFolderOpen(func(reader fyne.ListableURI, err error) {
 			if err != nil {
-				e.showErrorDialog(err)
+				e.showErrorDialog(err, true)
 				return
 			}
 			if reader == nil {
@@ -77,7 +75,7 @@ func (e *guiEnv) openDirCanvas(title string, updateVal *string, callbackFn func(
 		// Set properties of the folder open dialog
 		location, err := e.getListableURI(*updateVal)
 		if err != nil {
-			e.showErrorDialog(err)
+			e.showErrorDialog(err, true)
 			return
 		}
 		f.SetLocation(location)
