@@ -267,19 +267,19 @@ func TestGetClosestDir(t *testing.T) {
 		{
 			name:     "non-existing file, non-existing parent dir",
 			path:     helpers.JoinFilepathToSlash(baseTestDataDir, "fake_dir/fake_file.txt"),
-			expected: helpers.JoinFilepathToSlash(baseTestDataDir),
+			expected: baseTestDataDir,
 		},
 		{
 			name:     "Many levels deep, returns BaseDir",
 			path:     helpers.JoinFilepathToSlash("/fake_dir_1/fake_dir2/fake_dir_3/fake_dir_4/file.txt"),
-			expected: helpers.JoinFilepathToSlash(baseTestDataDir),
+			expected: baseTestDataDir,
 			baseDir:  baseTestDataDir,
 		},
 		{
 			name:     "Many levels deep, fake BaseDir, returns default /",
 			path:     helpers.JoinFilepathToSlash(baseTestDataDir, "fake_dir_1/fake_dir2/fake_dir_3/fake_dir_4/file.txt"),
-			expected: helpers.JoinFilepathToSlash("/"),
-			baseDir:  helpers.JoinFilepathToSlash("/fake_dir/weeoeoeoeo/"),
+			expected: projectpath.Root,
+			baseDir:  "/fake_dir/weeoeoeoeo/",
 		},
 	}
 
