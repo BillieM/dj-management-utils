@@ -2,30 +2,8 @@ package operations
 
 import (
 	"github.com/billiem/seren-management/pkg/helpers"
+	"github.com/billiem/seren-management/pkg/operations/internal"
 )
-
-/*
-StemSeparationType is used to determine the type of stem output
-*/
-type StemSeparationType int
-
-const (
-	NotSelected StemSeparationType = iota // no value selected - needed for validation
-	FourTrack                             // 4 .wav files for drums, bass, other, vocals
-	Traktor                               // Traktor stems .stem.m4a
-)
-
-func (s StemSeparationType) String() string {
-	return [...]string{"Not Selected", "4 Track", "Traktor"}[s]
-}
-
-func (s StemSeparationType) check() bool {
-
-	if s != FourTrack && s != Traktor {
-		return false
-	}
-	return true
-}
 
 type OperationOptions interface {
 	Check() (bool, error)
@@ -35,9 +13,9 @@ type OperationOptions interface {
 SeperateSingleStemOptions is used as a way to pass arguments to SeperateSingleStem
 */
 type SeparateSingleStemOpts struct {
-	InFilePath string             // Mandatory
-	OutDirPath string             // Optional - if not provided, will use the same dir as the input file
-	Type       StemSeparationType // Mandatory
+	InFilePath string                      // Mandatory
+	OutDirPath string                      // Optional - if not provided, will use the same dir as the input file
+	Type       internal.StemSeparationType // Mandatory
 }
 
 /*
@@ -47,7 +25,7 @@ func (p SeparateSingleStemOpts) Check() (bool, error) {
 	if p.InFilePath == "" {
 		return false, helpers.ErrInFilePathRequired
 	}
-	if !p.Type.check() {
+	if !p.Type.Check() {
 		return false, helpers.ErrInvalidStemSeparationType
 	}
 
@@ -58,10 +36,10 @@ func (p SeparateSingleStemOpts) Check() (bool, error) {
 SeperateFolderStemOptions contains the options for SeperateFolderStem
 */
 type SeparateFolderStemOpts struct {
-	InDirPath  string             // Mandatory
-	OutDirPath string             // Optional - if not provided, will use the same dir as the input file
-	Recursion  bool               // Optional
-	Type       StemSeparationType // Mandatory
+	InDirPath  string                      // Mandatory
+	OutDirPath string                      // Optional - if not provided, will use the same dir as the input file
+	Recursion  bool                        // Optional
+	Type       internal.StemSeparationType // Mandatory
 }
 
 /*

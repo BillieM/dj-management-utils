@@ -8,35 +8,17 @@ import (
 	"github.com/Southclaws/fault"
 	"github.com/Southclaws/fault/fmsg"
 	"github.com/billiem/seren-management/pkg/helpers"
+	"github.com/billiem/seren-management/pkg/operations/internal"
 	"github.com/deliveryhero/pipeline/v2"
 )
 
-/*
-getConvertPath gets all of the files in the provided directory which should be converted to mp3 based on the config
-
-if recursion is true, will also get files in subdirectories
-*/
-func (e *OpEnv) getConvertPaths(inDirPath string, recursion bool) ([]string, error) {
-	convertPaths, err := helpers.GetFilesInDir(inDirPath, recursion)
-	if err != nil {
-		return nil, err
-	}
-	var validConvertPaths []string
-	for _, path := range convertPaths {
-		if helpers.IsExtensionInArray(path, e.Config.ExtensionsToConvertToMp3) {
-			validConvertPaths = append(validConvertPaths, path)
-		}
-	}
-	return validConvertPaths, nil
-}
-
-func (e *OpEnv) parallelProcessConvertTrackArray(ctx context.Context, tracks []ConvertTrack) {
+func (e *Mp3Env) ConvertTracks(ctx context.Context, tracks []ConvertTrack) {
 
 	if len(tracks) == 0 {
 		return
 	}
 
-	p := BuildProgress(len(tracks), 1)
+	p := internal.BuildProgress(len(tracks), 1)
 
 	tracksChan := pipeline.Emit(tracks...)
 
@@ -75,7 +57,7 @@ func (e *OpEnv) parallelProcessConvertTrackArray(ctx context.Context, tracks []C
 	}
 }
 
-func (e *OpEnv) convertTrack(track ConvertTrack) (ConvertTrack, error) {
+func (e *Mp3Env) convertTrack(track ConvertTrack) (ConvertTrack, error) {
 
 	// create dir for new file if it doesn't exist
 	err := helpers.CreateDirIfNotExists(track.NewFile.FileInfo.DirPath)

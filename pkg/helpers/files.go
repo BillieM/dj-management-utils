@@ -11,17 +11,6 @@ import (
 	"github.com/billiem/seren-management/pkg/projectpath"
 )
 
-type FileInfo struct {
-	FullPath      string
-	DirPath       string
-	FileName      string
-	FileExtension string
-}
-
-func (f FileInfo) BuildFullPath() string {
-	return JoinFilepathToSlash(f.DirPath, f.FileName+f.FileExtension)
-}
-
 func DoesFileExist(path string) bool {
 	if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
 		return true
@@ -85,44 +74,6 @@ func GetFileExtensionFromFilePath(s string) (string, error) {
 		return "", ErrNoFileExtension
 	}
 	return ext, nil
-}
-
-/*
-Returns FileInfo struct from a given file path
-
-FileInfo contains information about the file path, including the directory path, file name, and file extension
-*/
-func SplitFilePath(s string) (FileInfo, error) {
-
-	// errors don't matter in this case
-	dirPath, _ := GetDirPathFromFilePath(s)
-	fileName, _ := GetFileNameFromFilePath(s)
-	fileExtension, _ := GetFileExtensionFromFilePath(s)
-
-	if dirPath == "" && fileName == "" && fileExtension == "" {
-		return FileInfo{}, ErrNoMatchesFound
-	}
-
-	return FileInfo{
-		FullPath:      s,
-		DirPath:       dirPath,
-		FileName:      fileName,
-		FileExtension: fileExtension,
-	}, nil
-}
-
-/*
-Calls SplitFilePath but checks all required fields are present
-*/
-func SplitFilePathRequired(s string) (FileInfo, error) {
-	fileInfo, err := SplitFilePath(s)
-	if err != nil {
-		return fileInfo, err
-	}
-	if fileInfo.DirPath == "" || fileInfo.FileName == "" || fileInfo.FileExtension == "" {
-		return fileInfo, ErrMissingRequiredFields
-	}
-	return fileInfo, nil
 }
 
 func GetFilesInDir(dirPath string, recursion bool) ([]string, error) {

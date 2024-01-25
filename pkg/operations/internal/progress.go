@@ -1,4 +1,4 @@
-package operations
+package internal
 
 /*
 progress is a struct used to track the progress of a process that may have multiple steps, for example, a stem separation process,

@@ -1,4 +1,4 @@
-package operations
+package internal
 
 /*
 Provides functionality surrounding the operation 'handler'

@@ -12,7 +12,7 @@ import (
 )
 
 /*
-TODO: handle all these with step handlers
+TODO: handle all these with operation handlers/ move to subfolder
 */
 
 func (e *OpEnv) CheckLocalPaths() {

@@ -1,9 +1,9 @@
-package operations_test
+package internal_test
 
 import (
 	"testing"
 
-	"github.com/billiem/seren-management/pkg/operations"
+	"github.com/billiem/seren-management/pkg/operations/internal"
 )
 
 func TestProgress(t *testing.T) {
@@ -34,7 +34,7 @@ func TestProgress(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			P := operations.BuildProgress(tt.numProcesses, tt.stepsPerProcess)
+			P := internal.BuildProgress(tt.numProcesses, tt.stepsPerProcess)
 
 			if P.Step(1) != tt.expStepVal {
 				t.Errorf("expected %f, got %f", tt.expStepVal, P.Step(1))

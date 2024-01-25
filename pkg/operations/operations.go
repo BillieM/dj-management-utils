@@ -168,6 +168,8 @@ func (e *OpEnv) ConvertFolderMp3(ctx context.Context, opts ConvertFolderMp3Opts)
 
 	_, err := opts.Check()
 
+	mp3Env := e.mp3Env()
+
 	if err != nil {
 		e.finishError(fault.Wrap(
 			err,
@@ -180,7 +182,7 @@ func (e *OpEnv) ConvertFolderMp3(ctx context.Context, opts ConvertFolderMp3Opts)
 	}
 
 	e.Logger.Info("Finding files to convert")
-	convertFilePaths, err := e.getConvertPaths(opts.InDirPath, opts.Recursion)
+	convertFilePaths, err := mp3Env.GetConvertPaths(opts.InDirPath, opts.Recursion)
 	e.Logger.Infof("Found %v potential files to convert", len(convertFilePaths))
 
 	if err != nil {
@@ -195,7 +197,7 @@ func (e *OpEnv) ConvertFolderMp3(ctx context.Context, opts ConvertFolderMp3Opts)
 	}
 
 	e.Logger.Info("Checking found files")
-	convertTrackArray, alreadyExistsCnt, errs := buildConvertTrackArray(convertFilePaths, opts.OutDirPath)
+	convertTrackArray, alreadyExistsCnt, errs := mp3Env.BuildConvertTrackArray(convertFilePaths, opts.OutDirPath)
 	e.Logger.Infof("%v files already exist, %v left to convert", alreadyExistsCnt, len(convertTrackArray))
 
 	for _, err := range errs {
@@ -212,7 +214,7 @@ func (e *OpEnv) ConvertFolderMp3(ctx context.Context, opts ConvertFolderMp3Opts)
 	}
 
 	e.Logger.Info("Converting files to mp3")
-	e.parallelProcessConvertTrackArray(ctx, convertTrackArray)
+	mp3Env.ParallelProcessConvertTrackArray(ctx, convertTrackArray)
 	e.Logger.Info("Finished")
 
 	e.finishSuccess(nil)

@@ -12,6 +12,7 @@ import (
 	"github.com/Southclaws/fault/fctx"
 	"github.com/Southclaws/fault/fmsg"
 	"github.com/billiem/seren-management/pkg/helpers"
+	"github.com/billiem/seren-management/pkg/operations/internal"
 	"github.com/deliveryhero/pipeline/v2"
 )
 
@@ -59,7 +60,7 @@ getStemPaths gets all of the files in the provided directory which should be con
 
 if recursion is true, will also get files in subdirectories
 */
-func (e *OpEnv) getStemPaths(inDirPath string, recursion bool) ([]string, error) {
+func (e *OpEnv) GetStemPaths(inDirPath string, recursion bool) ([]string, error) {
 	stemPaths, err := helpers.GetFilesInDir(inDirPath, recursion)
 	if err != nil {
 		return nil, err
@@ -73,7 +74,7 @@ func (e *OpEnv) getStemPaths(inDirPath string, recursion bool) ([]string, error)
 	return validStemPaths, nil
 }
 
-func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []StemTrack) {
+func (e *OpEnv) ParallelProcessStemTrackArray(ctx context.Context, tracks []StemTrack) {
 
 	numSteps := 3
 
@@ -81,7 +82,7 @@ func (e *OpEnv) parallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 		numSteps = 1
 	}
 
-	p := BuildProgress(len(tracks), numSteps)
+	p := internal.BuildProgress(len(tracks), numSteps)
 
 	tracksChan := pipeline.Emit(tracks...)
 
