@@ -12,7 +12,6 @@ import (
 	"github.com/Southclaws/fault/fctx"
 	"github.com/Southclaws/fault/fmsg"
 	"github.com/billiem/seren-management/pkg/helpers"
-	"github.com/billiem/seren-management/pkg/operations/internal"
 	"github.com/deliveryhero/pipeline/v2"
 )
 
@@ -55,26 +54,7 @@ func (d DemucsModels) String() string {
 	}
 }
 
-/*
-getStemPaths gets all of the files in the provided directory which should be converted to stems based on the config
-
-if recursion is true, will also get files in subdirectories
-*/
-func (e *OpEnv) GetStemPaths(inDirPath string, recursion bool) ([]string, error) {
-	stemPaths, err := helpers.GetFilesInDir(inDirPath, recursion)
-	if err != nil {
-		return nil, err
-	}
-	var validStemPaths []string
-	for _, path := range stemPaths {
-		if helpers.IsExtensionInArray(path, e.Config.ExtensionsToSeparateToStems) {
-			validStemPaths = append(validStemPaths, path)
-		}
-	}
-	return validStemPaths, nil
-}
-
-func (e *OpEnv) ParallelProcessStemTrackArray(ctx context.Context, tracks []StemTrack) {
+func (e *StemEnv) ConvertStemTracks(ctx context.Context, tracks []StemTrack) {
 
 	numSteps := 3
 
@@ -82,7 +62,7 @@ func (e *OpEnv) ParallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 		numSteps = 1
 	}
 
-	p := internal.BuildProgress(len(tracks), numSteps)
+	e.BuildProgressTracker(len(tracks), numSteps)
 
 	tracksChan := pipeline.Emit(tracks...)
 
@@ -104,7 +84,7 @@ func (e *OpEnv) ParallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 		}
 
 		e.Logger.Info(fmt.Sprintf("Finished demucs separation for: %s", t.Name))
-		e.progress(p.Step(t.ID))
+		e.ProcessStep(t.ID)
 
 		return t, nil
 	}, func(t StemTrack, err error) {
@@ -123,7 +103,7 @@ func (e *OpEnv) ParallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 			))
 		}
 
-		e.progress(p.Complete(t.ID))
+		e.ProcessComplete(t.ID)
 	}), tracksChan)
 
 	mergeM4aOut := pipeline.ProcessConcurrently(ctx, 2, pipeline.NewProcessor(func(ctx context.Context, t StemTrack) (StemTrack, error) {
@@ -144,7 +124,7 @@ func (e *OpEnv) ParallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 		}
 
 		e.Logger.Info(fmt.Sprintf("Finished merging files for: %s", t.Name))
-		e.progress(p.Step(t.ID))
+		e.ProcessStep(t.ID)
 
 		return t, nil
 	}, func(t StemTrack, err error) {
@@ -163,7 +143,7 @@ func (e *OpEnv) ParallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 			))
 		}
 
-		e.progress(p.Complete(t.ID))
+		e.ProcessComplete(t.ID)
 	}), demucsOut)
 
 	addMetadataOut := pipeline.ProcessConcurrently(ctx, 4, pipeline.NewProcessor(func(ctx context.Context, t StemTrack) (StemTrack, error) {
@@ -183,7 +163,7 @@ func (e *OpEnv) ParallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 		}
 
 		e.Logger.Info(fmt.Sprintf("Finished adding metadata for: %s", t.Name))
-		e.progress(p.Step(t.ID))
+		e.ProcessStep(t.ID)
 
 		return t, nil
 	}, func(t StemTrack, err error) {
@@ -201,7 +181,7 @@ func (e *OpEnv) ParallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 			))
 		}
 
-		e.progress(p.Complete(t.ID))
+		e.ProcessComplete(t.ID)
 	}), mergeM4aOut)
 
 	cleanupOut := pipeline.ProcessConcurrently(ctx, 4, pipeline.NewProcessor(func(ctx context.Context, t StemTrack) (StemTrack, error) {
@@ -242,7 +222,7 @@ func (e *OpEnv) ParallelProcessStemTrackArray(ctx context.Context, tracks []Stem
 /*
 demucsSeparate calls demucs to split a file into stem tracks
 */
-func (e *OpEnv) demucsSeparate(track StemTrack) (StemTrack, error) {
+func (e *StemEnv) demucsSeparate(track StemTrack) (StemTrack, error) {
 
 	// create stem dir if it doesn't exist
 	os.MkdirAll(track.StemDir, os.ModePerm)
@@ -274,7 +254,7 @@ func (e *OpEnv) demucsSeparate(track StemTrack) (StemTrack, error) {
 	return track, nil
 }
 
-func (e *OpEnv) mergeToM4a(track StemTrack) (StemTrack, error) {
+func (e *StemEnv) mergeToM4a(track StemTrack) (StemTrack, error) {
 
 	// create output file dir if it doesn't exist
 	os.MkdirAll(track.OutFile.FileInfo.DirPath, os.ModePerm)
@@ -300,7 +280,7 @@ func (e *OpEnv) mergeToM4a(track StemTrack) (StemTrack, error) {
 	return track, nil
 }
 
-func (e *OpEnv) addMetadata(track StemTrack) (StemTrack, error) {
+func (e *StemEnv) addMetadata(track StemTrack) (StemTrack, error) {
 
 	// add metadata to m4a
 	out, err := helpers.CmdExec(
@@ -316,7 +296,7 @@ func (e *OpEnv) addMetadata(track StemTrack) (StemTrack, error) {
 	return track, nil
 }
 
-func (e *OpEnv) cleanUp(track StemTrack) (StemTrack, error) {
+func (e *StemEnv) cleanUp(track StemTrack) (StemTrack, error) {
 	// deletes stem files/ dirs
 
 	if !track.StemsOnly {
@@ -326,7 +306,7 @@ func (e *OpEnv) cleanUp(track StemTrack) (StemTrack, error) {
 	return track, nil
 }
 
-func (e *OpEnv) getTraktorMetadata() string {
+func (e *StemEnv) getTraktorMetadata() string {
 	drumColour := "#009E73"
 	bassColour := "#D55E00"
 	otherColour := "#CC79A7"

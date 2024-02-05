@@ -6,11 +6,11 @@ import (
 )
 
 /*
-Mp3Env is the environment used for all mp3 conversion operations, it
+StemEnv is the environment used for all stem conversion operations, it
 is a subset of the OpEnv struct
 */
-type Mp3Env struct {
+type StemEnv struct {
 	*internal.OperationHandler
-	Config helpers.Config
+	helpers.Config
 	Logger helpers.SerenLogger
 }

@@ -28,10 +28,14 @@ func (e *guiEnv) getAddPlaylistCallback(playlistBindVals *iwidget.PlaylistBindin
 	ctx := context.Background()
 	ctx, ctxClose := context.WithCancel(ctx)
 	opEnv := e.opEnv()
-	opEnv.RegisterOperationHandler(
+	opEnv.BuildOperationHandler(
 		func(i float64) {},
-		func(i operations.OperationFinishedInfo) {
+		func(_ map[string]any) {
 			ctxClose()
+		},
+		func(err error) {
+			ctxClose()
+			e.logger.NonFatalError(err)
 		},
 	)
 

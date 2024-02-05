@@ -6,7 +6,6 @@ import (
 
 	"github.com/billiem/seren-management/pkg/collection"
 	"github.com/billiem/seren-management/pkg/helpers"
-	"github.com/billiem/seren-management/pkg/operations"
 	"github.com/urfave/cli/v2"
 )
 
@@ -67,12 +66,12 @@ func readTraktorCollection(c *cli.Context) error {
 	}
 
 	opEnv := e.opEnv()
-	opEnv.RegisterOperationHandler(func(f float64) {
+	opEnv.BuildOperationHandler(func(f float64) {
 		fmt.Println(f)
-	}, func(i operations.OperationFinishedInfo) {
-		if i.Err != nil {
-			fmt.Println(i.Err)
-		}
+	}, func(_ map[string]any) {
+
+	}, func(err error) {
+		fmt.Println(err)
 	})
 
 	opEnv.ReadCollection(c.Context, traktorCollectionOpts)

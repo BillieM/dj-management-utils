@@ -14,73 +14,62 @@ failure, success, or just to provide progress updates
 */
 
 /*
-OperationHandler is used to provide callbacks to the operations package
+OperationHandler is a struct that is used to handle the output of an operation
+back to the user interface
 */
-type operationHandler struct {
-	StepCallback     func(float64)
-	FinishedCallback func(OperationFinishedInfo)
+type OperationHandler struct {
+	progressTracker *progressTracker
+	progressFunc    func(float64)
+	successFunc     func(map[string]any)
+	errorFunc       func(error)
 }
 
-/*
-OperationFinishedInfo provides a format for passing information about the completion of an operation
-back to the interface that triggered it
-*/
-type OperationFinishedInfo struct {
-	Data map[string]any // TODO: consider changing this to an interface
-	Err  error
-}
-
-/*
-RegisterOperationHandler registers an OperationHandler with the OpEnv
-*/
-func (e *OpEnv) RegisterOperationHandler(stepCallback func(float64), finishedCallback func(OperationFinishedInfo)) {
-	e.operationHandler = operationHandler{
-		StepCallback:     stepCallback,
-		FinishedCallback: finishedCallback,
+func BuildOperationHandler(
+	progressFunc func(float64),
+	successFunc func(map[string]any),
+	errorFunc func(error),
+) *OperationHandler {
+	return &OperationHandler{
+		progressFunc: progressFunc,
+		successFunc:  successFunc,
+		errorFunc:    errorFunc,
 	}
 }
 
 /*
-finish is called by an operation, it calls the FinishedCallback assigned to the OpEnv
+BuildProgressTracker builds the underlying progress tracker for the operation,
+this is used to generate float64 values representing the progress of the operation
 */
-func (e *OpEnv) finish(finishedInfo OperationFinishedInfo) {
-	e.operationHandler.FinishedCallback(finishedInfo)
+func (o *OperationHandler) BuildProgressTracker(totalProcs int, stepsPer int) {
+	o.progressTracker = buildProgressTracker(totalProcs, stepsPer)
 }
 
 /*
-finishError is a helper function for generating an OperationFinishedInfo struct for an error
-and then calling finish, triggering the FinishedCallback assigned to the OperationHandler
+ProcessStep increments the progress of the process with the given id by 1
+and then calls the given progressFunc with the operations new total progress
 */
-func (e *OpEnv) finishError(err error) {
-	e.finish(newOperationFinishedInfoError(err))
+func (o *OperationHandler) ProcessStep(id int) {
+	o.progressFunc(
+		o.progressTracker.step(id),
+	)
 }
 
 /*
-finishSuccess is a helper function for generating an OperationFinishedInfo struct for success
-and then calling finish, triggering the FinishedCallback assigned to the OperationHandler
+ProcessComplete removes the process with the given id from the progress tracker
+and then calls the given progressFunc with the operations new total progress
 */
-func (e *OpEnv) finishSuccess(data map[string]any) {
-	e.finish(newOperationFinishedInfoSuccess(data))
+func (o *OperationHandler) ProcessComplete(id int) {
+	o.progressFunc(
+		o.progressTracker.complete(id),
+	)
 }
 
-/*
-newFinishedError is a helper function for generating an OperationFinishedInfo struct
-*/
-func newOperationFinishedInfoError(err error) OperationFinishedInfo {
-	return OperationFinishedInfo{
-		Err: err,
-	}
+func (o *OperationHandler) FinishError(err error) {
+	o.progressFunc(1)
+	o.errorFunc(err)
 }
 
-/*
- */
-func newOperationFinishedInfoSuccess(data map[string]any) OperationFinishedInfo {
-	return OperationFinishedInfo{
-		Data: data,
-		Err:  nil,
-	}
-}
-
-func (e *OpEnv) progress(i float64) {
-	e.operationHandler.StepCallback(i)
+func (o *OperationHandler) FinishSuccess(data map[string]any) {
+	o.progressFunc(1)
+	o.successFunc(data)
 }

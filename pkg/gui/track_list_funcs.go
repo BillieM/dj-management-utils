@@ -35,20 +35,10 @@ func (e *guiEnv) getDownloadSoundCloudTrackFunc(selectedTrack *iwidget.SelectedT
 		track := selectedTrack.TrackBinding.Track
 
 		opEnv := e.opEnv()
-		opEnv.RegisterOperationHandler(
+		opEnv.BuildOperationHandler(
 			func(i float64) {},
-			func(i operations.OperationFinishedInfo) {
-				if i.Err != nil {
-					e.showErrorDialog(fault.Wrap(
-						i.Err,
-						fmsg.WithDesc(
-							"error downloading soundcloud track",
-							"Error downloading SoundCloud track",
-						),
-					), true)
-					return
-				}
-				filePath, ok := i.Data["filepath"].(string)
+			func(data map[string]any) {
+				filePath, ok := data["filepath"].(string)
 				if !ok {
 					e.showErrorDialog(fault.Wrap(
 						fault.New("error casting filepath to string"),
@@ -64,6 +54,15 @@ func (e *guiEnv) getDownloadSoundCloudTrackFunc(selectedTrack *iwidget.SelectedT
 					"Download Successful",
 					fmt.Sprintf("Downloaded %s to %s", track.Name, track.LocalPath),
 				)
+			},
+			func(err error) {
+				e.showErrorDialog(fault.Wrap(
+					err,
+					fmsg.WithDesc(
+						"error downloading soundcloud track",
+						"Error downloading SoundCloud track",
+					),
+				), true)
 			},
 		)
 
@@ -200,9 +199,10 @@ func (e *guiEnv) getRefreshSoundCloudPlaylistFunc(playlist streaming.SoundCloudP
 	return func() {
 
 		opEnv := e.opEnv()
-		opEnv.RegisterOperationHandler(
+		opEnv.BuildOperationHandler(
 			func(i float64) {},
-			func(i operations.OperationFinishedInfo) {},
+			func(_ map[string]any) {},
+			func(err error) {},
 		)
 
 		opts := operations.GetSoundCloudPlaylistOpts{

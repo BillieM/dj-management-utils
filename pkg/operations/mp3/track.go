@@ -24,7 +24,7 @@ GetConvertPaths gets all of the files in the provided directory which should be 
 
 if recursion is true, will also get files in subdirectories
 */
-func (e *Mp3Env) GetConvertPaths(inDirPath string, recursion bool) ([]string, error) {
+func (e *Mp3Env) GetMp3Paths(inDirPath string, recursion bool) ([]string, error) {
 	convertPaths, err := helpers.GetFilesInDir(inDirPath, recursion)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ BuildConvertTracks builds an array of ConvertTrack structs from an array of file
 File paths have been pre-validated to ensure they are valid files which can be converted
 by the GetConvertPaths function
 */
-func BuildConvertTracks(paths []string, outDirPath string) ([]ConvertTrack, int, []error) {
+func (e *Mp3Env) GetMp3Tracks(paths []string, outDirPath string) ([]ConvertTrack, int, []error) {
 	var tracks []ConvertTrack
 	var errs []error
 	var alreadyExistsCnt int

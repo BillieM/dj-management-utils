@@ -8,17 +8,16 @@ import (
 	"github.com/Southclaws/fault"
 	"github.com/Southclaws/fault/fmsg"
 	"github.com/billiem/seren-management/pkg/helpers"
-	"github.com/billiem/seren-management/pkg/operations/internal"
 	"github.com/deliveryhero/pipeline/v2"
 )
 
-func (e *Mp3Env) ConvertTracks(ctx context.Context, tracks []ConvertTrack) {
+func (e *Mp3Env) ConvertMp3Tracks(ctx context.Context, tracks []ConvertTrack) {
 
 	if len(tracks) == 0 {
 		return
 	}
 
-	p := internal.BuildProgress(len(tracks), 1)
+	e.BuildProgressTracker(len(tracks), 1)
 
 	tracksChan := pipeline.Emit(tracks...)
 
@@ -37,7 +36,7 @@ func (e *Mp3Env) ConvertTracks(ctx context.Context, tracks []ConvertTrack) {
 
 		e.Logger.Info(fmt.Sprintf("Finished converting: %s", t.Name))
 
-		e.progress(p.Complete(t.ID))
+		e.ProcessComplete(t.ID)
 
 		return t, nil
 	}, func(t ConvertTrack, err error) {
@@ -48,7 +47,8 @@ func (e *Mp3Env) ConvertTracks(ctx context.Context, tracks []ConvertTrack) {
 				fmsg.With("error processing convert track"),
 			))
 		}
-		e.progress(p.Complete(t.ID))
+
+		e.ProcessComplete(t.ID)
 	}), tracksChan)
 
 	for range convertOut {

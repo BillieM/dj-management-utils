@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/billiem/seren-management/pkg/operations/internal"
-	operations "github.com/billiem/seren-management/pkg/operations/stems.go"
+	stems "github.com/billiem/seren-management/pkg/operations/stems"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -13,16 +13,16 @@ func TestBuildStemTrack(t *testing.T) {
 		name           string
 		path           string
 		outDirPath     string
-		stemType       internal.StemSeparationType
-		expectedOutput operations.StemTrack
+		stemType       stems.StemSeparationType
+		expectedOutput stems.StemTrack
 		expectedError  error
 	}{
 		{
 			name:       "Valid traktor path extraction with no outDirPath",
 			path:       "/path/to/valid/file.mp3",
 			outDirPath: "",
-			stemType:   internal.Traktor,
-			expectedOutput: operations.StemTrack{
+			stemType:   stems.Traktor,
+			expectedOutput: stems.StemTrack{
 				ID:         0,
 				Name:       "file",
 				StemDir:    "/path/to/valid/file/",
@@ -44,7 +44,7 @@ func TestBuildStemTrack(t *testing.T) {
 						FullPath:      "/path/to/valid/file.stem.m4a",
 					},
 				},
-				BassFile: operations.StemFile{
+				BassFile: stems.StemFile{
 					internal.AudioFile{
 						FileInfo: internal.FileInfo{
 							DirPath:       "/path/to/valid/file/",
@@ -55,7 +55,7 @@ func TestBuildStemTrack(t *testing.T) {
 						DeleteOnFinish: true,
 					},
 				},
-				DrumsFile: operations.StemFile{
+				DrumsFile: stems.StemFile{
 					internal.AudioFile{
 						FileInfo: internal.FileInfo{
 							DirPath:       "/path/to/valid/file/",
@@ -66,7 +66,7 @@ func TestBuildStemTrack(t *testing.T) {
 						DeleteOnFinish: true,
 					},
 				},
-				OtherFile: operations.StemFile{
+				OtherFile: stems.StemFile{
 					internal.AudioFile{
 						FileInfo: internal.FileInfo{
 							DirPath:       "/path/to/valid/file/",
@@ -77,7 +77,7 @@ func TestBuildStemTrack(t *testing.T) {
 						DeleteOnFinish: true,
 					},
 				},
-				VocalsFile: operations.StemFile{
+				VocalsFile: stems.StemFile{
 					internal.AudioFile{
 						FileInfo: internal.FileInfo{
 							DirPath:       "/path/to/valid/file/",
@@ -95,8 +95,8 @@ func TestBuildStemTrack(t *testing.T) {
 			name:       "Valid FourTrack path extraction with outDirPath",
 			path:       "/path/to/valid/chicken.wav",
 			outDirPath: "/out/dir/path/",
-			stemType:   internal.FourTrack,
-			expectedOutput: operations.StemTrack{
+			stemType:   stems.FourTrack,
+			expectedOutput: stems.StemTrack{
 				ID:         1,
 				Name:       "chicken",
 				StemDir:    "/out/dir/path/chicken/",
@@ -111,7 +111,7 @@ func TestBuildStemTrack(t *testing.T) {
 					},
 				},
 				OutFile: internal.AudioFile{},
-				BassFile: operations.StemFile{
+				BassFile: stems.StemFile{
 					internal.AudioFile{
 						FileInfo: internal.FileInfo{
 							DirPath:       "/out/dir/path/chicken/",
@@ -122,7 +122,7 @@ func TestBuildStemTrack(t *testing.T) {
 						DeleteOnFinish: false,
 					},
 				},
-				DrumsFile: operations.StemFile{
+				DrumsFile: stems.StemFile{
 					internal.AudioFile{
 						FileInfo: internal.FileInfo{
 							DirPath:       "/out/dir/path/chicken/",
@@ -133,7 +133,7 @@ func TestBuildStemTrack(t *testing.T) {
 						DeleteOnFinish: false,
 					},
 				},
-				OtherFile: operations.StemFile{
+				OtherFile: stems.StemFile{
 					internal.AudioFile{
 						FileInfo: internal.FileInfo{
 							DirPath:       "/out/dir/path/chicken/",
@@ -144,7 +144,7 @@ func TestBuildStemTrack(t *testing.T) {
 						DeleteOnFinish: false,
 					},
 				},
-				VocalsFile: operations.StemFile{
+				VocalsFile: stems.StemFile{
 					internal.AudioFile{
 						FileInfo: internal.FileInfo{
 							DirPath:       "/out/dir/path/chicken/",
@@ -162,7 +162,7 @@ func TestBuildStemTrack(t *testing.T) {
 
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			output, err := operations.BuildStemTrack(i, tt.path, tt.outDirPath, tt.stemType)
+			output, err := stems.BuildStemTrack(i, tt.path, tt.outDirPath, tt.stemType)
 
 			if diff := cmp.Diff(output, tt.expectedOutput); diff != "" {
 				t.Errorf("buildStemTrack() output mismatch (-got +want):\n%s", diff)
@@ -182,7 +182,7 @@ func TestBuildStemFile(t *testing.T) {
 		fileName       string
 		extension      string
 		deleteOnFinish bool
-		want           operations.StemFile
+		want           stems.StemFile
 	}{
 		{
 			name:           "bass stem delete on finish",
@@ -190,7 +190,7 @@ func TestBuildStemFile(t *testing.T) {
 			fileName:       "bass",
 			extension:      ".wav",
 			deleteOnFinish: true,
-			want: operations.StemFile{
+			want: stems.StemFile{
 				AudioFile: internal.AudioFile{
 					FileInfo: internal.FileInfo{
 						DirPath:       "/path/to/stems/",
@@ -208,7 +208,7 @@ func TestBuildStemFile(t *testing.T) {
 			fileName:       "drums",
 			extension:      ".mp3",
 			deleteOnFinish: false,
-			want: operations.StemFile{
+			want: stems.StemFile{
 				AudioFile: internal.AudioFile{
 					FileInfo: internal.FileInfo{
 						DirPath:       "/path/to/stems/",
@@ -224,7 +224,7 @@ func TestBuildStemFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := operations.BuildStemFile(tt.baseStemDir, tt.fileName, tt.extension, tt.deleteOnFinish)
+			got := stems.BuildStemFile(tt.baseStemDir, tt.fileName, tt.extension, tt.deleteOnFinish)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("buildStemFile() mismatch (-want +got):\n%s", diff)
 			}

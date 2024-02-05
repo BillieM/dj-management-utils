@@ -2,7 +2,8 @@ package operations
 
 import (
 	"github.com/billiem/seren-management/pkg/helpers"
-	"github.com/billiem/seren-management/pkg/operations/internal"
+
+	stems "github.com/billiem/seren-management/pkg/operations/stems"
 )
 
 type OperationOptions interface {
@@ -13,9 +14,9 @@ type OperationOptions interface {
 SeperateSingleStemOptions is used as a way to pass arguments to SeperateSingleStem
 */
 type SeparateSingleStemOpts struct {
-	InFilePath string                      // Mandatory
-	OutDirPath string                      // Optional - if not provided, will use the same dir as the input file
-	Type       internal.StemSeparationType // Mandatory
+	InFilePath string                   // Mandatory
+	OutDirPath string                   // Optional - if not provided, will use the same dir as the input file
+	Type       stems.StemSeparationType // Mandatory
 }
 
 /*
@@ -36,10 +37,10 @@ func (p SeparateSingleStemOpts) Check() (bool, error) {
 SeperateFolderStemOptions contains the options for SeperateFolderStem
 */
 type SeparateFolderStemOpts struct {
-	InDirPath  string                      // Mandatory
-	OutDirPath string                      // Optional - if not provided, will use the same dir as the input file
-	Recursion  bool                        // Optional
-	Type       internal.StemSeparationType // Mandatory
+	InDirPath  string                   // Mandatory
+	OutDirPath string                   // Optional - if not provided, will use the same dir as the input file
+	Recursion  bool                     // Optional
+	Type       stems.StemSeparationType // Mandatory
 }
 
 /*

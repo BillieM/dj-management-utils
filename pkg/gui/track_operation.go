@@ -24,19 +24,19 @@ func (e *guiEnv) prepareTrackOperation() (*operations.OpEnv, *iwidget.RunningOpe
 
 	e.termSink.SetIO(io.Pipe())
 
-	opEnv.RegisterOperationHandler(
+	opEnv.BuildOperationHandler(
 		func(i float64) {
 			runningOperation.ProgressBar.SetValue(i)
 		},
-		func(i operations.OperationFinishedInfo) {
-			runningOperation.ProgressBar.SetValue(1)
+		func(_ map[string]any) {
 			runningOperation.StopButton.Disable()
 			e.guiState.busy = false
-			if i.Err != nil {
-				e.showErrorDialog(i.Err, true)
-				return
-			}
 			e.showInfoDialog("Finished", "Process finished")
+		},
+		func(err error) {
+			runningOperation.StopButton.Disable()
+			e.guiState.busy = false
+			e.showErrorDialog(err, true)
 		},
 	)
 

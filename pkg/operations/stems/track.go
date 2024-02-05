@@ -33,10 +33,29 @@ type StemFile struct {
 }
 
 /*
-buildStemTrackArray builds an array of StemTrack structs from an array of file paths
+GetStemPaths gets all of the files in the provided directory which should be converted to stems based on the config
+
+if recursion is true, will also get files in subdirectories
+*/
+func (e *StemEnv) GetStemPaths(inDirPath string, recursion bool) ([]string, error) {
+	stemPaths, err := helpers.GetFilesInDir(inDirPath, recursion)
+	if err != nil {
+		return nil, err
+	}
+	var validStemPaths []string
+	for _, path := range stemPaths {
+		if helpers.IsExtensionInArray(path, e.Config.ExtensionsToSeparateToStems) {
+			validStemPaths = append(validStemPaths, path)
+		}
+	}
+	return validStemPaths, nil
+}
+
+/*
+GetStemTracks builds an array of StemTrack structs from an array of file paths
 */
 
-func buildStemTrackArray(paths []string, outDirPath string, stemType internal.StemSeparationType) ([]StemTrack, int, []error) {
+func (e *StemEnv) GetStemTracks(paths []string, outDirPath string, stemType StemSeparationType) ([]StemTrack, int, []error) {
 	var tracks []StemTrack
 	var errs []error
 	var alreadyExistsCnt int
@@ -63,7 +82,7 @@ func buildStemTrackArray(paths []string, outDirPath string, stemType internal.St
 /*
 BuildStemTrack builds a StemTrack struct from a file path
 */
-func BuildStemTrack(id int, path string, outDirPath string, stemType internal.StemSeparationType) (StemTrack, error) {
+func BuildStemTrack(id int, path string, outDirPath string, stemType StemSeparationType) (StemTrack, error) {
 
 	origFileInfo, err := internal.SplitFilePathRequired(path)
 
@@ -78,7 +97,7 @@ func BuildStemTrack(id int, path string, outDirPath string, stemType internal.St
 		baseStemDirPath = helpers.JoinFilepathToSlash(outDirPath, origFileInfo.FileName) + "/"
 	}
 
-	deleteOnFinish := stemType == internal.Traktor
+	deleteOnFinish := stemType == Traktor
 	var skipDemucs bool
 	var stemsOnly bool
 
@@ -94,7 +113,7 @@ func BuildStemTrack(id int, path string, outDirPath string, stemType internal.St
 		helpers.DoesFileExist(vocalsFile.FileInfo.FullPath)
 
 	// Build the out file only if generating a Traktor stem file (out file is the .stem.m4a used by Traktor)
-	if stemType == internal.Traktor {
+	if stemType == Traktor {
 		newFileInfo = origFileInfo
 		newFileInfo.FileExtension = ".stem.m4a"
 		if outDirPath != "" {
@@ -109,7 +128,7 @@ func BuildStemTrack(id int, path string, outDirPath string, stemType internal.St
 		if helpers.DoesFileExist(newFileInfo.FullPath) {
 			return StemTrack{}, helpers.ErrStemOutputExists
 		}
-	} else if stemType == internal.FourTrack {
+	} else if stemType == FourTrack {
 
 		stemsOnly = true
 
