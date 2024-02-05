@@ -1,9 +1,7 @@
-package operations_test
+package internal
 
 import (
 	"testing"
-
-	"github.com/billiem/seren-management/pkg/operations"
 )
 
 func TestProgress(t *testing.T) {
@@ -34,14 +32,14 @@ func TestProgress(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			P := operations.BuildProgress(tt.numProcesses, tt.stepsPerProcess)
+			P := buildProgressTracker(tt.numProcesses, tt.stepsPerProcess)
 
-			if P.Step(1) != tt.expStepVal {
-				t.Errorf("expected %f, got %f", tt.expStepVal, P.Step(1))
+			if P.step(1) != tt.expStepVal {
+				t.Errorf("expected %f, got %f", tt.expStepVal, P.step(1))
 			}
 
-			if P.Complete(1) != tt.expCompleteVal {
-				t.Errorf("expected %f, got %f", tt.expCompleteVal, P.Complete(1))
+			if P.complete(1) != tt.expCompleteVal {
+				t.Errorf("expected %f, got %f", tt.expCompleteVal, P.complete(1))
 			}
 		})
 	}

@@ -5,6 +5,8 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"github.com/billiem/seren-management/pkg/operations"
+
+	stems "github.com/billiem/seren-management/pkg/operations/stems"
 )
 
 /*
@@ -38,14 +40,14 @@ func (e *guiEnv) checkConfig(checks []func() (bool, string)) (bool, fyne.CanvasO
 	return true, nil
 }
 
-func buildStemTypeSelect(t *operations.StemSeparationType, callbackFn func()) *widget.Select {
+func buildStemTypeSelect(t *stems.StemSeparationType, callbackFn func()) *widget.Select {
 	w := widget.NewSelect(
 		[]string{"Traktor Stem File", "4 Stem Files"},
 		func(s string) {
 			if s == "Traktor Stem File" {
-				*t = operations.Traktor
+				*t = stems.Traktor
 			} else if s == "4 Stem Files" {
-				*t = operations.FourTrack
+				*t = stems.FourTrack
 			}
 			callbackFn()
 		},

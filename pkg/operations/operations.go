@@ -22,7 +22,7 @@ func (e *OpEnv) SeparateSingleStem(ctx context.Context, opts SeparateSingleStemO
 	_, err := opts.Check()
 
 	if err != nil {
-		e.finishError(fault.Wrap(
+		e.FinishError(fault.Wrap(
 			err,
 			fmsg.WithDesc(
 				"error checking opts",
@@ -32,11 +32,13 @@ func (e *OpEnv) SeparateSingleStem(ctx context.Context, opts SeparateSingleStemO
 		return
 	}
 
+	stemEnv := e.StemEnvBuilder()
+
 	e.Logger.Info("Checking file to separate")
-	stemTrackArray, alreadyExistsCnt, errs := buildStemTrackArray([]string{opts.InFilePath}, opts.OutDirPath, opts.Type)
+	stemTrackArray, alreadyExistsCnt, errs := stemEnv.GetStemTracks([]string{opts.InFilePath}, opts.OutDirPath, opts.Type)
 
 	if len(errs) > 0 {
-		e.finishError(fault.Wrap(
+		e.FinishError(fault.Wrap(
 			errs[0],
 			fmsg.WithDesc(
 				"error building stem track array",
@@ -48,15 +50,15 @@ func (e *OpEnv) SeparateSingleStem(ctx context.Context, opts SeparateSingleStemO
 
 	if alreadyExistsCnt > 0 {
 		e.Logger.Info("Output file(s) already exist(s)")
-		e.finishSuccess(nil)
+		e.FinishSuccess(nil)
 		return
 	}
 
 	e.Logger.Info("Converting file to stems")
-	e.parallelProcessStemTrackArray(ctx, stemTrackArray)
+	stemEnv.ConvertStemTracks(ctx, stemTrackArray)
 	e.Logger.Info("Finished")
 
-	e.finishSuccess(nil)
+	e.FinishSuccess(nil)
 }
 
 /*
@@ -67,7 +69,7 @@ func (e *OpEnv) SeparateFolderStem(ctx context.Context, opts SeparateFolderStemO
 	_, err := opts.Check()
 
 	if err != nil {
-		e.finishError(fault.Wrap(
+		e.FinishError(fault.Wrap(
 			err,
 			fmsg.WithDesc(
 				"error checking opts",
@@ -77,11 +79,13 @@ func (e *OpEnv) SeparateFolderStem(ctx context.Context, opts SeparateFolderStemO
 		return
 	}
 
+	stemEnv := e.StemEnvBuilder()
+
 	e.Logger.Info("Finding files to convert")
-	stemFilePaths, err := e.getStemPaths(opts.InDirPath, opts.Recursion)
+	stemFilePaths, err := stemEnv.GetStemPaths(opts.InDirPath, opts.Recursion)
 
 	if err != nil {
-		e.finishError(fault.Wrap(
+		e.FinishError(fault.Wrap(
 			err,
 			fmsg.WithDesc(
 				"error getting stem paths",
@@ -94,7 +98,7 @@ func (e *OpEnv) SeparateFolderStem(ctx context.Context, opts SeparateFolderStemO
 	e.Logger.Infof("Found %v potential files to convert", len(stemFilePaths))
 
 	e.Logger.Info("Checking found files")
-	stemTrackArray, alreadyExistsCnt, errs := buildStemTrackArray(stemFilePaths, opts.OutDirPath, opts.Type)
+	stemTrackArray, alreadyExistsCnt, errs := stemEnv.GetStemTracks(stemFilePaths, opts.OutDirPath, opts.Type)
 	e.Logger.Infof("%v files already exist, %v left to convert", alreadyExistsCnt, len(stemTrackArray))
 
 	for _, err := range errs {
@@ -106,15 +110,15 @@ func (e *OpEnv) SeparateFolderStem(ctx context.Context, opts SeparateFolderStemO
 
 	if len(stemTrackArray) == 0 {
 		e.Logger.Info("No files to convert")
-		e.finishSuccess(nil)
+		e.FinishSuccess(nil)
 		return
 	}
 
 	e.Logger.Info("Converting files to stems")
-	e.parallelProcessStemTrackArray(ctx, stemTrackArray)
+	stemEnv.ConvertStemTracks(ctx, stemTrackArray)
 	e.Logger.Info("Finished")
 
-	e.finishSuccess(nil)
+	e.FinishSuccess(nil)
 }
 
 /*
@@ -124,7 +128,7 @@ func (e *OpEnv) ConvertSingleMp3(ctx context.Context, opts ConvertSingleMp3Opts)
 	_, err := opts.Check()
 
 	if err != nil {
-		e.finishError(fault.Wrap(
+		e.FinishError(fault.Wrap(
 			err,
 			fmsg.WithDesc(
 				"error checking opts",
@@ -134,11 +138,13 @@ func (e *OpEnv) ConvertSingleMp3(ctx context.Context, opts ConvertSingleMp3Opts)
 		return
 	}
 
+	mp3Env := e.Mp3EnvBuilder()
+
 	e.Logger.Info("Checking file to convert")
-	convertTrackArray, alreadyExistsCnt, errs := buildConvertTrackArray([]string{opts.InFilePath}, opts.OutDirPath)
+	convertTrackArray, alreadyExistsCnt, errs := mp3Env.GetMp3Tracks([]string{opts.InFilePath}, opts.OutDirPath)
 
 	if len(errs) > 0 {
-		e.finishError(fault.Wrap(
+		e.FinishError(fault.Wrap(
 			errs[0],
 			fmsg.WithDesc(
 				"error building convert track array",
@@ -150,15 +156,15 @@ func (e *OpEnv) ConvertSingleMp3(ctx context.Context, opts ConvertSingleMp3Opts)
 
 	if alreadyExistsCnt > 0 {
 		e.Logger.Info("Output file(s) already exist(s)")
-		e.finishSuccess(nil)
+		e.FinishSuccess(nil)
 		return
 	}
 
 	e.Logger.Info("Converting file to mp3")
-	e.parallelProcessConvertTrackArray(ctx, convertTrackArray)
+	mp3Env.ConvertMp3Tracks(ctx, convertTrackArray)
 	e.Logger.Info("Finished")
 
-	e.finishSuccess(nil)
+	e.FinishSuccess(nil)
 }
 
 /*
@@ -169,7 +175,7 @@ func (e *OpEnv) ConvertFolderMp3(ctx context.Context, opts ConvertFolderMp3Opts)
 	_, err := opts.Check()
 
 	if err != nil {
-		e.finishError(fault.Wrap(
+		e.FinishError(fault.Wrap(
 			err,
 			fmsg.WithDesc(
 				"error checking opts",
@@ -179,12 +185,14 @@ func (e *OpEnv) ConvertFolderMp3(ctx context.Context, opts ConvertFolderMp3Opts)
 		return
 	}
 
+	mp3Env := e.Mp3EnvBuilder()
+
 	e.Logger.Info("Finding files to convert")
-	convertFilePaths, err := e.getConvertPaths(opts.InDirPath, opts.Recursion)
+	convertFilePaths, err := mp3Env.GetMp3Paths(opts.InDirPath, opts.Recursion)
 	e.Logger.Infof("Found %v potential files to convert", len(convertFilePaths))
 
 	if err != nil {
-		e.finishError(fault.Wrap(
+		e.FinishError(fault.Wrap(
 			err,
 			fmsg.WithDesc(
 				"error getting convert paths",
@@ -195,7 +203,7 @@ func (e *OpEnv) ConvertFolderMp3(ctx context.Context, opts ConvertFolderMp3Opts)
 	}
 
 	e.Logger.Info("Checking found files")
-	convertTrackArray, alreadyExistsCnt, errs := buildConvertTrackArray(convertFilePaths, opts.OutDirPath)
+	convertTrackArray, alreadyExistsCnt, errs := mp3Env.GetMp3Tracks(convertFilePaths, opts.OutDirPath)
 	e.Logger.Infof("%v files already exist, %v left to convert", alreadyExistsCnt, len(convertTrackArray))
 
 	for _, err := range errs {
@@ -207,15 +215,15 @@ func (e *OpEnv) ConvertFolderMp3(ctx context.Context, opts ConvertFolderMp3Opts)
 
 	if len(convertTrackArray) == 0 {
 		e.Logger.Info("No files to convert")
-		e.finishSuccess(nil)
+		e.FinishSuccess(nil)
 		return
 	}
 
 	e.Logger.Info("Converting files to mp3")
-	e.parallelProcessConvertTrackArray(ctx, convertTrackArray)
+	mp3Env.ConvertMp3Tracks(ctx, convertTrackArray)
 	e.Logger.Info("Finished")
 
-	e.finishSuccess(nil)
+	e.FinishSuccess(nil)
 }
 
 /*
@@ -228,7 +236,7 @@ func (e *OpEnv) ReadCollection(ctx context.Context, opts collection.ReadCollecti
 	err := collection.ReadCollection()
 
 	if err != nil {
-		e.finishError(fault.Wrap(
+		e.FinishError(fault.Wrap(
 			err,
 			fmsg.WithDesc(
 				"error reading collection",
@@ -359,7 +367,7 @@ playlistName is optional and is used to create a folder for the playlist within 
 func (e *OpEnv) DownloadSoundCloudFile(track streaming.SoundCloudTrack, playlistName string) {
 
 	if e.Config.SoundCloudClientID == "" {
-		e.finishError(
+		e.FinishError(
 			fault.New("SoundCloud Client ID not set"),
 		)
 		return
@@ -381,7 +389,7 @@ func (e *OpEnv) DownloadSoundCloudFile(track streaming.SoundCloudTrack, playlist
 	)
 
 	if err != nil {
-		e.finishError(
+		e.FinishError(
 			fault.Wrap(
 				err,
 				fmsg.With("error downloading file from SoundCloud"),
@@ -394,7 +402,7 @@ func (e *OpEnv) DownloadSoundCloudFile(track streaming.SoundCloudTrack, playlist
 
 	err = e.SerenDB.TxUpsertSoundCloudTracks([]data.SoundcloudTrack{track.ToDB()})
 	if err != nil {
-		e.finishError(
+		e.FinishError(
 			fault.Wrap(
 				err,
 				fmsg.With("error saving track to database"),
@@ -403,7 +411,7 @@ func (e *OpEnv) DownloadSoundCloudFile(track streaming.SoundCloudTrack, playlist
 		return
 	}
 
-	e.finishSuccess(
+	e.FinishSuccess(
 		map[string]any{
 			"filepath": filePath,
 		},
