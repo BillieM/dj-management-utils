@@ -157,6 +157,7 @@ func (e *guiEnv) separateSingleStemView() fyne.CanvasObject {
 			opEnv:            opEnv,
 			runningOperation: runningOperation,
 			execFunc: func(ctx context.Context) {
+				opEnv.AttachDefaultStemEnvBuilder()
 				opEnv.SeparateSingleStem(ctx, opts)
 			},
 		})
@@ -194,6 +195,7 @@ func (e *guiEnv) separateFolderStemView() fyne.CanvasObject {
 			opEnv:            opEnv,
 			runningOperation: runningOperation,
 			execFunc: func(ctx context.Context) {
+				opEnv.AttachDefaultStemEnvBuilder()
 				opEnv.SeparateFolderStem(ctx, opts)
 			},
 		})
@@ -245,6 +247,7 @@ func (e *guiEnv) convertSingleMp3View() fyne.CanvasObject {
 			opEnv:            opEnv,
 			runningOperation: runningOperation,
 			execFunc: func(ctx context.Context) {
+				opEnv.AttachDefaultMp3EnvBuilder()
 				opEnv.ConvertSingleMp3(ctx, opts)
 			},
 		})
@@ -281,6 +284,7 @@ func (e *guiEnv) convertFolderMp3View() fyne.CanvasObject {
 			opEnv:            opEnv,
 			runningOperation: runningOperation,
 			execFunc: func(ctx context.Context) {
+				opEnv.AttachDefaultMp3EnvBuilder()
 				opEnv.ConvertFolderMp3(ctx, opts)
 			},
 		})

@@ -20,6 +20,7 @@ type Config struct {
 	DownloadDir                 string   `json:"downloadDir"`
 	ExtensionsToConvertToMp3    []string `json:"extensionsToConvertToMp3"`
 	ExtensionsToSeparateToStems []string `json:"extensionsToSeparateToStems"`
+	CudaEnabled                 bool     `json:"cudaEnabled"`
 
 	// these are not stored in config.json
 	SoundCloudClientID    string `json:"-"`

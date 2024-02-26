@@ -12,5 +12,6 @@
   "extensionsToSeparateToStems": [
     "mp3",
     "wav"
-  ]
+  ],
+  "cudaEnabled": false
 }
