@@ -234,7 +234,8 @@ func (e *StemEnv) mergeToM4a(track StemTrack) (StemTrack, error) {
 		"-i", track.OtherFile.AudioFile.FileInfo.FullPath,
 		"-i", track.VocalsFile.AudioFile.FileInfo.FullPath,
 		"-map", "0", "-map", "1", "-map", "2", "-map", "3", "-map", "4",
-		"-metadata", fmt.Sprintf("udta:0:type=stem:src=base64,%s", e.getTraktorMetadata()),
+		"-metadata", "type=stem",
+		"-metadata", "src=base64,"+e.getTraktorMetadata(),
 		"-vn",
 		track.OutFile.FileInfo.FullPath,
 	)
