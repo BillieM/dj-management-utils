@@ -243,9 +243,9 @@ func (i *TrackInfo) CreateRenderer() fyne.WidgetRenderer {
 }
 
 func (i *TrackInfo) updateFromData(t streaming.SoundCloudTrack) {
-	i.TrackNameLink.SetURLFromString(t.Permalink)
+	i.TrackNameLink.SetURLFromString(t.PermalinkUrl)
 	i.TrackNameLink.SetText(t.Name)
-	i.TrackLinkButton.SetContent("Open in browser", t.Permalink)
+	i.TrackLinkButton.SetContent("Open in browser", t.PermalinkUrl)
 	i.TrackProperties.updateFromData(t)
 }
 

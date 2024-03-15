@@ -6,6 +6,7 @@ import (
 
 	"github.com/billiem/seren-management/pkg/collection"
 	"github.com/billiem/seren-management/pkg/helpers"
+	"github.com/billiem/seren-management/pkg/streaming"
 	"github.com/urfave/cli/v2"
 )
 
@@ -108,6 +109,19 @@ func getSpotifyPlaylist(c *cli.Context) error {
 	}
 
 	_ = e
+
+	return nil
+}
+
+func generateClientID(c *cli.Context) error {
+
+	clientID, err := streaming.GenerateSoundCloudClientID()
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(clientID)
 
 	return nil
 }

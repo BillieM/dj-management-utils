@@ -289,8 +289,24 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 		}
 	}
 
+	clientID, err := streaming.GetAndSetSoundCloudClientID(e.Config)
+
+	if err != nil {
+		p(
+			streaming.SoundCloudPlaylist{},
+			fault.Wrap(
+				err,
+				fmsg.WithDesc(
+					"error getting/ setting SoundCloud client ID",
+					"There was an error getting or setting the SoundCloud client ID",
+				),
+			),
+		)
+		return
+	}
+
 	s := streaming.SoundCloud{
-		ClientID: e.Config.SoundCloudClientID,
+		ClientID: clientID,
 	}
 
 	// get playlist from SoundCloud
@@ -347,6 +363,9 @@ func (e *OpEnv) GetSoundCloudPlaylist(ctx context.Context, opts GetSoundCloudPla
 	err = e.SerenDB.TxUpsertSoundCloudPlaylistAndTracks(dataP, dataT)
 
 	if err != nil {
+
+		e.Logger.NonFatalError(err)
+
 		p(
 			streaming.SoundCloudPlaylist{},
 			fault.Wrap(err, fmsg.With("error saving playlist to database")),
@@ -366,9 +385,14 @@ playlistName is optional and is used to create a folder for the playlist within 
 */
 func (e *OpEnv) DownloadSoundCloudFile(track streaming.SoundCloudTrack, playlistName string) {
 
-	if e.Config.SoundCloudClientID == "" {
+	clientID, err := streaming.GetAndSetSoundCloudClientID(e.Config)
+
+	if err != nil {
 		e.FinishError(
-			fault.New("SoundCloud Client ID not set"),
+			fault.Wrap(
+				err,
+				fmsg.With("error getting/ setting SoundCloud client ID"),
+			),
 		)
 		return
 	}
@@ -380,7 +404,7 @@ func (e *OpEnv) DownloadSoundCloudFile(track streaming.SoundCloudTrack, playlist
 	}
 
 	s := streaming.SoundCloud{
-		ClientID: e.Config.SoundCloudClientID,
+		ClientID: clientID,
 	}
 
 	filePath, err := s.DownloadFile(

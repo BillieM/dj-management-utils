@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Southclaws/fault"
+	"github.com/Southclaws/fault/fctx"
 	"github.com/Southclaws/fault/fmsg"
 	"github.com/billiem/seren-management/pkg/data"
 	"github.com/billiem/seren-management/pkg/helpers"
@@ -35,10 +36,10 @@ type SoundCloud struct {
 }
 
 type SoundCloudPlaylist struct {
-	ExternalID int64
-	Name       string
-	SearchUrl  string
-	Permalink  string
+	ExternalID   int64
+	Name         string
+	SearchUrl    string
+	PermalinkUrl string
 
 	Tracks []SoundCloudTrack
 
@@ -65,7 +66,7 @@ func (p *SoundCloudPlaylist) loadFromHydratable(hp HydratableSoundCloudPlaylist)
 
 	p.ExternalID = hp.ID
 	p.Name = hp.Title
-	p.Permalink = hp.Permalink
+	p.PermalinkUrl = hp.PermalinkURL
 	p.Tracks = tracks
 }
 
@@ -84,15 +85,15 @@ func (p *SoundCloudPlaylist) LoadFromDB(dp data.SoundcloudPlaylist, tracks []dat
 	p.ExternalID = dp.ExternalID.Int64
 	p.Name = dp.Name.String
 	p.SearchUrl = dp.SearchUrl.String
-	p.Permalink = dp.Permalink.String
+	p.PermalinkUrl = dp.PermalinkUrl.String
 }
 
 func (p *SoundCloudPlaylist) ToDB() (data.SoundcloudPlaylist, []data.SoundcloudTrack) {
 	dataP := data.SoundcloudPlaylist{
-		ExternalID: sql.NullInt64{Valid: true, Int64: p.ExternalID},
-		Name:       sql.NullString{Valid: true, String: p.Name},
-		SearchUrl:  sql.NullString{Valid: true, String: p.SearchUrl},
-		Permalink:  sql.NullString{Valid: true, String: p.Permalink},
+		ExternalID:   sql.NullInt64{Valid: true, Int64: p.ExternalID},
+		Name:         sql.NullString{Valid: true, String: p.Name},
+		SearchUrl:    sql.NullString{Valid: true, String: p.SearchUrl},
+		PermalinkUrl: sql.NullString{Valid: true, String: p.PermalinkUrl},
 	}
 
 	dataTracks := []data.SoundcloudTrack{}
@@ -107,7 +108,7 @@ func (p *SoundCloudPlaylist) ToDB() (data.SoundcloudPlaylist, []data.SoundcloudT
 type SoundCloudTrack struct {
 	ExternalID          int64  `gorm:"uniqueIndex"`
 	Name                string // change to title
-	Permalink           string
+	PermalinkUrl        string
 	PurchaseTitle       string
 	PurchaseURL         string
 	HasDownloadsLeft    bool
@@ -135,7 +136,7 @@ func (t *SoundCloudTrack) loadFromHydratable(ht HydratableSoundCloudTrack) {
 
 	t.ExternalID = ht.ID
 	t.Name = ht.Title
-	t.Permalink = ht.PermalinkURL
+	t.PermalinkUrl = ht.PermalinkURL
 	t.PurchaseTitle = ht.PurchaseTitle
 	t.PurchaseURL = ht.PurchaseURL
 	t.HasDownloadsLeft = ht.HasDownloadsLeft
@@ -153,7 +154,7 @@ this exists in order to properly map fields between the database and the struct
 func (t *SoundCloudTrack) LoadFromDB(dt data.SoundcloudTrack) {
 	t.ExternalID = dt.ExternalID.Int64
 	t.Name = dt.Name.String
-	t.Permalink = dt.Permalink.String
+	t.PermalinkUrl = dt.PermalinkUrl.String
 	t.PurchaseTitle = dt.PurchaseTitle.String
 	t.PurchaseURL = dt.PurchaseUrl.String
 	t.HasDownloadsLeft = dt.HasDownloadsLeft.Bool
@@ -171,7 +172,7 @@ func (t *SoundCloudTrack) ToDB() data.SoundcloudTrack {
 	return data.SoundcloudTrack{
 		ExternalID:          sql.NullInt64{Valid: true, Int64: t.ExternalID},
 		Name:                sql.NullString{Valid: true, String: t.Name},
-		Permalink:           sql.NullString{Valid: true, String: t.Permalink},
+		PermalinkUrl:        sql.NullString{Valid: true, String: t.PermalinkUrl},
 		PurchaseTitle:       sql.NullString{Valid: true, String: t.PurchaseTitle},
 		PurchaseUrl:         sql.NullString{Valid: true, String: t.PurchaseURL},
 		HasDownloadsLeft:    sql.NullBool{Valid: true, Bool: t.HasDownloadsLeft},
@@ -188,10 +189,20 @@ func (t *SoundCloudTrack) ToDB() data.SoundcloudTrack {
 
 func (s SoundCloud) GetSoundCloudPlaylist(ctx context.Context, playlistUrl string) (SoundCloudPlaylist, error) {
 
+	ctx = fctx.WithMeta(
+		ctx,
+		"playlist_url", playlistUrl,
+		"client_id", s.ClientID,
+	)
+
 	resp, err := http.Get(playlistUrl)
 
 	if err != nil {
-		return SoundCloudPlaylist{}, err
+		return SoundCloudPlaylist{}, fault.Wrap(
+			err,
+			fctx.With(ctx),
+			fmsg.With("Error making request to get SoundCloud playlist"),
+		)
 	}
 
 	defer resp.Body.Close()
@@ -199,34 +210,54 @@ func (s SoundCloud) GetSoundCloudPlaylist(ctx context.Context, playlistUrl strin
 	body, err := io.ReadAll(resp.Body)
 
 	if err != nil {
-		return SoundCloudPlaylist{}, err
+		return SoundCloudPlaylist{}, fault.Wrap(
+			err,
+			fctx.With(ctx),
+			fmsg.With("Error reading response body"),
+		)
 	}
 
 	hydratableStr, err := extractSCHydrationString(string(body))
 
 	if err != nil {
-		return SoundCloudPlaylist{}, err
+		return SoundCloudPlaylist{}, fault.Wrap(
+			err,
+			fctx.With(ctx),
+			fmsg.With("Error extracting hydration string"),
+		)
 	}
 
 	h := Hydratable{}
 	err = h.UnmarshalJSON([]byte(hydratableStr))
 
 	if err != nil {
-		return SoundCloudPlaylist{}, err
+		return SoundCloudPlaylist{}, fault.Wrap(
+			err,
+			fctx.With(ctx),
+			fmsg.With("Error unmarshalling hydratable string"),
+		)
 	}
 
 	if h.Playlist.ID == 0 {
-		return SoundCloudPlaylist{}, helpers.ErrRequestingPlaylist
+		return SoundCloudPlaylist{}, fault.Wrap(
+			fault.New("Missing playlist ID"),
+			fctx.With(ctx),
+		)
 	}
 
 	err = s.completeTracks(ctx, &h.Playlist)
 
 	if err != nil {
-		return SoundCloudPlaylist{}, err
+		return SoundCloudPlaylist{}, fault.Wrap(
+			err,
+			fctx.With(ctx),
+			fmsg.With("Error completing tracks"),
+		)
 	}
 
 	p := SoundCloudPlaylist{}
 	p.loadFromHydratable(h.Playlist)
+
 	return p, nil
 }
 
@@ -472,4 +503,67 @@ func (s SoundCloud) DownloadFile(dirPath string, id int64) (string, error) {
 	}
 
 	return filePath, nil
+}
+
+func GetAndSetSoundCloudClientID(cfg helpers.Config) (string, error) {
+	if cfg.SoundCloudClientID != "" {
+		return cfg.SoundCloudClientID, nil
+	}
+
+	clientID, err := GenerateSoundCloudClientID()
+
+	if err != nil {
+		return "", fault.Wrap(
+			err,
+			fmsg.With("Error generating SoundCloud client_id"),
+		)
+	}
+
+	cfg.SoundCloudClientID = clientID
+
+	return clientID, nil
+}
+
+func GenerateSoundCloudClientID() (string, error) {
+
+	resp, err := http.Get("https://www.soundcloud.com")
+
+	if err != nil {
+		return "", err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+		return "", err
+	}
+
+	assetMatches := helpers.RegexAllSubmatches(string(body), `src="(https[^"]+.js)"`)
+
+	for _, match := range assetMatches {
+
+		assetResp, err := http.Get(match[1])
+
+		if err != nil {
+			continue
+		}
+
+		defer assetResp.Body.Close()
+
+		assetBody, err := io.ReadAll(assetResp.Body)
+
+		if err != nil {
+			continue
+		}
+
+		clientIDMatches := helpers.RegexAllSubmatches(string(assetBody), `client_id[=:]\s*"*([a-zA-Z0-9]{32})`)
+
+		if len(clientIDMatches) > 0 {
+			return clientIDMatches[0][1], nil
+		}
+	}
+
+	return "", fault.New("Error generating SoundCloud client_id")
 }

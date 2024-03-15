@@ -54,20 +54,20 @@ INSERT INTO soundcloud_playlists (
     external_id,
     name,
     search_url,
-    permalink
+    permalink_url
 ) VALUES (
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP,
     sqlc.narg('external_id'),
     sqlc.narg('name'),
     sqlc.narg('search_url'),
-    sqlc.narg('permalink')
+    sqlc.narg('permalink_url')
 ) ON CONFLICT (external_id) DO UPDATE SET
     updated_at = CURRENT_TIMESTAMP,
 
     name = coalesce(?2, name),
     search_url = coalesce(?3, search_url),
-    permalink = coalesce(?4, permalink)
+    permalink_url = coalesce(?4, permalink_url)
 
 RETURNING *;
 
@@ -77,7 +77,7 @@ INSERT INTO soundcloud_tracks (
     updated_at,
     external_id,
     name,
-    permalink,
+    permalink_url,
     purchase_title,
     purchase_url,
     has_downloads_left,
@@ -94,7 +94,7 @@ INSERT INTO soundcloud_tracks (
     CURRENT_TIMESTAMP,
     sqlc.narg('external_id'),
     sqlc.narg('name'),
-    sqlc.narg('permalink'),
+    sqlc.narg('permalink_url'),
     sqlc.narg('purchase_title'),
     sqlc.narg('purchase_url'),
     sqlc.narg('has_downloads_left'),
@@ -110,7 +110,7 @@ INSERT INTO soundcloud_tracks (
     updated_at = CURRENT_TIMESTAMP,
 
     name = coalesce(?2, name),
-    permalink = coalesce(?3, permalink),
+    permalink_url = coalesce(?3, permalink_url),
     purchase_title = coalesce(?4, purchase_title),
     purchase_url = coalesce(?5, purchase_url),
     has_downloads_left = coalesce(?6, has_downloads_left),

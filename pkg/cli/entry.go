@@ -103,6 +103,12 @@ func Entry() {
 					},
 				},
 			},
+			{
+				Name:    "get-client-id",
+				Aliases: []string{"gcid"},
+				Usage:   "Generates a soundcloud client_id",
+				Action:  generateClientID,
+			},
 		},
 		Flags: []cli.Flag{
 			&cli.StringFlag{

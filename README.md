@@ -30,6 +30,10 @@ godotenv ( [github.com/joho/godotenv](https://github.com/joho/godotenv) )
 - to simplify loading environment variables from .env files to run development commands
 - available via go install (`go install github.com/joho/godotenv/cmd/godotenv@latest`)
 
+sqlc ( [github.com/sqlc-dev/sqlc](https://github.com/sqlc-dev/sqlc) )
+- to generate go code from SQL queries
+- available via go install (`go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest`)
+
 ## Creating new DB migrations & queries
 
 goose is used in order to run the migrations inside `./db/migrations` on the database, we combine this with godotenv to simplify these commands. For example...

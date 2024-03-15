@@ -79,7 +79,7 @@ func (e *guiEnv) getSaveSoundCloudTrackFunc(selectedTrack *iwidget.SelectedTrack
 		ctx := context.Background()
 		ctx = fctx.WithMeta(ctx,
 			"track_name", track.Name,
-			"track_permalink", track.Permalink,
+			"track_permalink", track.PermalinkUrl,
 			"track_external_id", fmt.Sprintf("%d", track.ExternalID),
 			"track_local_path", track.LocalPath,
 		)
@@ -193,6 +193,8 @@ func (e *guiEnv) getRefreshSoundCloudPlaylistFunc(playlist streaming.SoundCloudP
 			}
 		}
 
+		e.showInfoDialog("Refresh Successful", fmt.Sprintf("Refreshed %s, %d new tracks", playlist.Name, len(tracksToSave)))
+
 		trackListBinding.ApplyFilterSort()
 	}
 
@@ -206,7 +208,7 @@ func (e *guiEnv) getRefreshSoundCloudPlaylistFunc(playlist streaming.SoundCloudP
 		)
 
 		opts := operations.GetSoundCloudPlaylistOpts{
-			PlaylistURL: playlist.Permalink,
+			PlaylistURL: playlist.PermalinkUrl,
 			Refresh:     true,
 		}
 

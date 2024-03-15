@@ -27,17 +27,20 @@ func (sDB *SerenDB) TxUpsertSoundCloudPlaylistAndTracks(p SoundcloudPlaylist, tr
 	qtx := sDB.Queries.WithTx(tx)
 
 	insertedP, err := qtx.UpsertSoundCloudPlaylist(context.Background(), UpsertSoundCloudPlaylistParams{
-		ExternalID: p.ExternalID,
-		Name:       p.Name,
-		SearchUrl:  p.SearchUrl,
-		Permalink:  p.Permalink,
+		ExternalID:   p.ExternalID,
+		Name:         p.Name,
+		SearchUrl:    p.SearchUrl,
+		PermalinkUrl: p.PermalinkUrl,
 	})
 
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		tx.Rollback()
 		return fault.Wrap(
 			err,
-			fmsg.With("Error inserting playlist"),
+			fmsg.WithDesc(
+				"Error inserting playlist",
+				"There was an error inserting SoundCloud playlist into database",
+			),
 		)
 	}
 
@@ -46,7 +49,7 @@ func (sDB *SerenDB) TxUpsertSoundCloudPlaylistAndTracks(p SoundcloudPlaylist, tr
 		insertedT, err := qtx.UpsertSoundCloudTrack(context.Background(), UpsertSoundCloudTrackParams{
 			ExternalID:          t.ExternalID,
 			Name:                t.Name,
-			Permalink:           t.Permalink,
+			PermalinkUrl:        t.PermalinkUrl,
 			PurchaseTitle:       t.PurchaseTitle,
 			PurchaseUrl:         t.PurchaseUrl,
 			HasDownloadsLeft:    t.HasDownloadsLeft,
@@ -73,7 +76,7 @@ func (sDB *SerenDB) TxUpsertSoundCloudPlaylistAndTracks(p SoundcloudPlaylist, tr
 			SoundcloudTrackID:    sql.NullInt64{Valid: true, Int64: insertedT.ID},
 		})
 
-		if err != nil {
+		if err != nil && err != sql.ErrNoRows {
 			tx.Rollback()
 			return fault.Wrap(
 				err,
@@ -106,7 +109,7 @@ func (sDB *SerenDB) TxUpsertSoundCloudTracks(t []SoundcloudTrack) error {
 		_, err := qtx.UpsertSoundCloudTrack(context.Background(), UpsertSoundCloudTrackParams{
 			ExternalID:          t.ExternalID,
 			Name:                t.Name,
-			Permalink:           t.Permalink,
+			PermalinkUrl:        t.PermalinkUrl,
 			PurchaseTitle:       t.PurchaseTitle,
 			PurchaseUrl:         t.PurchaseUrl,
 			HasDownloadsLeft:    t.HasDownloadsLeft,
