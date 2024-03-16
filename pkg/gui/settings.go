@@ -9,10 +9,10 @@ import (
 
 func (e *guiEnv) openSettingsWindow(a fyne.App) bool {
 
-	if e.settingsAlreadyOpen {
+	if e.busy {
 		return true
 	} else {
-		e.settingsAlreadyOpen = true
+		e.busy = true
 		// clone config state so we can discard changes if the user closes the window without saving
 		tmpConfig := *e.Config
 		e.tmpConfig = &tmpConfig
@@ -21,14 +21,32 @@ func (e *guiEnv) openSettingsWindow(a fyne.App) bool {
 	w := a.NewWindow("Settings")
 
 	w.SetOnClosed(func() {
-		e.settingsAlreadyOpen = false
+		e.busy = false
 		e.tmpConfig = nil
 	})
 
-	// Create a new container with a vertical layout
-	container := container.NewVScroll(container.NewVBox(
-		e.settingsList(w)...,
-	))
+	// Create a new container
+	// Use bordered layout to show save button at the bottom &
+	// tabs at the top
+	tabsContainer := container.NewAppTabs(
+		container.NewTabItem("General", e.generalTab()),
+		container.NewTabItem("Stems", e.stemsTab()),
+		container.NewTabItem("SoundCloud", e.soundCloudTab()),
+		container.NewTabItem("Traktor", e.traktorTab()),
+		container.NewTabItem("Rekordbox", e.rekordboxTab()),
+	)
+
+	container := container.NewBorder(
+		nil,
+		container.NewBorder(
+			nil, nil, nil,
+			e.saveButton(w),
+			widget.NewLabel("Save settings"),
+		),
+		nil, nil,
+
+		tabsContainer,
+	)
 
 	// Set the window content to the container
 	w.SetContent(container)
@@ -40,23 +58,34 @@ func (e *guiEnv) openSettingsWindow(a fyne.App) bool {
 	return false
 }
 
-/*
-settingsList generates a list of canvas objects for the settings window
+func (e *guiEnv) generalTab() *fyne.Container {
+	return container.NewVBox(
+		widget.NewLabel("General settings"),
+	)
+}
 
-any altered settings are stored in the TmpConfig struct, which is discarded if the user closes the window without saving
-*/
-func (e *guiEnv) settingsList(w fyne.Window) []fyne.CanvasObject {
+func (e *guiEnv) stemsTab() *fyne.Container {
+	return container.NewVBox(
+		widget.NewLabel("Stems settings"),
+	)
+}
 
-	objs := []fyne.CanvasObject{}
+func (e *guiEnv) soundCloudTab() *fyne.Container {
+	return container.NewVBox(
+		widget.NewLabel("SoundCloud settings"),
+	)
+}
 
-	objs = append(objs, e.openFileCanvas(
-		"Traktor Collection Filepath", &e.tmpConfig.TraktorCollectionPath, []string{".nml"}, func() {},
-	))
+func (e *guiEnv) traktorTab() *fyne.Container {
+	return container.NewVBox(
+		widget.NewLabel("Traktor settings"),
+	)
+}
 
-	objs = append(objs, e.saveButton(w))
-
-	return objs
-
+func (e *guiEnv) rekordboxTab() *fyne.Container {
+	return container.NewVBox(
+		widget.NewLabel("Rekordbox settings"),
+	)
 }
 
 /*

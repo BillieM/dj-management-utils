@@ -164,7 +164,25 @@ func (e *guiEnv) separateSingleStemView() fyne.CanvasObject {
 	})
 	startButton.Disable()
 
-	trackPathCanvas := e.openFileCanvas("Track Path", &opts.InFilePath, []string{".wav", ".mp3"}, func() { enableBtnIfOptsOkay(opts, startButton) })
+	trackPathCanvas := iwidget.NewOpenPath(
+		e.getWidgetBase(),
+		"",
+		iwidget.File,
+	)
+
+	trackPathCanvas.SetOnValid(
+		func(path string) {
+			opts.InFilePath = path
+			enableBtnIfOptsOkay(opts, startButton)
+		},
+	)
+
+	trackPathCanvas.SetOnError(
+		func(err error, log bool) {
+			e.showErrorDialog(err, log)
+		},
+	)
+
 	stemTypeSelect := buildStemTypeSelect(&opts.Type, func() { enableBtnIfOptsOkay(opts, startButton) })
 
 	return container.NewBorder(
@@ -202,7 +220,25 @@ func (e *guiEnv) separateFolderStemView() fyne.CanvasObject {
 	})
 	startButton.Disable()
 
-	trackPathCanvas := e.openDirCanvas("Folder Path", &opts.InDirPath, func() { enableBtnIfOptsOkay(opts, startButton) })
+	trackPathCanvas := iwidget.NewOpenPath(
+		e.getWidgetBase(),
+		"",
+		iwidget.Directory,
+	)
+
+	trackPathCanvas.SetOnValid(
+		func(path string) {
+			opts.InDirPath = path
+			enableBtnIfOptsOkay(opts, startButton)
+		},
+	)
+
+	trackPathCanvas.SetOnError(
+		func(err error, log bool) {
+			e.showErrorDialog(err, log)
+		},
+	)
+
 	stemTypeSelect := buildStemTypeSelect(&opts.Type, func() { enableBtnIfOptsOkay(opts, startButton) })
 
 	return container.NewBorder(
@@ -254,7 +290,24 @@ func (e *guiEnv) convertSingleMp3View() fyne.CanvasObject {
 	})
 	startButton.Disable()
 
-	trackPathCanvas := e.openFileCanvas("Track Path", &opts.InFilePath, []string{".wav", ".flac"}, func() { startButton.Enable() })
+	trackPathCanvas := iwidget.NewOpenPath(
+		e.getWidgetBase(),
+		"",
+		iwidget.File,
+	)
+
+	trackPathCanvas.SetOnValid(
+		func(path string) {
+			opts.InFilePath = path
+			enableBtnIfOptsOkay(opts, startButton)
+		},
+	)
+
+	trackPathCanvas.SetOnError(
+		func(err error, log bool) {
+			e.showErrorDialog(err, log)
+		},
+	)
 
 	return container.NewBorder(
 		container.NewVBox(
@@ -292,7 +345,24 @@ func (e *guiEnv) convertFolderMp3View() fyne.CanvasObject {
 
 	startButton.Disable()
 
-	trackPathCanvas := e.openDirCanvas("Folder Path", &opts.InDirPath, func() { startButton.Enable() })
+	trackPathCanvas := iwidget.NewOpenPath(
+		e.getWidgetBase(),
+		"",
+		iwidget.Directory,
+	)
+
+	trackPathCanvas.SetOnValid(
+		func(path string) {
+			opts.InDirPath = path
+			enableBtnIfOptsOkay(opts, startButton)
+		},
+	)
+
+	trackPathCanvas.SetOnError(
+		func(err error, log bool) {
+			e.showErrorDialog(err, log)
+		},
+	)
 
 	return container.NewBorder(
 		container.NewVBox(

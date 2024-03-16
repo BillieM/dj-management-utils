@@ -2,7 +2,6 @@ package gui
 
 import (
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/dialog"
 )
 
 func (e *guiEnv) makeNavBar(a fyne.App, w fyne.Window) *fyne.MainMenu {
@@ -20,9 +19,9 @@ func (e *guiEnv) makeNavBar(a fyne.App, w fyne.Window) *fyne.MainMenu {
 func (e *guiEnv) makeFileNav(a fyne.App, w fyne.Window) *fyne.Menu {
 	return fyne.NewMenu("File",
 		fyne.NewMenuItem("Settings", func() {
-			alreadyOpen := e.openSettingsWindow(a)
-			if alreadyOpen {
-				dialog.ShowInformation("Settings", "Settings window is already open", w)
+			pleaseFinish := e.openSettingsWindow(a)
+			if pleaseFinish {
+				e.showInfoDialog("Error opening settings!", "Please finish what you're doing first")
 			}
 		}),
 		fyne.NewMenuItem("Quit", func() { a.Quit() }),

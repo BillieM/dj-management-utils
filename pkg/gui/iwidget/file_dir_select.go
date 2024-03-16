@@ -172,7 +172,9 @@ func (i *OpenPath) SetOnValid(callback func(string)) {
 /*
 SetOnError sets the callback for when an error occurs
 
-The error is passed to the callback
+# The error is passed to the callback
+
+The second argument can be used to log the error with the logger.
 */
 func (i *OpenPath) SetOnError(callback func(error, bool)) {
 	i.onError = callback

@@ -50,6 +50,7 @@ func Entry() {
 				split,
 			),
 		)
+		mainWindow.SetMaster()
 	})
 
 	mainWindow.ShowAndRun()
