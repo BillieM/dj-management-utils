@@ -1,6 +1,6 @@
 # seren-dj-utils
 A collection of utilities for DJ library management.
-
+![gui_X3G9tbvfTX](https://github.com/BillieM/dj-management-utils/assets/58907197/f1f4a7fe-89b5-4482-9d9b-2a60d42b7522)
 
 ## Dependencies
 
