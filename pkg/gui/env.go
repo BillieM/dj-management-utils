@@ -102,8 +102,7 @@ func buildGuiEnv(a fyne.App, w fyne.Window) (*guiEnv, error) {
 }
 
 type guiState struct {
-	settingsAlreadyOpen bool
-	busy                bool
+	busy bool
 }
 
 /*
@@ -114,10 +113,10 @@ It also displays an error dialog to the user if the GUI is busy
 func (e *guiEnv) isBusy() bool {
 	if e.guiState.busy {
 		e.showErrorDialog(fault.Wrap(
-			fault.New("gui state busy"),
+			fault.New("Error!"),
 			fmsg.WithDesc(
-				"wait for current operation to finish",
-				"Busy, please wait for the current operation to finish",
+				"gui state busy",
+				"Busy, please finish what you're doing first!",
 			),
 		), false)
 		return true

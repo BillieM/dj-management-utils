@@ -1,6 +1,8 @@
 package gui
 
 import (
+	"fmt"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
@@ -9,10 +11,10 @@ import (
 
 func (e *guiEnv) openSettingsWindow(a fyne.App) bool {
 
-	if e.settingsAlreadyOpen {
+	if e.busy {
 		return true
 	} else {
-		e.settingsAlreadyOpen = true
+		e.busy = true
 		// clone config state so we can discard changes if the user closes the window without saving
 		tmpConfig := *e.Config
 		e.tmpConfig = &tmpConfig
@@ -21,14 +23,32 @@ func (e *guiEnv) openSettingsWindow(a fyne.App) bool {
 	w := a.NewWindow("Settings")
 
 	w.SetOnClosed(func() {
-		e.settingsAlreadyOpen = false
+		e.busy = false
 		e.tmpConfig = nil
 	})
 
-	// Create a new container with a vertical layout
-	container := container.NewVScroll(container.NewVBox(
-		e.settingsList(w)...,
-	))
+	// Create a new container
+	// Use bordered layout to show save button at the bottom &
+	// tabs at the top
+	tabsContainer := container.NewAppTabs(
+		container.NewTabItem("General", e.generalTab()),
+		container.NewTabItem("Stems", e.stemsTab()),
+		container.NewTabItem("SoundCloud", e.soundCloudTab()),
+		container.NewTabItem("Traktor", e.traktorTab()),
+		container.NewTabItem("Rekordbox", e.rekordboxTab()),
+	)
+
+	container := container.NewBorder(
+		nil,
+		container.NewBorder(
+			widget.NewSeparator(),
+			nil, nil,
+			e.saveButton(w),
+			widget.NewLabel("Save settings"),
+		),
+		nil, nil,
+		tabsContainer,
+	)
 
 	// Set the window content to the container
 	w.SetContent(container)
@@ -40,23 +60,89 @@ func (e *guiEnv) openSettingsWindow(a fyne.App) bool {
 	return false
 }
 
-/*
-settingsList generates a list of canvas objects for the settings window
+func (e *guiEnv) generalTab() *fyne.Container {
+	return container.NewVBox(
+		widget.NewLabel("General Settings"),
+	)
+}
 
-any altered settings are stored in the TmpConfig struct, which is discarded if the user closes the window without saving
-*/
-func (e *guiEnv) settingsList(w fyne.Window) []fyne.CanvasObject {
+func (e *guiEnv) stemsTab() *fyne.Container {
 
-	objs := []fyne.CanvasObject{}
+	// build input widgets
+	batchSizeSlider := widget.NewSlider(1, 10)
+	mergeSlider := widget.NewSlider(1, 10)
+	cleanUpSlider := widget.NewSlider(1, 10)
+	cudaCheckbox := widget.NewCheck("", func(useCuda bool) {
+		e.tmpConfig.CudaEnabled = useCuda
+	})
 
-	objs = append(objs, e.openFileCanvas(
-		"Traktor Collection Filepath", &e.tmpConfig.TraktorCollectionPath, []string{".nml"}, func() {},
-	))
+	// build form items
+	batchSizeFormItem := widget.NewFormItem("", batchSizeSlider)
+	mergeFormItem := widget.NewFormItem("", mergeSlider)
+	cleanUpFormItem := widget.NewFormItem("", cleanUpSlider)
+	cudaFormItem := widget.NewFormItem("Process stems with CUDA", cudaCheckbox)
 
-	objs = append(objs, e.saveButton(w))
+	// set form item tooltips
+	batchSizeFormItem.HintText = "The batch size to call demucs (the stem separation library) with. Higher values may use more memory."
+	mergeFormItem.HintText = "The number of workers to use for merging demucs output to m4a."
+	cleanUpFormItem.HintText = "The number of workers to use for cleaning up demucs output."
+	cudaFormItem.HintText = `Use CUDA for demucs processing. This requires a Nvidia GPU with CUDA support to work. Usage of CUDA will speed up demucs processing significantly.`
 
-	return objs
+	form := widget.NewForm(
+		batchSizeFormItem,
+		mergeFormItem,
+		cleanUpFormItem,
+		cudaFormItem,
+	)
 
+	// set slider change callback
+	batchSizeSlider.OnChanged = func(val float64) {
+		e.tmpConfig.DemucsBatchSize = int(val)
+		batchSizeFormItem.Text = fmt.Sprintf("Demucs batch size: %d", e.tmpConfig.DemucsBatchSize)
+		form.Refresh()
+	}
+
+	mergeSlider.OnChanged = func(val float64) {
+		e.tmpConfig.MergeWorkers = int(val)
+		mergeFormItem.Text = fmt.Sprintf("Merge workers: %d", e.tmpConfig.MergeWorkers)
+		form.Refresh()
+	}
+
+	cleanUpSlider.OnChanged = func(val float64) {
+		e.tmpConfig.CleanUpWorkers = int(val)
+		cleanUpFormItem.Text = fmt.Sprintf("Clean up workers: %d", e.tmpConfig.CleanUpWorkers)
+		form.Refresh()
+	}
+
+	// set form item values
+	batchSizeSlider.SetValue(float64(e.tmpConfig.DemucsBatchSize))
+	mergeSlider.SetValue(float64(e.tmpConfig.MergeWorkers))
+	cleanUpSlider.SetValue(float64(e.tmpConfig.CleanUpWorkers))
+	cudaCheckbox.SetChecked(e.tmpConfig.CudaEnabled)
+
+	return container.NewBorder(
+		widget.NewLabel("Warning, changing these settings may cause the application to crash or behave unexpectedly"),
+		nil, nil, nil,
+		form,
+	)
+}
+
+func (e *guiEnv) soundCloudTab() *fyne.Container {
+	return container.NewVBox(
+		widget.NewLabel("SoundCloud settings"),
+	)
+}
+
+func (e *guiEnv) traktorTab() *fyne.Container {
+	return container.NewVBox(
+		widget.NewLabel("Traktor settings"),
+	)
+}
+
+func (e *guiEnv) rekordboxTab() *fyne.Container {
+	return container.NewVBox(
+		widget.NewLabel("Rekordbox settings"),
+	)
 }
 
 /*
@@ -65,10 +151,6 @@ and then saves the Config struct to the config file
 */
 func (e *guiEnv) saveButton(w fyne.Window) *widget.Button {
 	btn := widget.NewButton("Save", func() {
-		if e.isBusy() {
-			return
-		}
-
 		e.Config = e.tmpConfig
 		err := e.Config.SaveConfig()
 		if err != nil {
