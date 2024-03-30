@@ -1,6 +1,8 @@
 package gui
 
 import (
+	"fmt"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
@@ -39,12 +41,12 @@ func (e *guiEnv) openSettingsWindow(a fyne.App) bool {
 	container := container.NewBorder(
 		nil,
 		container.NewBorder(
-			nil, nil, nil,
+			widget.NewSeparator(),
+			nil, nil,
 			e.saveButton(w),
 			widget.NewLabel("Save settings"),
 		),
 		nil, nil,
-
 		tabsContainer,
 	)
 
@@ -60,13 +62,68 @@ func (e *guiEnv) openSettingsWindow(a fyne.App) bool {
 
 func (e *guiEnv) generalTab() *fyne.Container {
 	return container.NewVBox(
-		widget.NewLabel("General settings"),
+		widget.NewLabel("General Settings"),
 	)
 }
 
 func (e *guiEnv) stemsTab() *fyne.Container {
-	return container.NewVBox(
-		widget.NewLabel("Stems settings"),
+
+	// build input widgets
+	batchSizeSlider := widget.NewSlider(1, 10)
+	mergeSlider := widget.NewSlider(1, 10)
+	cleanUpSlider := widget.NewSlider(1, 10)
+	cudaCheckbox := widget.NewCheck("", func(useCuda bool) {
+		e.tmpConfig.CudaEnabled = useCuda
+	})
+
+	// build form items
+	batchSizeFormItem := widget.NewFormItem("", batchSizeSlider)
+	mergeFormItem := widget.NewFormItem("", mergeSlider)
+	cleanUpFormItem := widget.NewFormItem("", cleanUpSlider)
+	cudaFormItem := widget.NewFormItem("Process stems with CUDA", cudaCheckbox)
+
+	// set form item tooltips
+	batchSizeFormItem.HintText = "The batch size to call demucs (the stem separation library) with. Higher values may use more memory."
+	mergeFormItem.HintText = "The number of workers to use for merging demucs output to m4a."
+	cleanUpFormItem.HintText = "The number of workers to use for cleaning up demucs output."
+	cudaFormItem.HintText = `Use CUDA for demucs processing. This requires a Nvidia GPU with CUDA support to work. Usage of CUDA will speed up demucs processing significantly.`
+
+	form := widget.NewForm(
+		batchSizeFormItem,
+		mergeFormItem,
+		cleanUpFormItem,
+		cudaFormItem,
+	)
+
+	// set slider change callback
+	batchSizeSlider.OnChanged = func(val float64) {
+		e.tmpConfig.DemucsBatchSize = int(val)
+		batchSizeFormItem.Text = fmt.Sprintf("Demucs batch size: %d", e.tmpConfig.DemucsBatchSize)
+		form.Refresh()
+	}
+
+	mergeSlider.OnChanged = func(val float64) {
+		e.tmpConfig.MergeWorkers = int(val)
+		mergeFormItem.Text = fmt.Sprintf("Merge workers: %d", e.tmpConfig.MergeWorkers)
+		form.Refresh()
+	}
+
+	cleanUpSlider.OnChanged = func(val float64) {
+		e.tmpConfig.CleanUpWorkers = int(val)
+		cleanUpFormItem.Text = fmt.Sprintf("Clean up workers: %d", e.tmpConfig.CleanUpWorkers)
+		form.Refresh()
+	}
+
+	// set form item values
+	batchSizeSlider.SetValue(float64(e.tmpConfig.DemucsBatchSize))
+	mergeSlider.SetValue(float64(e.tmpConfig.MergeWorkers))
+	cleanUpSlider.SetValue(float64(e.tmpConfig.CleanUpWorkers))
+	cudaCheckbox.SetChecked(e.tmpConfig.CudaEnabled)
+
+	return container.NewBorder(
+		widget.NewLabel("Warning, changing these settings may cause the application to crash or behave unexpectedly"),
+		nil, nil, nil,
+		form,
 	)
 }
 
@@ -94,10 +151,6 @@ and then saves the Config struct to the config file
 */
 func (e *guiEnv) saveButton(w fyne.Window) *widget.Button {
 	btn := widget.NewButton("Save", func() {
-		if e.isBusy() {
-			return
-		}
-
 		e.Config = e.tmpConfig
 		err := e.Config.SaveConfig()
 		if err != nil {

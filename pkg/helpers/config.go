@@ -21,6 +21,9 @@ type Config struct {
 	ExtensionsToConvertToMp3    []string `json:"extensionsToConvertToMp3"`
 	ExtensionsToSeparateToStems []string `json:"extensionsToSeparateToStems"`
 	CudaEnabled                 bool     `json:"cudaEnabled"`
+	DemucsBatchSize             int      `json:"demucsBatchSize"`
+	MergeWorkers                int      `json:"mergeWorkers"`
+	CleanUpWorkers              int      `json:"cleanUpWorkers"`
 
 	// these are not stored in config.json
 	SoundCloudClientID    string `json:"-"`

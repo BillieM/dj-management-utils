@@ -1,4 +1,5 @@
 {
+  "development": true,
   "traktorCollectionPath": "H:/Native Instruments/Traktor Windows/collection_backup_outdated.nml",
   "baseDir": "H:/Music/",
   "downloadDir": "H:/Music/to process/",
@@ -13,5 +14,8 @@
     "mp3",
     "wav"
   ],
-  "cudaEnabled": false
+  "cudaEnabled": true,
+  "demucsBatchSize": 1,
+  "mergeWorkers": 4,
+  "cleanUpWorkers": 8
 }
