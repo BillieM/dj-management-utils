@@ -1,6 +1,15 @@
 # seren-dj-utils
 A collection of utilities for DJ library management.
 
+## Project history
+
+This earlier DJ-library project led to [Crate Lynx](https://github.com/BillieM/crate-lynx),
+a separate tool for matching streaming playlists to local audio and exporting DJ
+playlists. Crate Lynx is designed for one trusted operator on a private machine or LAN.
+
+Read [Building my own DJ library tools, from Python to Crate Lynx](https://billiem.uk/posts/dj-tools-i-kept-trying-to-build/)
+for the history of these tools and their trade-offs.
+
 ![gui_X3G9tbvfTX](https://github.com/BillieM/dj-management-utils/assets/58907197/f1f4a7fe-89b5-4482-9d9b-2a60d42b7522)
 
 ## Dependencies
